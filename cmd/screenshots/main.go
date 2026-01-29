@@ -13,7 +13,10 @@
 //	-width      Viewport width (default: 1280)
 //	-height     Viewport height (default: 720)
 //	-scale      Device scale factor for retina (default: 2)
-//	-gif        Capture animated GIF hero (default: true)
+//	-gif        Capture animated GIF hero (default: false)
+//	-webp       Capture animated WebP hero (default: true)
+//	-slowdown   Slowdown factor (e.g., 1.25 for 25% slower) (default: 1.25)
+//	-duration   Recording duration in seconds (default: 8)
 package main
 
 import (
@@ -29,13 +32,16 @@ import (
 )
 
 type Config struct {
-	URL      string
-	OutDir   string
-	Headless bool
-	Width    int
-	Height   int
-	Scale    float64
-	CaptureGIF bool
+	URL         string
+	OutDir      string
+	Headless    bool
+	Width       int
+	Height      int
+	Scale       float64
+	CaptureGIF  bool
+	CaptureWebP bool
+	Slowdown    float64
+	Duration    int
 }
 
 func main() {
@@ -46,7 +52,10 @@ func main() {
 	flag.IntVar(&cfg.Width, "width", 1280, "Viewport width")
 	flag.IntVar(&cfg.Height, "height", 720, "Viewport height")
 	flag.Float64Var(&cfg.Scale, "scale", 2, "Device scale factor (2 for retina)")
-	flag.BoolVar(&cfg.CaptureGIF, "gif", true, "Capture animated GIF hero")
+	flag.BoolVar(&cfg.CaptureGIF, "gif", false, "Capture animated GIF hero")
+	flag.BoolVar(&cfg.CaptureWebP, "webp", true, "Capture animated WebP hero")
+	flag.Float64Var(&cfg.Slowdown, "slowdown", 1.25, "Slowdown factor (e.g., 1.25 for 25% slower)")
+	flag.IntVar(&cfg.Duration, "duration", 8, "Recording duration in seconds")
 	flag.Parse()
 
 	if err := run(cfg); err != nil {
@@ -83,9 +92,10 @@ func run(cfg Config) error {
 	}
 	defer browser.Close()
 
-	// Create context with viewport and video recording for GIF
+	// Create context with viewport and video recording for GIF/WebP
 	videoDir := filepath.Join(cfg.OutDir, "video")
-	if cfg.CaptureGIF {
+	captureVideo := cfg.CaptureGIF || cfg.CaptureWebP
+	if captureVideo {
 		os.MkdirAll(videoDir, 0755)
 	}
 
@@ -98,7 +108,7 @@ func run(cfg Config) error {
 		ColorScheme:       playwright.ColorSchemeDark,
 	}
 
-	if cfg.CaptureGIF {
+	if captureVideo {
 		contextOpts.RecordVideo = &playwright.RecordVideo{
 			Dir: videoDir,
 			Size: &playwright.Size{
@@ -213,9 +223,9 @@ func run(cfg Config) error {
 		log.Printf("  Saved: %s", outPath)
 	}
 
-	// Capture GIF animation
-	if cfg.CaptureGIF {
-		log.Println("Capturing GIF animation...")
+	// Capture video animation (GIF or WebP)
+	if captureVideo {
+		log.Println("Capturing video animation...")
 
 		// Go back to dark mode library view
 		if err := page.Click(".theme-toggle"); err != nil {
@@ -235,8 +245,9 @@ func run(cfg Config) error {
 			log.Printf("Play click: %v", err)
 		}
 
-		// Let it record for a few seconds
-		time.Sleep(4 * time.Second)
+		// Let it record for the configured duration
+		log.Printf("Recording for %d seconds...", cfg.Duration)
+		time.Sleep(time.Duration(cfg.Duration) * time.Second)
 
 		// Stop recording by closing the page
 		page.Close()
@@ -248,13 +259,26 @@ func run(cfg Config) error {
 			if err == nil {
 				log.Printf("Video recorded: %s", videoPath)
 
-				// Convert to GIF using ffmpeg
-				gifPath := filepath.Join(cfg.OutDir, "algiers-demo.gif")
-				if err := convertToGIF(videoPath, gifPath, cfg.Width/2); err != nil {
-					log.Printf("Warning: GIF conversion failed: %v", err)
-					log.Println("To convert manually: ffmpeg -i video.webm -vf \"fps=12,scale=640:-1:flags=lanczos\" -loop 0 demo.gif")
-				} else {
-					log.Printf("GIF saved: %s", gifPath)
+				// Convert to WebP if requested
+				if cfg.CaptureWebP {
+					webpPath := filepath.Join(cfg.OutDir, "algiers-demo.webp")
+					if err := convertToWebP(videoPath, webpPath, cfg.Width/2, cfg.Slowdown); err != nil {
+						log.Printf("Warning: WebP conversion failed: %v", err)
+						log.Println("To convert manually: ffmpeg -i video.webm -vf \"setpts=1.25*PTS,fps=12,scale=640:-1\" -c:v libwebp -loop 0 demo.webp")
+					} else {
+						log.Printf("WebP saved: %s", webpPath)
+					}
+				}
+
+				// Convert to GIF if requested
+				if cfg.CaptureGIF {
+					gifPath := filepath.Join(cfg.OutDir, "algiers-demo.gif")
+					if err := convertToGIF(videoPath, gifPath, cfg.Width/2, cfg.Slowdown); err != nil {
+						log.Printf("Warning: GIF conversion failed: %v", err)
+						log.Println("To convert manually: ffmpeg -i video.webm -vf \"setpts=1.25*PTS,fps=12,scale=640:-1:flags=lanczos\" -loop 0 demo.gif")
+					} else {
+						log.Printf("GIF saved: %s", gifPath)
+					}
 				}
 			}
 		}
@@ -264,13 +288,47 @@ func run(cfg Config) error {
 	return nil
 }
 
-func convertToGIF(videoPath, gifPath string, width int) error {
+func convertToWebP(videoPath, webpPath string, width int, slowdown float64) error {
+	// Two-step conversion: video -> temp GIF -> WebP
+	// This works even without ffmpeg libwebp support
+
+	// Step 1: Convert video to temporary GIF
+	tempGIF := webpPath + ".tmp.gif"
+	defer os.Remove(tempGIF)
+
+	vf := fmt.Sprintf("setpts=%.2f*PTS,fps=12,scale=%d:-1:flags=lanczos,split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse", slowdown, width)
+	cmd := exec.Command("ffmpeg",
+		"-y",
+		"-i", videoPath,
+		"-vf", vf,
+		"-loop", "0",
+		tempGIF,
+	)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("ffmpeg to GIF: %w", err)
+	}
+
+	// Step 2: Convert GIF to WebP using gif2webp
+	cmd = exec.Command("gif2webp", "-q", "80", tempGIF, "-o", webpPath)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("gif2webp: %w", err)
+	}
+
+	return nil
+}
+
+func convertToGIF(videoPath, gifPath string, width int, slowdown float64) error {
 	// Use ffmpeg to convert video to GIF
-	// -vf: video filters - fps, scale, palettegen/paletteuse for quality
+	// setpts: slow down the video, fps, scale, palettegen/paletteuse for quality
+	vf := fmt.Sprintf("setpts=%.2f*PTS,fps=12,scale=%d:-1:flags=lanczos,split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse", slowdown, width)
 	cmd := exec.Command("ffmpeg",
 		"-y", // overwrite output
 		"-i", videoPath,
-		"-vf", fmt.Sprintf("fps=12,scale=%d:-1:flags=lanczos,split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse", width),
+		"-vf", vf,
 		"-loop", "0",
 		gifPath,
 	)
