@@ -196,10 +196,19 @@ flowchart TB
 <div align="center">
 
 ### Library View with Pro Visualizations
-![Library View](docs/assets/screens/algiers-hero.png)
+![Library View](docs/assets/screens/algiers-library-view.png)
+
+### Active Waveform with Spectrum Analyzer
+![Hero View](docs/assets/screens/algiers-hero.png)
 
 ### Set Builder with Energy Arc
 ![Set Builder](docs/assets/screens/algiers-set-builder.png)
+
+### Transition Graph (D3.js Force-Directed)
+![Graph View](docs/assets/screens/algiers-graph-view.png)
+
+### Light Mode
+![Light Mode](docs/assets/screens/algiers-light-mode.png)
 
 </div>
 
