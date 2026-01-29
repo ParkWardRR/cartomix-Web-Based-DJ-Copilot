@@ -1,0 +1,106 @@
+syntax = "proto3";
+
+package cartomix.engine;
+
+option go_package = "github.com/cartomix/cancun/proto/engine;engine";
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/duration.proto";
+import "proto/common/types.proto";
+
+service EngineAPI {
+  // Scan a folder or DJ export and enqueue tracks for analysis.
+  rpc ScanLibrary(ScanRequest) returns (stream ScanProgress);
+
+  // Analyze specific tracks (by path or id). Stream progress.
+  rpc AnalyzeTracks(AnalyzeRequest) returns (stream AnalyzeProgress);
+
+  // List library summaries with optional filters.
+  rpc ListTracks(ListTracksRequest) returns (stream cartomix.common.TrackSummary);
+
+  // Fetch full analysis for a track.
+  rpc GetTrack(GetTrackRequest) returns (cartomix.common.TrackAnalysis);
+
+  // Propose an ordering for a set with human-readable explanations.
+  rpc ProposeSet(SetPlanRequest) returns (SetPlanResponse);
+
+  // Export playlist + cues + analysis artifacts.
+  rpc ExportSet(ExportRequest) returns (ExportResponse);
+}
+
+message ScanRequest {
+  repeated string roots = 1; // folders or DJ export roots
+  bool force_rescan = 2;
+}
+
+message ScanProgress {
+  string path = 1;
+  string status = 2; // queued / analyzing / done / skipped / error
+  string error = 3;
+  int64 processed = 4;
+  int64 total = 5;
+}
+
+message AnalyzeRequest {
+  repeated string paths = 1;
+  repeated cartomix.common.TrackId track_ids = 2;
+  bool force = 3;
+  int32 max_parallel = 4;
+  int32 analysis_version = 5; // bump to force re-analysis under new params
+}
+
+message AnalyzeProgress {
+  cartomix.common.TrackId id = 1;
+  string stage = 2; // decode / beatgrid / key / sections / cues / done
+  string status = 3; // running / done / error
+  string error = 4;
+  float percent = 5;
+}
+
+message ListTracksRequest {
+  string query = 1; // simple search
+  bool needs_grid_review = 2;
+  string order_by = 3; // bpm, key, energy
+  int32 limit = 4;
+}
+
+message GetTrackRequest {
+  cartomix.common.TrackId id = 1;
+}
+
+enum SetMode {
+  SET_MODE_UNSPECIFIED = 0;
+  WARM_UP = 1;
+  PEAK_TIME = 2;
+  OPEN_FORMAT = 3;
+}
+
+message SetPlanRequest {
+  repeated cartomix.common.TrackId track_ids = 1;
+  SetMode mode = 2;
+  bool allow_key_jumps = 3;
+  double max_bpm_step = 4;
+  repeated cartomix.common.TrackId must_play = 5;
+  repeated cartomix.common.TrackId ban = 6;
+}
+
+message SetPlanResponse {
+  repeated cartomix.common.TrackId order = 1;
+  repeated cartomix.common.EdgeExplanation explanations = 2;
+}
+
+message ExportRequest {
+  repeated cartomix.common.TrackId track_ids = 1;
+  string output_dir = 2; // e.g., ./exports/set001
+  string playlist_name = 3;
+  bool include_rekordbox = 4;
+  bool include_serato = 5;
+  bool include_traktor = 6;
+}
+
+message ExportResponse {
+  string playlist_path = 1;
+  string analysis_json = 2;
+  string cues_csv = 3;
+  repeated string vendor_exports = 4; // paths per DJ ecosystem
+}

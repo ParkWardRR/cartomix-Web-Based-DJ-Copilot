@@ -31,8 +31,10 @@ graph TD
 - See `docs/PLAN.md` for milestones, risks, and task breakdown.
 - Source spec: `spec.md` (kept in-repo for traceability).
 
-## Running (planned)
-Local-first by design; the target stack is Go 1.22+, Swift 6, Node 22 for the web UI, and SQLite (WAL). Setup scripts and CI pipelines will land with the first engine/UI scaffolding.
+## Running (scaffold)
+- Toolchains: Go 1.22, Swift 6 (see `go.mod`, `analyzer-swift/.swift-version`).
+- Dev loop: `make test` runs Go + Swift stubs; `make fixturegen` writes a manifest placeholder under `testdata/audio`.
+- CI: `.github/workflows/ci.yml` runs Go tests on Ubuntu and Swift tests on macOS (lint placeholder for now).
 
 ## License
 This project uses the Blue Oak Model License 1.0.0 (see `LICENSE`).

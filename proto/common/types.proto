@@ -1,0 +1,141 @@
+syntax = "proto3";
+
+package cartomix.common;
+
+option go_package = "github.com/cartomix/cancun/proto/common;common";
+
+import "google/protobuf/duration.proto";
+
+// Track identity is a content hash + path to keep stable across moves.
+message TrackId {
+  string content_hash = 1;  // e.g., blake3 of decoded PCM header chunk
+  string path = 2;          // original absolute or DJ export path
+}
+
+// Beat index and wall-clock time (seconds) to keep both representations handy.
+message BeatMarker {
+  int32 index = 1;                        // 0-based beat index
+  google.protobuf.Duration time = 2;      // seconds from start
+  bool is_downbeat = 3;
+}
+
+enum SectionLabel {
+  SECTION_LABEL_UNSPECIFIED = 0;
+  INTRO = 1;
+  VERSE = 2;
+  BREAKDOWN = 3;
+  BUILD = 4;
+  DROP = 5;
+  OUTRO = 6;
+}
+
+message Section {
+  int32 start_beat = 1;
+  int32 end_beat = 2;
+  SectionLabel label = 3;
+  float confidence = 4;  // 0..1
+}
+
+enum CueType {
+  CUE_TYPE_UNSPECIFIED = 0;
+  LOAD = 1;
+  FIRST_DOWNBEAT = 2;
+  INTRO_START = 3;
+  BREAKDOWN = 4;
+  BUILD = 5;
+  DROP = 6;
+  OUTRO_START = 7;
+  SAFETY_LOOP = 8;
+}
+
+message CuePoint {
+  int32 beat_index = 1;
+  google.protobuf.Duration time = 2;
+  CueType type = 3;
+  float confidence = 4;
+  bool user_authored = 5;
+}
+
+message TransitionWindow {
+  int32 start_beat = 1;
+  int32 end_beat = 2;
+  string tag = 3;           // e.g., "low_energy", "peak", "break_to_build"
+  float confidence = 4;
+}
+
+enum KeyFormat {
+  KEY_FORMAT_UNSPECIFIED = 0;
+  OPEN_KEY = 1;
+  CAMELOT = 2;
+}
+
+message MusicalKey {
+  string value = 1;   // e.g., "8A" (Camelot) or "Am" (OpenKey)
+  KeyFormat format = 2;
+  float confidence = 3;
+}
+
+message EnergySegment {
+  int32 start_beat = 1;
+  int32 end_beat = 2;
+  int32 level = 3;    // 1-10
+}
+
+message WaveformTile {
+  int32 level = 1;    // zoom level / resolution bucket
+  bytes peaks = 2;    // packed int16 peak pairs
+}
+
+message TempoMapNode {
+  int32 beat_index = 1;
+  double bpm = 2;
+}
+
+message Beatgrid {
+  repeated BeatMarker beats = 1;
+  repeated TempoMapNode tempo_map = 2; // empty means static tempo
+  float confidence = 3;
+  bool is_dynamic = 4;
+}
+
+message Loudness {
+  float integrated_lufs = 1;
+  float true_peak_db = 2;
+}
+
+message TrackAnalysis {
+  TrackId id = 1;
+  double duration_seconds = 2;
+  Beatgrid beatgrid = 3;
+  MusicalKey key = 4;
+  int32 energy_global = 5;
+  repeated EnergySegment energy_segments = 6;
+  repeated Section sections = 7;
+  repeated CuePoint cue_points = 8;
+  repeated TransitionWindow transition_windows = 9;
+  Loudness loudness = 10;
+  bytes embedding = 11; // float16/32 payload
+  int32 analysis_version = 12;
+}
+
+message TrackSummary {
+  TrackId id = 1;
+  string title = 2;
+  string artist = 3;
+  double bpm = 4;
+  MusicalKey key = 5;
+  int32 energy = 6;
+  int32 cue_count = 7;
+  string status = 8; // analyzed / pending / failed
+}
+
+message EdgeExplanation {
+  TrackId from = 1;
+  TrackId to = 2;
+  float score = 3;
+  string reason = 4; // human-readable summary
+  float tempo_delta = 5;
+  int32 energy_delta = 6;
+  string key_relation = 7; // e.g., "same key", "+1 Camelot"
+  string window_overlap = 8;
+}
