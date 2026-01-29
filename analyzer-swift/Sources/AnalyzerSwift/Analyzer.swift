@@ -42,6 +42,9 @@ public struct TrackAnalysisResult: Sendable {
     // Audio embedding (for similarity/vibe matching)
     public let embedding: AudioEmbedding
 
+    // OpenL3 embedding (512-dim, for ML-powered similarity)
+    public let openL3Embedding: OpenL3Embedding?
+
     public init(
         path: String,
         duration: Double,
@@ -65,7 +68,8 @@ public struct TrackAnalysisResult: Sendable {
         safeStartBeat: Int,
         safeEndBeat: Int,
         waveformSummary: [Float],
-        embedding: AudioEmbedding
+        embedding: AudioEmbedding,
+        openL3Embedding: OpenL3Embedding? = nil
     ) {
         self.path = path
         self.duration = duration
@@ -90,6 +94,7 @@ public struct TrackAnalysisResult: Sendable {
         self.safeEndBeat = safeEndBeat
         self.waveformSummary = waveformSummary
         self.embedding = embedding
+        self.openL3Embedding = openL3Embedding
     }
 
     /// Primary BPM (from first tempo node)
@@ -125,6 +130,7 @@ public enum AnalysisProgress: Sendable {
     case cues
     case waveform
     case embedding
+    case openL3Embedding
     case complete
 }
 
@@ -138,17 +144,21 @@ public final class Analyzer: @unchecked Sendable {
     private let sectionDetector: SectionDetector
     private let cueGenerator: CueGenerator
     private let embeddingGenerator: EmbeddingGenerator
+    private let openL3Embedder: OpenL3Embedder
 
     // Configuration
     private let targetSampleRate: Double
     private let waveformBins: Int
+    private let enableOpenL3: Bool
 
     public init(
         sampleRate: Double = 48000,
-        waveformBins: Int = 200
+        waveformBins: Int = 200,
+        enableOpenL3: Bool = true
     ) {
         self.targetSampleRate = sampleRate
         self.waveformBins = waveformBins
+        self.enableOpenL3 = enableOpenL3
 
         // Initialize components
         self.decoder = AudioDecoder(targetSampleRate: sampleRate, mono: true)
@@ -159,7 +169,11 @@ public final class Analyzer: @unchecked Sendable {
         self.sectionDetector = SectionDetector(sampleRate: sampleRate)
         self.cueGenerator = CueGenerator(maxCues: 8)
         self.embeddingGenerator = EmbeddingGenerator(sampleRate: sampleRate)
+        self.openL3Embedder = OpenL3Embedder()
     }
+
+    /// Check if OpenL3 model is available
+    public var openL3Available: Bool { openL3Embedder.isAvailable }
 
     /// Analyze a track file
     public func analyze(
@@ -221,6 +235,13 @@ public final class Analyzer: @unchecked Sendable {
         progress?(.embedding)
         let embedding = embeddingGenerator.generate(samples)
 
+        // 10. Generate OpenL3 embedding (if enabled)
+        var openL3Embedding: OpenL3Embedding? = nil
+        if enableOpenL3 {
+            progress?(.openL3Embedding)
+            openL3Embedding = openL3Embedder.generate(samples)
+        }
+
         progress?(.complete)
 
         return TrackAnalysisResult(
@@ -246,7 +267,8 @@ public final class Analyzer: @unchecked Sendable {
             safeStartBeat: cueResult.safeStartBeat,
             safeEndBeat: cueResult.safeEndBeat,
             waveformSummary: waveformSummary,
-            embedding: embedding
+            embedding: embedding,
+            openL3Embedding: openL3Embedding
         )
     }
 

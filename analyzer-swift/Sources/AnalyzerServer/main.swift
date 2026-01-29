@@ -68,6 +68,8 @@ struct Analyze: AsyncParsableCommand {
                     FileHandle.standardError.write("Generating waveform...\n".data(using: .utf8)!)
                 case .embedding:
                     FileHandle.standardError.write("Generating audio embedding...\n".data(using: .utf8)!)
+                case .openL3Embedding:
+                    FileHandle.standardError.write("Generating OpenL3 embedding (512-dim)...\n".data(using: .utf8)!)
                 case .complete:
                     FileHandle.standardError.write("Complete!\n".data(using: .utf8)!)
                 }
@@ -102,7 +104,7 @@ struct Analyze: AsyncParsableCommand {
     }
 
     private func encodeSummary(_ result: TrackAnalysisResult) -> String {
-        """
+        var summary = """
         Track: \(result.path)
         Duration: \(String(format: "%.1f", result.duration))s
         BPM: \(String(format: "%.1f", result.bpm)) (confidence: \(String(format: "%.0f%%", result.beatgridConfidence * 100)))
@@ -113,6 +115,12 @@ struct Analyze: AsyncParsableCommand {
         Cues: \(result.cues.count)
         Embedding: \(result.embedding.vector.count)-dim vector (centroid: \(String(format: "%.0f", result.embedding.spectralCentroid)) Hz)
         """
+
+        if let openL3 = result.openL3Embedding {
+            summary += "\nOpenL3: \(openL3.vector.count)-dim vector (\(openL3.windowCount) windows)"
+        }
+
+        return summary
     }
 }
 
@@ -324,6 +332,7 @@ struct AnalysisJSON: Codable {
     let cues: [CueJSON]
     let waveformSummary: [Float]
     let embedding: EmbeddingJSON
+    let openL3Embedding: OpenL3EmbeddingJSON?
 
     init(from result: TrackAnalysisResult) {
         self.path = result.path
@@ -337,6 +346,7 @@ struct AnalysisJSON: Codable {
         self.cues = result.cues.map { CueJSON(from: $0) }
         self.waveformSummary = result.waveformSummary
         self.embedding = EmbeddingJSON(from: result.embedding)
+        self.openL3Embedding = result.openL3Embedding.map { OpenL3EmbeddingJSON(from: $0) }
     }
 }
 
@@ -423,6 +433,30 @@ struct EmbeddingJSON: Codable {
         self.spectralFlatness = embedding.spectralFlatness
         self.tempoStability = embedding.tempoStability
         self.harmonicRatio = embedding.harmonicRatio
+    }
+}
+
+struct OpenL3EmbeddingJSON: Codable {
+    let vector: [Float]
+    let windowCount: Int
+    let windows: [OpenL3WindowJSON]?
+
+    init(from embedding: OpenL3Embedding) {
+        self.vector = embedding.vector
+        self.windowCount = embedding.windowCount
+        // Only include first 10 windows to keep JSON size reasonable
+        self.windows = embedding.windows.prefix(10).map { OpenL3WindowJSON(from: $0) }
+    }
+}
+
+struct OpenL3WindowJSON: Codable {
+    let timestamp: Double
+    let duration: Double
+    // Omit vector to save space - use track-level vector for similarity
+
+    init(from window: OpenL3WindowEmbedding) {
+        self.timestamp = window.timestamp
+        self.duration = window.duration
     }
 }
 
