@@ -6,13 +6,48 @@
 
 **Apple Silicon–native DJ prep tool: analyze, cue, transition, export — all local.**
 
-| | | | |
-|:---:|:---:|:---:|:---:|
-| **Status** | [![Phase](https://img.shields.io/badge/alpha-blueviolet?style=for-the-badge)](#alpha-features) | [![Version](https://img.shields.io/badge/v0.1.0-blue?style=for-the-badge)](#changelog) | [![Local-First](https://img.shields.io/badge/local--first-success?style=for-the-badge)](#what-this-is) |
-| **Platform** | [![Apple Silicon](https://img.shields.io/badge/M1--M5-000000?style=for-the-badge&logo=apple&logoColor=white)](#apple-silicon-only) | [![ANE](https://img.shields.io/badge/Neural%20Engine-FF9500?style=for-the-badge&logo=apple&logoColor=white)](#hardware-acceleration-m1-m5) | [![Metal](https://img.shields.io/badge/Metal%20GPU-147EFB?style=for-the-badge&logo=apple&logoColor=white)](#hardware-acceleration-m1-m5) |
-| **Backend** | [![Go](https://img.shields.io/badge/Go%201.24-00ADD8?style=for-the-badge&logo=go&logoColor=white)](#architecture) | [![Swift](https://img.shields.io/badge/Swift%206-F05138?style=for-the-badge&logo=swift&logoColor=white)](#architecture) | [![gRPC](https://img.shields.io/badge/gRPC-4285F4?style=for-the-badge&logo=google&logoColor=white)](#architecture) |
-| **Frontend** | [![React](https://img.shields.io/badge/React%2019-61DAFB?style=for-the-badge&logo=react&logoColor=black)](#architecture) | [![D3.js](https://img.shields.io/badge/D3.js%207-F9A03C?style=for-the-badge&logo=d3.js&logoColor=white)](#pro-visualizations) | [![Framer](https://img.shields.io/badge/Framer%20Motion-0055FF?style=for-the-badge&logo=framer&logoColor=white)](#pro-visualizations) |
-| **Quality** | [![Tests](https://img.shields.io/badge/Go%20%7C%20Playwright-FF69B4?style=for-the-badge)](#developer-loop) | [![Docs](https://img.shields.io/badge/PLAN.md-8E43E7?style=for-the-badge)](docs/PLAN.md) | [![License](https://img.shields.io/badge/Blue%20Oak-lightgray?style=for-the-badge)](LICENSE) |
+<!-- Status & Version -->
+[![Phase](https://img.shields.io/badge/alpha-blueviolet?style=for-the-badge)](#alpha-features)
+[![Version](https://img.shields.io/badge/v0.1.0-blue?style=for-the-badge)](#changelog)
+[![Local-First](https://img.shields.io/badge/local--first-success?style=for-the-badge)](#what-this-is)
+[![Privacy](https://img.shields.io/badge/100%25%20Local-222222?style=for-the-badge&logo=lock&logoColor=white)](#what-this-is)
+[![Offline](https://img.shields.io/badge/Offline%20Ready-00C853?style=for-the-badge)](#why-its-different)
+
+<!-- Apple Silicon Platform -->
+[![Apple Silicon](https://img.shields.io/badge/Apple%20Silicon-000000?style=for-the-badge&logo=apple&logoColor=white)](#apple-silicon-only)
+[![M1–M5](https://img.shields.io/badge/M1--M5%20Native-000000?style=for-the-badge&logo=apple&logoColor=white)](#apple-silicon-only)
+[![ANE](https://img.shields.io/badge/Neural%20Engine-FF9500?style=for-the-badge&logo=apple&logoColor=white)](#hardware-acceleration-m1-m5)
+[![Metal](https://img.shields.io/badge/Metal%20GPU-147EFB?style=for-the-badge&logo=apple&logoColor=white)](#hardware-acceleration-m1-m5)
+[![Accelerate](https://img.shields.io/badge/Accelerate%20vDSP-FF2D55?style=for-the-badge&logo=apple&logoColor=white)](#hardware-acceleration-m1-m5)
+[![Core ML](https://img.shields.io/badge/Core%20ML-34C759?style=for-the-badge&logo=apple&logoColor=white)](#hardware-acceleration-m1-m5)
+
+<!-- Backend Stack -->
+[![Go](https://img.shields.io/badge/Go%201.24-00ADD8?style=for-the-badge&logo=go&logoColor=white)](#architecture)
+[![Swift](https://img.shields.io/badge/Swift%206-F05138?style=for-the-badge&logo=swift&logoColor=white)](#architecture)
+[![gRPC](https://img.shields.io/badge/gRPC-4285F4?style=for-the-badge&logo=google&logoColor=white)](#architecture)
+[![SQLite](https://img.shields.io/badge/SQLite%20WAL-003B57?style=for-the-badge&logo=sqlite&logoColor=white)](#architecture)
+[![Protobuf](https://img.shields.io/badge/Protobuf-4285F4?style=for-the-badge&logo=google&logoColor=white)](#architecture)
+
+<!-- Frontend Stack -->
+[![React](https://img.shields.io/badge/React%2019-61DAFB?style=for-the-badge&logo=react&logoColor=black)](#architecture)
+[![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](#architecture)
+[![Vite](https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white)](#architecture)
+[![D3.js](https://img.shields.io/badge/D3.js%207-F9A03C?style=for-the-badge&logo=d3.js&logoColor=white)](#pro-visualizations)
+[![Framer Motion](https://img.shields.io/badge/Framer%20Motion-0055FF?style=for-the-badge&logo=framer&logoColor=white)](#pro-visualizations)
+[![Zustand](https://img.shields.io/badge/Zustand%205-443E38?style=for-the-badge)](#pro-visualizations)
+
+<!-- Audio Formats -->
+[![WAV](https://img.shields.io/badge/WAV-8B5CF6?style=for-the-badge)](#feature-highlights)
+[![AIFF](https://img.shields.io/badge/AIFF-8B5CF6?style=for-the-badge)](#feature-highlights)
+[![MP3](https://img.shields.io/badge/MP3-8B5CF6?style=for-the-badge)](#feature-highlights)
+[![AAC](https://img.shields.io/badge/AAC-8B5CF6?style=for-the-badge)](#feature-highlights)
+[![ALAC](https://img.shields.io/badge/ALAC-8B5CF6?style=for-the-badge)](#feature-highlights)
+[![FLAC](https://img.shields.io/badge/FLAC-8B5CF6?style=for-the-badge)](#feature-highlights)
+
+<!-- Quality & Docs -->
+[![Tests](https://img.shields.io/badge/Go%20%7C%20Playwright-FF69B4?style=for-the-badge)](#developer-loop)
+[![Docs](https://img.shields.io/badge/PLAN.md-8E43E7?style=for-the-badge)](docs/PLAN.md)
+[![License](https://img.shields.io/badge/Blue%20Oak-lightgray?style=for-the-badge)](LICENSE)
 
 <br/>
 
@@ -370,8 +405,6 @@ PRs welcome! Keep commits scoped and include:
 - Repro steps for bugs
 - Expected vs actual behavior
 - Test coverage for new features
-
-For Conductor support, email humans@conductor.build.
 
 ## Changelog
 
