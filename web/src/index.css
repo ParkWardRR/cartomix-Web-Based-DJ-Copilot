@@ -1156,3 +1156,294 @@ body {
     grid-template-columns: 1fr;
   }
 }
+
+/* Audio Player */
+.audio-player {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--color-bg-tertiary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  margin-bottom: 0.5rem;
+}
+
+.player-controls {
+  display: flex;
+  gap: 0.25rem;
+  flex-shrink: 0;
+}
+
+.player-btn {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-text);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.player-btn:hover:not(:disabled) {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+  color: white;
+}
+
+.player-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.player-btn.playing {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: white;
+}
+
+.player-icon {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: -1px;
+}
+
+.play-icon {
+  margin-left: 2px;
+}
+
+.player-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--color-border);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.player-timeline {
+  flex: 1;
+  height: 24px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+}
+
+.timeline-track {
+  width: 100%;
+  height: 6px;
+  background: var(--color-bg);
+  border-radius: 3px;
+  position: relative;
+  overflow: visible;
+}
+
+.timeline-progress {
+  height: 100%;
+  background: linear-gradient(90deg, var(--color-primary), var(--color-accent));
+  border-radius: 3px;
+  transition: width 0.05s linear;
+}
+
+.timeline-playhead {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 12px;
+  height: 12px;
+  background: var(--color-accent);
+  border: 2px solid var(--color-bg-secondary);
+  border-radius: 50%;
+  box-shadow: 0 0 8px rgba(167, 139, 250, 0.5);
+  transition: left 0.05s linear;
+}
+
+.player-time {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.7rem;
+  font-family: 'SF Mono', Monaco, monospace;
+  color: var(--color-text-secondary);
+  flex-shrink: 0;
+  min-width: 70px;
+}
+
+.time-current {
+  color: var(--color-text);
+}
+
+.time-separator {
+  color: var(--color-text-muted);
+}
+
+.player-speed {
+  display: flex;
+  gap: 0.15rem;
+  flex-shrink: 0;
+}
+
+.speed-btn {
+  padding: 0.2rem 0.35rem;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-muted);
+  font-size: 0.6rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.speed-btn:hover {
+  border-color: var(--color-primary);
+  color: var(--color-text);
+}
+
+.speed-btn.active {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: white;
+}
+
+.player-error {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-error);
+  border-radius: 50%;
+  color: white;
+  font-size: 0.7rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+/* Waveform enhancements */
+.waveform {
+  position: relative;
+  height: 80px;
+  background: var(--color-bg-tertiary);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.energy-arc {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 100%;
+  padding: 8px;
+}
+
+.energy-bar {
+  flex: 1;
+  min-width: 2px;
+  background: var(--color-waveform);
+  border-radius: 1px;
+  transition: background-color 0.1s ease;
+}
+
+.energy-bar.played {
+  background: var(--color-waveform-played);
+}
+
+.waveform-playhead {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--color-accent);
+  box-shadow: 0 0 8px var(--color-accent);
+  pointer-events: none;
+  transition: left 0.05s linear;
+  z-index: 10;
+}
+
+.waveform-playhead::before {
+  content: '';
+  position: absolute;
+  top: -4px;
+  left: -4px;
+  width: 10px;
+  height: 10px;
+  background: var(--color-accent);
+  border-radius: 50%;
+  border: 2px solid var(--color-bg-secondary);
+}
+
+/* Section pills */
+.pill-section {
+  font-weight: 600;
+}
+
+.pill-section.intro {
+  background: var(--color-section-intro);
+  border-color: #22c55e;
+  color: #22c55e;
+}
+
+.pill-section.verse {
+  background: rgba(59, 130, 246, 0.2);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.pill-section.chorus,
+.pill-section.drop {
+  background: var(--color-section-drop);
+  border-color: #ef4444;
+  color: #ef4444;
+}
+
+.pill-section.breakdown {
+  background: var(--color-section-breakdown);
+  border-color: #a855f7;
+  color: #a855f7;
+}
+
+.pill-section.outro {
+  background: var(--color-section-outro);
+  border-color: #eab308;
+  color: #eab308;
+}
+
+/* Cue list enhancements */
+.cue-list li {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.3rem 0;
+}
+
+.cue-list li.active {
+  background: rgba(167, 139, 250, 0.15);
+  border-radius: var(--radius-sm);
+  margin: 0 -0.25rem;
+  padding: 0.3rem 0.25rem;
+}
+
+.cue-color {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.cue-info {
+  flex: 1;
+  font-size: 0.7rem;
+  color: var(--color-text-secondary);
+}
+
+/* Track detail card */
+.track-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}

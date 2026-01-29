@@ -20,8 +20,8 @@
 - [x] Section detection (intro/verse/build/drop/breakdown/outro) + transition windows.
 - [x] Key detection (Krumhansl-Schmuckler chroma profiles) + Camelot/Open Key mapping; energy global + sectional curve.
 - [x] Cue generator (max 8, beat-aligned, priority-based with safety bounds).
-- [ ] Embeddings/similarity vector for "vibe" continuity (stub model first).
-- [ ] Loudness (EBU R128) + true peak.
+- [x] Embeddings/similarity vector for "vibe" continuity (128-dim MFCC-like features with cosine similarity).
+- [x] Loudness (EBU R128) + true peak (K-weighting filters, integrated/momentary/short-term loudness).
 
 ## Swift accel worker
 
@@ -91,7 +91,7 @@
 - [x] Pro UI with visualizations ready for alpha demo.
 - [x] Updated README with alpha features, architecture, and changelog.
 - [ ] Versioning/analysis cache migration strategy; backup/export of DB.
-- [ ] Minimal docs: quickstart, API surface, test corpus instructions.
+- [x] Minimal docs: quickstart, API surface, test corpus instructions.
 - [ ] Alpha acceptance checklist: import 100 tracks, analyze, build 30-track set, rehearse transitions, export to Rekordbox/Serato/Traktor without manual metadata fixes.
 
 ---
@@ -117,9 +117,7 @@
 
 ### Next (Beta)
 - Core ML integration for ANE inference
-- gRPC server integration for Swift analyzer
-- Web Audio playback UI integration (hook complete, UI pending)
-- Embeddings/similarity vector for vibe continuity
+- gRPC server integration for Swift analyzer (HTTP server complete)
 - CI pipeline for macOS (go/swift/unit/property + E2E)
 
 ### Recently Completed (Post-Alpha)
@@ -148,3 +146,11 @@
 - Golden comparison tests for Traktor NML export
 - Export round-trip validation with checksums
 - Web Audio useAudioPlayer hook for browser playback
+
+### Audio Analysis (v0.3.0-beta)
+- EBU R128 loudness analyzer with K-weighting filters
+- Integrated, momentary, short-term loudness + true peak measurement
+- 128-dimensional audio embeddings with MFCC-like features
+- Vibe similarity scoring for DJ set continuity
+- Spectral centroid, rolloff, flatness, and harmonic ratio features
+- Web Audio integration into TrackDetail UI component

@@ -7,8 +7,8 @@
 **Apple Silicon–native DJ prep tool: analyze, cue, transition, export — all local.**
 
 <!-- Status & Version -->
-[![Phase](https://img.shields.io/badge/alpha-blueviolet?style=for-the-badge)](#alpha-features)
-[![Version](https://img.shields.io/badge/v0.1.0-blue?style=for-the-badge)](#changelog)
+[![Phase](https://img.shields.io/badge/beta-blueviolet?style=for-the-badge)](#beta-features)
+[![Version](https://img.shields.io/badge/v0.3.0-blue?style=for-the-badge)](#changelog)
 [![Local-First](https://img.shields.io/badge/local--first-success?style=for-the-badge)](#what-this-is)
 [![Privacy](https://img.shields.io/badge/100%25%20Local-222222?style=for-the-badge&logo=lock&logoColor=white)](#what-this-is)
 [![Offline](https://img.shields.io/badge/Offline%20Ready-00C853?style=for-the-badge)](#why-its-different)
@@ -24,7 +24,8 @@
 <!-- Backend Stack -->
 [![Go](https://img.shields.io/badge/Go%201.24-00ADD8?style=for-the-badge&logo=go&logoColor=white)](#architecture)
 [![Swift](https://img.shields.io/badge/Swift%206-F05138?style=for-the-badge&logo=swift&logoColor=white)](#architecture)
-[![gRPC](https://img.shields.io/badge/gRPC-4285F4?style=for-the-badge&logo=google&logoColor=white)](#architecture)
+[![gRPC](https://img.shields.io/badge/gRPC-4285F4?style=for-the-badge&logo=google&logoColor=white)](#communication-protocols)
+[![HTTP](https://img.shields.io/badge/HTTP%20REST-009688?style=for-the-badge)](#communication-protocols)
 [![SQLite](https://img.shields.io/badge/SQLite%20WAL-003B57?style=for-the-badge&logo=sqlite&logoColor=white)](#architecture)
 [![Protobuf](https://img.shields.io/badge/Protobuf-4285F4?style=for-the-badge&logo=google&logoColor=white)](#architecture)
 
@@ -32,6 +33,7 @@
 [![React](https://img.shields.io/badge/React%2019-61DAFB?style=for-the-badge&logo=react&logoColor=black)](#architecture)
 [![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](#architecture)
 [![Vite](https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white)](#architecture)
+[![Web Audio](https://img.shields.io/badge/Web%20Audio-FF6B6B?style=for-the-badge)](#web-audio-playback)
 [![D3.js](https://img.shields.io/badge/D3.js%207-F9A03C?style=for-the-badge&logo=d3.js&logoColor=white)](#pro-visualizations)
 [![Framer Motion](https://img.shields.io/badge/Framer%20Motion-0055FF?style=for-the-badge&logo=framer&logoColor=white)](#pro-visualizations)
 [![Zustand](https://img.shields.io/badge/Zustand%205-443E38?style=for-the-badge)](#pro-visualizations)
@@ -46,7 +48,7 @@
 
 <!-- Quality & Docs -->
 [![Tests](https://img.shields.io/badge/Go%20%7C%20Playwright-FF69B4?style=for-the-badge)](#developer-loop)
-[![Docs](https://img.shields.io/badge/PLAN.md-8E43E7?style=for-the-badge)](docs/PLAN.md)
+[![Docs](https://img.shields.io/badge/API.md-8E43E7?style=for-the-badge)](docs/API.md)
 [![License](https://img.shields.io/badge/Blue%20Oak-lightgray?style=for-the-badge)](LICENSE)
 
 <br/>
@@ -63,18 +65,20 @@
 
 ## Table of Contents
 - [What This Is](#what-this-is)
-- [Alpha Features](#alpha-features)
+- [Beta Features](#beta-features)
 - [Pro Visualizations](#pro-visualizations)
 - [Why It's Different](#why-its-different)
 - [Apple Silicon Only](#apple-silicon-only)
 - [Hardware Acceleration (M1–M5)](#hardware-acceleration-m1-m5)
 - [Feature Highlights](#feature-highlights)
 - [Architecture](#architecture)
+- [Communication Protocols](#communication-protocols)
 - [Screenshots](#screenshots)
 - [Quick Start](#quick-start)
 - [Developer Loop](#developer-loop)
 - [Project Layout](#project-layout)
 - [Roadmap](#roadmap)
+- [API Reference](#api-reference)
 - [Contributing](#contributing)
 - [License](#license)
 
@@ -84,14 +88,22 @@ A local-first copilot for DJ set prep. It ingests your library, detects structur
 
 **Key Principles:**
 - End-to-end local: no cloud lock-in; audio never leaves your Mac
-- Apple-accelerated DSP: tempo, key, and energy analysis run on Metal + Accelerate
+- Apple-accelerated DSP: tempo, key, loudness, and energy analysis run on Metal + Accelerate
 - AI where it helps: ANE-powered models suggest cues/sections but every choice is editable
 - Explainable transitions: every proposed segue cites tempo delta, key distance, energy window overlap, and beat-grid alignment
+- Vibe continuity: 128-dimensional audio embeddings find tracks that "feel" similar
 
-## Alpha Features
+## Beta Features
 
-v0.1.0-alpha brings the first complete UI with professional-grade visualizations:
+v0.3.0-beta brings professional audio analysis with broadcast-standard loudness measurement:
 
+### Audio Analysis
+- **EBU R128 Loudness** — Broadcast-standard loudness (LUFS, LU, true peak) with K-weighting filters
+- **Audio Embeddings** — 128-dimensional vectors for "vibe" similarity matching
+- **Spectral Features** — Centroid, rolloff, flatness, harmonic ratio for timbre analysis
+- **Web Audio Playback** — Full browser-based audio with play/pause/seek/speed controls
+
+### UI & Visualization
 - **Live Dashboard** — Animated stats with real-time analysis progress, BPM/key distribution charts
 - **Canvas Waveform Renderer** — High-performance waveform with section overlays, cue markers, playhead, and beat grid
 - **Real-time Spectrum Analyzer** — WebGL-style frequency visualization with mirror mode
@@ -99,6 +111,12 @@ v0.1.0-alpha brings the first complete UI with professional-grade visualizations
 - **Transition Graph** — D3.js force-directed graph showing track connections and flow
 - **Three-View Layout** — Library, Set Builder, and Graph View modes
 - **Dark Mode Default** — Pro-first dark theme with light mode toggle
+
+### Export Formats
+- **Rekordbox XML** — Full DJ_PLAYLISTS schema with cues, tempo markers, and key
+- **Serato crate** — Binary .crate format with supplementary cues CSV
+- **Traktor NML** — Complete NML v19 export with CUE_V2 markers
+- **Generic** — M3U8, JSON, CSV, SHA256 checksums, tar.gz bundles
 
 ## Pro Visualizations
 
@@ -112,12 +130,14 @@ Built with high-performance libraries for smooth 60fps rendering:
 | **Transition Graph** | D3.js Force | Interactive force-directed graph with zoom/pan/drag |
 | **BPM/Key Charts** | D3.js | Animated bar charts with hover tooltips |
 | **Live Stats** | Framer Motion | Spring-animated number counters and progress rings |
+| **Audio Player** | Web Audio API | Full playback with timeline, seek, speed control |
 
 **Libraries Used:**
 - **D3.js 7** — Data visualization and force simulation
 - **Framer Motion 11** — Spring physics animations and gestures
 - **React Virtuoso 4** — Virtualized list rendering (ready for large libraries)
 - **Zustand 5** — Lightweight state management
+- **Web Audio API** — Browser-native audio playback with AudioContext
 
 ## Why It's Different
 
@@ -128,6 +148,8 @@ Built with high-performance libraries for smooth 60fps rendering:
 | **Control** | Every edit is yours | AI decides for you |
 | **Explainability** | Shows why transitions work | Black box |
 | **Offline** | Works without internet | Requires connection |
+| **Loudness** | Broadcast-standard EBU R128 | Inconsistent metering |
+| **Similarity** | 128-dim embeddings for vibe matching | Genre tags only |
 
 ## Apple Silicon Only
 
@@ -142,7 +164,7 @@ Built with high-performance libraries for smooth 60fps rendering:
 |--------|----------|----------------|
 | **ANE (Neural Engine)** | Section classification, energy models, downbeat confidence | Core ML with ANE preference |
 | **Metal (GPU)** | Real-time spectrograms, onset detection, waveform tiling | Metal Performance Shaders |
-| **Accelerate (vDSP/BLAS)** | FFT for beatgrid, harmonic key detection | Vectorized SIMD operations |
+| **Accelerate (vDSP/BLAS)** | FFT, K-weighting, beatgrid, key detection, embeddings | Vectorized SIMD operations |
 | **Unified Memory** | Zero-copy data sharing between CPU/GPU/ANE | Chunked streaming pipelines |
 
 ## Feature Highlights
@@ -154,27 +176,33 @@ Built with high-performance libraries for smooth 60fps rendering:
 - Search by title, artist, or key
 
 ### Analysis
-- Beatgrid detection (static + dynamic tempo maps)
-- Key detection with Camelot wheel mapping
-- Energy level (1-10) with per-section curves
-- Section detection (Intro/Break/Build/Drop/Outro)
-- Up to 8 cue suggestions per track with confidence scores
+- **Beatgrid** — Static + dynamic tempo maps with confidence scoring
+- **Key Detection** — Krumhansl-Schmuckler with Camelot wheel mapping
+- **Energy** — 1-10 scale with per-section curves and band breakdown (low/mid/high)
+- **Loudness** — EBU R128 integrated, momentary, short-term, loudness range, true peak
+- **Sections** — Intro/Verse/Build/Drop/Breakdown/Outro with confidence
+- **Cues** — Up to 8 beat-aligned suggestions with priority scoring
+- **Embeddings** — 128-dimensional similarity vectors for vibe matching
 
 ### Set Planning
 - Weighted graph optimization with explainable scoring
 - Set modes: Warm-up, Peak-time, Open-format
 - Edge explanations: tempo delta, key relation, energy flow
 - Transition window matching (intro→outro overlap)
+- **Vibe continuity** scoring using audio embeddings
 
 ### Export
-- M3U8 playlist
-- Analysis JSON with full track data
-- Cues CSV with beat/time indices
-- SHA256 checksum manifest
-- Ready-to-share tar.gz bundles
-- **Rekordbox XML** - Full DJ_PLAYLISTS schema with cues, tempo markers, and key
-- **Serato crate** - Binary .crate format with supplementary cues CSV
-- **Traktor NML** - Complete NML v19 export with CUE_V2 markers
+- **Generic** — M3U8, JSON, CSV, SHA256 checksums, tar.gz bundles
+- **Rekordbox** — Full DJ_PLAYLISTS XML with cues, tempo markers, key
+- **Serato** — Binary .crate format with cues CSV
+- **Traktor** — NML v19 with CUE_V2 markers
+
+### Web Audio Playback
+- Browser-native audio with AudioContext and AudioBufferSourceNode
+- Play/pause/stop/seek controls
+- Variable playback speed (0.5x – 1.5x)
+- Timeline with draggable playhead
+- Synced with waveform visualization
 
 ## Architecture
 
@@ -186,22 +214,28 @@ flowchart LR
       direction TB
       REACT["React 19 + TypeScript"]
       VIZ["D3.js / Framer Motion"]
+      AUDIO["Web Audio API"]
       REACT --> VIZ
+      REACT --> AUDIO
     end
 
     subgraph ENGINE["Go Engine (1.24+)"]
       direction TB
+      HTTP["HTTP REST API"]
       GRPC["gRPC Server"]
       SCHED["Job Scheduler"]
       PLAN["Set Planner"]
       EXPORT["Exporters"]
-      GRPC --> SCHED --> PLAN --> EXPORT
+      HTTP --> SCHED
+      GRPC --> SCHED
+      SCHED --> PLAN --> EXPORT
     end
 
     subgraph ANALYZER["Swift Analyzer"]
       direction TB
       DSP["Accelerate vDSP"]
-      METAL["Metal GPU"]
+      LOUD["Loudness (R128)"]
+      EMBED["Embeddings"]
       ANE["Core ML / ANE"]
     end
 
@@ -211,25 +245,102 @@ flowchart LR
       BLOBS["Blob Store"]
     end
 
-    UI <-->|"gRPC-web"| ENGINE
-    ENGINE <-->|"gRPC"| ANALYZER
+    UI <-->|"HTTP REST"| ENGINE
+    ENGINE <-->|"HTTP / gRPC"| ANALYZER
     ENGINE <--> DATA
     ANALYZER --> DATA
 ```
 
 **How it works:**
 
-1. **Frontend** — React UI sends commands (scan library, plan set, export) via gRPC-web / HTTP API
+1. **Frontend** — React UI sends commands via HTTP REST (scan library, plan set, export)
 2. **Go Engine** — Coordinates jobs, runs the weighted-graph set planner, handles exports
-3. **Swift Analyzer** — Performs DSP analysis using Apple frameworks (Accelerate, Metal, Core ML)
+3. **Swift Analyzer** — DSP analysis using Apple frameworks (Accelerate, Metal, Core ML)
 4. **Storage** — SQLite for metadata, blob store for waveform tiles and embeddings
 
 | Layer | Tech | Role |
 |-------|------|------|
-| **Frontend** | React 19, TypeScript, Vite, D3.js, Framer Motion | Interactive UI with real-time visualizations |
-| **Engine** | Go 1.24, gRPC, Protobuf | API server, job scheduling, set planning, exports |
-| **Analyzer** | Swift 6, Accelerate, Metal, Core ML | Audio DSP and ML inference on ANE/GPU |
-| **Storage** | SQLite (WAL mode) | Track metadata, analysis results, waveform tiles |
+| **Frontend** | React 19, TypeScript, Vite, D3.js, Web Audio | Interactive UI with audio playback |
+| **Engine** | Go 1.24, HTTP/gRPC, Protobuf | API server, job scheduling, set planning |
+| **Analyzer** | Swift 6, Accelerate, Metal, Core ML | Audio DSP, loudness, embeddings |
+| **Storage** | SQLite (WAL mode) | Track metadata, analysis results |
+
+## Communication Protocols
+
+### Why HTTP REST (Current)
+
+The web UI and Swift analyzer currently use **HTTP REST** for communication:
+
+```
+┌─────────┐       HTTP/JSON        ┌──────────┐       HTTP/JSON       ┌────────────┐
+│ Web UI  │ ◄──────────────────► │ Go Engine│ ◄───────────────────► │Swift Analzr│
+│ (React) │    /api/tracks         │  (Go)    │    /analyze           │  (Swift)   │
+└─────────┘    /api/export         └──────────┘    /health             └────────────┘
+```
+
+**Advantages of HTTP REST:**
+- **Simplicity** — Easy to debug with curl, browser DevTools, Postman
+- **Browser-native** — No additional libraries needed (fetch API)
+- **Firewall-friendly** — Works on port 80/443 without special configuration
+- **Human-readable** — JSON responses are easy to inspect and log
+- **Quick iteration** — Faster to prototype without code generation
+
+### Why gRPC (Future)
+
+gRPC is planned for production deployments with high-throughput requirements:
+
+```
+┌─────────┐      gRPC-web          ┌──────────┐        gRPC          ┌────────────┐
+│ Web UI  │ ◄──────────────────► │ Go Engine│ ◄───────────────────► │Swift Analzr│
+│ (React) │   binary protobuf     │  (Go)    │    binary protobuf    │  (Swift)   │
+└─────────┘   multiplexed         └──────────┘    streaming          └────────────┘
+```
+
+**Advantages of gRPC:**
+- **Performance** — Binary protobuf is 3-10x smaller than JSON
+- **Streaming** — Native support for real-time progress updates
+- **Type Safety** — Generated stubs catch errors at compile time
+- **Multiplexing** — Multiple RPC calls over one HTTP/2 connection
+- **Bi-directional** — Server can push updates without polling
+
+### Protocol Comparison
+
+| Aspect | HTTP REST | gRPC |
+|--------|-----------|------|
+| **Encoding** | JSON (text) | Protobuf (binary) |
+| **Size** | ~3-10x larger | Compact |
+| **Latency** | HTTP/1.1 connection per request | HTTP/2 multiplexed |
+| **Streaming** | Polling or WebSocket | Native bi-directional |
+| **Browser** | Native fetch | Requires gRPC-web proxy |
+| **Debugging** | Easy (curl, DevTools) | Needs specialized tools |
+| **Code Gen** | Optional | Required |
+| **Best For** | Web apps, rapid prototyping | Microservices, high throughput |
+
+### Current Implementation
+
+The codebase supports both protocols:
+
+```go
+// HTTP REST (internal/httpapi/)
+router.POST("/api/analyze", handleAnalyze)
+router.GET("/api/tracks", handleListTracks)
+router.POST("/api/export/rekordbox", handleExportRekordbox)
+
+// gRPC (internal/server/)
+func (s *EngineServer) AnalyzeTrack(ctx context.Context, req *pb.AnalyzeRequest) (*pb.TrackAnalysis, error)
+func (s *EngineServer) ProposeSet(ctx context.Context, req *pb.ProposeSetRequest) (*pb.SetPlan, error)
+```
+
+The Swift analyzer exposes both:
+```bash
+# HTTP (current - simple, works everywhere)
+./analyzer-swift serve --port 9090 --proto http
+
+# gRPC (future - for high-throughput pipelines)
+./analyzer-swift serve --port 9090 --proto grpc
+```
+
+**Recommendation:** Use HTTP REST for development and simple deployments. Switch to gRPC when you need streaming progress updates or are processing large libraries (1000+ tracks).
 
 ## Detailed Architecture
 
@@ -252,8 +363,10 @@ The Swift analyzer (`analyzer-swift`) is the core audio analysis engine, built w
 │   │ 48kHz SR │       │  STFT    │        │ BeatgridDet │                │
 │   │ Mono PCM │       │ Spectral │        │ KeyDetector │                │
 │   │ Float32  │       │  Flux    │        │ EnergyAnalz │                │
-│   └──────────┘       │ Chroma   │        │ SectionDet  │                │
-│                      └──────────┘        │ CueGenerator│                │
+│   └──────────┘       │ Chroma   │        │ LoudnessAnl │◄── EBU R128    │
+│                      └──────────┘        │ EmbeddingGn │◄── 128-dim     │
+│                                          │ SectionDet  │                │
+│                                          │ CueGenerator│                │
 │                                          └─────────────┘                │
 │                                                 │                        │
 │                                                 ▼                        │
@@ -261,8 +374,9 @@ The Swift analyzer (`analyzer-swift`) is the core audio analysis engine, built w
 │                                    │ TrackAnalysisResult │               │
 │                                    │  - beats, tempoMap  │               │
 │                                    │  - key (Camelot)    │               │
-│                                    │  - energy, sections │               │
-│                                    │  - cues, waveform   │               │
+│                                    │  - energy, loudness │               │
+│                                    │  - embedding (128d) │               │
+│                                    │  - sections, cues   │               │
 │                                    └────────────────────┘               │
 │                                                                          │
 └─────────────────────────────────────────────────────────────────────────┘
@@ -277,38 +391,58 @@ The Swift analyzer (`analyzer-swift`) is the core audio analysis engine, built w
 | **BeatgridDetector** | Accelerate | Onset detection via spectral flux + autocorrelation tempo estimation |
 | **KeyDetector** | Accelerate | Krumhansl-Schmuckler key profiles with chroma correlation |
 | **EnergyAnalyzer** | Accelerate | RMS/peak analysis, band energy (low/mid/high), energy curve |
+| **LoudnessAnalyzer** | Accelerate | EBU R128 with K-weighting, integrated/momentary/short-term loudness |
+| **EmbeddingGenerator** | Accelerate | 128-dim MFCC-like features for similarity matching |
 | **SectionDetector** | — | Energy segmentation for intro/verse/build/drop/breakdown/outro |
 | **CueGenerator** | — | Priority-based cue selection with beat alignment (max 8 cues) |
 
-#### Key Detection Algorithm
+#### Loudness Analysis (EBU R128)
+
+Broadcast-standard loudness measurement per ITU-R BS.1770-4:
 
 ```
-1. Extract chroma features from STFT (12 pitch classes)
-2. Average chroma vectors across all frames
-3. Correlate with Krumhansl-Schmuckler major/minor profiles
-4. For each pitch class (0-11):
-   - Rotate major profile by pitch class
-   - Rotate minor profile by pitch class
-   - Compute Pearson correlation
-5. Select key with highest correlation
-6. Output: pitchClass, isMinor, confidence
-7. Convert to Camelot (e.g., "8A") and Open Key (e.g., "1m") notation
+1. Apply K-weighting filters (high shelf + high-pass)
+2. Calculate mean square of K-weighted samples
+3. Compute loudness in 400ms blocks (momentary)
+4. Compute loudness in 3s blocks (short-term)
+5. Gate blocks below -70 LUFS (absolute)
+6. Gate blocks below relative threshold (-10 LU from ungated)
+7. Average gated blocks → Integrated Loudness (LUFS)
+8. Calculate Loudness Range (LRA) from short-term distribution
+9. Measure true peak via 4x oversampling
 ```
 
-#### Beatgrid Detection Algorithm
+Output:
+- **Integrated Loudness** — Overall loudness in LUFS (typical: -14 to -8 LUFS for music)
+- **Loudness Range** — Dynamic range in LU (typical: 4-12 LU for electronic music)
+- **Momentary Max** — Peak 400ms loudness
+- **Short-term Max** — Peak 3s loudness
+- **True Peak** — Maximum inter-sample peak in dBTP
+
+#### Audio Embeddings
+
+128-dimensional vectors for finding tracks with similar "vibe":
 
 ```
-1. Compute STFT spectrogram (2048-point FFT, 512-sample hop)
-2. Calculate spectral flux (half-wave rectified difference)
-3. Autocorrelation-based tempo estimation:
-   - Compute autocorrelation of onset strength signal
-   - Find peak in 60-180 BPM range
-4. Peak picking with adaptive threshold:
-   - Mean + 0.5 * standard deviation
-   - Minimum distance constraint (half beat interval)
-5. Grid alignment from first strong onset
-6. Output: beat markers with time, index, downbeat flag
+1. Compute STFT spectrogram (2048-point FFT, 1024-sample hop)
+2. Divide spectrum into 32 mel-like bands
+3. For each band, compute:
+   - Mean magnitude
+   - Standard deviation
+   - Delta (first derivative)
+   - Delta-delta (second derivative)
+4. Concatenate → 128 dimensions (32 bands × 4 stats)
+5. L2 normalize for cosine similarity
 ```
+
+Similarity metrics:
+- **Cosine Similarity** — Pure vector similarity (0-1)
+- **Vibe Similarity** — Weighted combination:
+  - 50% vector similarity
+  - 15% spectral centroid (brightness)
+  - 15% spectral flatness (tonal vs noisy)
+  - 10% harmonic ratio
+  - 10% zero crossing rate (percussiveness)
 
 ### Go Engine Architecture
 
@@ -333,6 +467,7 @@ The Go engine handles coordination, storage, and exports.
 │  │  - Key compatibility (Camelot wheel distance)                    │   │
 │  │  - Tempo delta penalty                                           │   │
 │  │  - Energy flow scoring (climb/drop preferences)                  │   │
+│  │  - Vibe similarity from embeddings                              │   │
 │  │  - Transition window overlap detection                           │   │
 │  │  - Set modes: Warm-up, Peak-time, Open-format                   │   │
 │  └─────────────────────────────────────────────────────────────────┘   │
@@ -352,7 +487,7 @@ The Go engine handles coordination, storage, and exports.
 
 ### Web UI Architecture
 
-React 19 + TypeScript with Zustand state management.
+React 19 + TypeScript with Zustand state management and Web Audio.
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
@@ -364,6 +499,7 @@ React 19 + TypeScript with Zustand state management.
 │  │  - tracks, trackMap, filteredTracks                             │   │
 │  │  - selectedId, viewMode, chartMode                              │   │
 │  │  - currentSetPlan with edges                                    │   │
+│  │  - isPlaying, playheadPosition (audio sync)                     │   │
 │  │  - API actions: fetchTracks, proposeSet, exportSet             │   │
 │  └─────────────────────────────────────────────────────────────────┘   │
 │                                    │                                     │
@@ -373,8 +509,23 @@ React 19 + TypeScript with Zustand state management.
 │  │  Library View  │     │  Set Builder   │     │   Graph View   │      │
 │  │  - LibraryGrid │     │  - SetBuilder  │     │ - TransitionGr │      │
 │  │  - TrackDetail │     │  - EnergyArc   │     │ - D3 force sim │      │
-│  │  - BPMKeyChart │     │  - ExportPanel │     │ - zoom/pan     │      │
-│  └────────────────┘     └────────────────┘     └────────────────┘      │
+│  │  - AudioPlayer │     │  - ExportPanel │     │ - zoom/pan     │      │
+│  │  - BPMKeyChart │     └────────────────┘     └────────────────┘      │
+│  └────────────────┘                                                     │
+│                                                                          │
+│  ┌─────────────────────────────────────────────────────────────────┐   │
+│  │                    Audio Playback (Web Audio)                    │   │
+│  │  ┌──────────────┐ ┌──────────────┐ ┌──────────────┐             │   │
+│  │  │ AudioContext │ │BufferSource  │ │  GainNode    │             │   │
+│  │  │ (singleton)  │ │ (per track)  │ │ (volume)     │             │   │
+│  │  └──────────────┘ └──────────────┘ └──────────────┘             │   │
+│  │  ┌──────────────────────────────────────────────────────────┐   │   │
+│  │  │ useAudioPlayer hook                                       │   │   │
+│  │  │  - loadTrack(url), play(), pause(), stop(), seek(time)   │   │   │
+│  │  │  - setPlaybackRate(0.5-1.5x)                              │   │   │
+│  │  │  - state: isPlaying, currentTime, duration, error         │   │   │
+│  │  └──────────────────────────────────────────────────────────┘   │   │
+│  └─────────────────────────────────────────────────────────────────┘   │
 │                                                                          │
 │  ┌─────────────────────────────────────────────────────────────────┐   │
 │  │                    Visualization Components                      │   │
@@ -383,6 +534,7 @@ React 19 + TypeScript with Zustand state management.
 │  │  │ Canvas 2D    │ │ Canvas 2D   │ │ SVG + Framer │             │   │
 │  │  │ sections     │ │ mirror/bars │ │ bezier curve │             │   │
 │  │  │ cues, beats  │ │ 60fps RAF   │ │ spring anim  │             │   │
+│  │  │ playhead sync│ │             │ │              │             │   │
 │  │  └──────────────┘ └──────────────┘ └──────────────┘             │   │
 │  └─────────────────────────────────────────────────────────────────┘   │
 │                                                                          │
@@ -401,46 +553,20 @@ React 19 + TypeScript with Zustand state management.
      ▼                ▼                 ▼                ▼
 ┌──────────┐     ┌──────────┐     ┌──────────┐     ┌──────────┐
 │WAV/MP3/  │     │TrackAnalz│     │ SQLite   │     │ Zustand  │
-│AAC/FLAC  │     │Result    │     │ + Blobs  │     │  Store   │
+│AAC/FLAC  │     │+ Loudness│     │ + Blobs  │     │ + Audio  │
+│          │     │+ Embedng │     │          │     │ Context  │
 └──────────┘     └──────────┘     └──────────┘     └──────────┘
 
 1. Library Scanner finds audio files, computes SHA256 content hash
-2. Swift Analyzer decodes audio, runs DSP pipeline
+2. Swift Analyzer decodes audio, runs DSP pipeline:
+   - Beatgrid, key, energy, loudness, embedding, sections, cues
 3. Analysis results stored in SQLite with WAL mode
 4. Web UI fetches via HTTP API, stores in Zustand
-5. User builds set, UI calls proposeSet API
-6. Planner returns ordered tracks with edge explanations
-7. Export generates Rekordbox/Serato/Traktor files
-```
-
-### Protocol Buffers
-
-Shared contracts between Go engine and Swift analyzer:
-
-```protobuf
-// proto/common/types.proto
-message TrackAnalysis {
-  TrackId id = 1;
-  double duration_seconds = 2;
-  Beatgrid beatgrid = 3;
-  MusicalKey key = 4;
-  int32 energy_global = 5;
-  repeated Section sections = 7;
-  repeated CuePoint cue_points = 8;
-  repeated TransitionWindow transition_windows = 9;
-}
-
-message MusicalKey {
-  string value = 1;      // "8A" (Camelot)
-  KeyFormat format = 2;  // CAMELOT or OPEN_KEY
-  float confidence = 3;
-}
-
-message Beatgrid {
-  repeated BeatMarker beats = 1;
-  repeated TempoMapNode tempo_map = 2;
-  float confidence = 3;
-}
+5. User can preview tracks with Web Audio playback
+6. User builds set, UI calls proposeSet API
+7. Planner returns ordered tracks with edge explanations
+   - Uses embedding similarity for vibe continuity
+8. Export generates Rekordbox/Serato/Traktor files
 ```
 
 ## Screenshots
@@ -460,31 +586,84 @@ message Beatgrid {
 
 ## Quick Start
 
+### Prerequisites
+
+- **macOS 13+** (Ventura or later)
+- **Apple Silicon** (M1/M2/M3/M4)
+- **Go 1.24+** — `brew install go`
+- **Node.js 22+** — `brew install node`
+- **Swift 6+** — Comes with Xcode Command Line Tools
+
+### Build & Run
+
 ```bash
 # Clone the repository
 git clone https://github.com/cartomix/algiers.git
 cd algiers
 
-# Install Go dependencies
-go mod download
+# 1. Build the Swift analyzer (required for audio analysis)
+cd analyzer-swift
+swift build -c release
+cd ..
 
-# Install web dependencies
+# 2. Install dependencies
+go mod download
 cd web && npm install && cd ..
 
-# Generate proto stubs (if modified)
-make proto
+# 3. Start all services (3 terminals)
 
-# Run tests
-make test
-
-# Start the engine (port 50051)
+# Terminal 1: Start the Go engine (port 50051 gRPC, 8080 HTTP)
 go run ./cmd/engine
 
-# Start the web UI (separate terminal)
+# Terminal 2: Start the Swift analyzer (port 9090)
+./analyzer-swift/.build/release/analyzer-swift serve --port 9090
+
+# Terminal 3: Start the web UI (port 5173)
 cd web && npm run dev
 ```
 
 Open http://localhost:5173 to see the UI.
+
+### Analyze a Single Track
+
+```bash
+# Analyze and print JSON (includes loudness + embedding)
+./analyzer-swift/.build/release/analyzer-swift "path/to/track.flac"
+
+# Show summary with loudness info
+./analyzer-swift/.build/release/analyzer-swift --format summary "path/to/track.flac"
+
+# Example output:
+# Track: path/to/track.flac
+# Duration: 369.6s
+# BPM: 117.2 (confidence: 100%)
+# Key: F# / 2B (confidence: 92%)
+# Energy: 7/10
+# Loudness: -14.0 LUFS (range: 3.7 LU, peak: 0.5 dBTP)
+# Sections: 7
+# Cues: 8
+# Embedding: 128-dim vector (centroid: 628 Hz)
+
+# Show progress during analysis
+./analyzer-swift/.build/release/analyzer-swift --progress "path/to/track.flac"
+```
+
+### Test Corpus Setup
+
+For testing with real audio files:
+
+```bash
+# Create test directory
+mkdir -p testdata/real-audio
+
+# Copy your test tracks (FLAC, MP3, WAV, AIFF, AAC, ALAC supported)
+cp ~/Music/*.flac testdata/real-audio/
+
+# Create a MANIFEST.md to document your test corpus
+# (see testdata/real-audio/MANIFEST.md for example)
+```
+
+Note: Audio files in `testdata/real-audio/` are gitignored.
 
 ## Developer Loop
 
@@ -523,7 +702,7 @@ For testing with real music (not committed to git):
 mkdir -p testdata/real-audio
 
 # Analyze with Swift analyzer
-.build/release/analyzer-swift analyze testdata/real-audio/*.flac --progress
+./analyzer-swift/.build/release/analyzer-swift analyze testdata/real-audio/*.flac --progress
 
 # Or scan with Go engine
 go run ./cmd/engine scan testdata/real-audio/
@@ -579,19 +758,38 @@ Screenshots at 1280x720 @2x (retina). GIF at 640px width, 12fps.
 ```
 .
 ├── cmd/
-│   ├── engine/          # Go gRPC server entrypoint
+│   ├── engine/          # Go gRPC/HTTP server entrypoint
 │   ├── exportverify/    # Checksum verification CLI
 │   ├── fixturegen/      # Test audio generator
 │   └── screenshots/     # Playwright-Go screenshot capture
 ├── analyzer-swift/      # Swift analyzer module (Metal + Core ML)
 │   ├── Package.swift
 │   └── Sources/
+│       ├── AnalyzerSwift/
+│       │   ├── Analysis/
+│       │   │   ├── BeatgridDetector.swift
+│       │   │   ├── KeyDetector.swift
+│       │   │   ├── EnergyAnalyzer.swift
+│       │   │   ├── LoudnessAnalyzer.swift  # EBU R128
+│       │   │   ├── EmbeddingGenerator.swift # 128-dim vibe vectors
+│       │   │   ├── SectionDetector.swift
+│       │   │   └── CueGenerator.swift
+│       │   ├── DSP/
+│       │   │   ├── AudioDecoder.swift
+│       │   │   └── FFT.swift
+│       │   └── Analyzer.swift
+│       └── AnalyzerServer/
+│           └── main.swift           # CLI + HTTP server
 ├── internal/
 │   ├── analyzer/        # Analyzer interface + gRPC client
 │   ├── auth/            # gRPC auth interceptors
 │   ├── config/          # Server configuration
-│   ├── exporter/        # M3U/JSON/CSV/Tar exports
+│   ├── exporter/        # M3U/JSON/CSV/Tar + vendor exports
+│   │   ├── rekordbox.go # Rekordbox XML
+│   │   ├── serato.go    # Serato crate
+│   │   └── traktor.go   # Traktor NML
 │   ├── fixtures/        # WAV generator
+│   ├── httpapi/         # HTTP REST endpoints
 │   ├── planner/         # Set ordering algorithm
 │   ├── scanner/         # Library file scanner
 │   ├── server/          # gRPC server implementation
@@ -599,19 +797,26 @@ Screenshots at 1280x720 @2x (retina). GIF at 640px width, 12fps.
 ├── web/
 │   ├── src/
 │   │   ├── components/  # React components
+│   │   │   ├── AudioPlayer.tsx      # Web Audio controls
 │   │   │   ├── WaveformCanvas.tsx
 │   │   │   ├── SpectrumAnalyzer.tsx
 │   │   │   ├── EnergyArc.tsx
 │   │   │   ├── TransitionGraph.tsx
 │   │   │   ├── LiveStats.tsx
 │   │   │   ├── BPMKeyChart.tsx
+│   │   │   ├── ExportPanel.tsx
 │   │   │   └── ...
+│   │   ├── hooks/
+│   │   │   └── useAudioPlayer.ts    # Web Audio hook
+│   │   ├── api.ts                   # API client
+│   │   ├── store.ts                 # Zustand store
 │   │   ├── App.tsx
 │   │   └── types.ts
 │   └── package.json
 ├── proto/               # gRPC/Protobuf contracts
 ├── gen/go/              # Generated Go stubs
 ├── docs/
+│   ├── API.md           # API reference
 │   ├── PLAN.md          # Milestones and tasks
 │   └── ROADMAP.md       # Ops hardening checklist
 ├── testdata/audio/      # Generated test fixtures
@@ -629,27 +834,39 @@ Screenshots at 1280x720 @2x (retina). GIF at 640px width, 12fps.
 - [x] Pro UI with visualizations
 - [x] Dark mode default
 
-### Beta (Current)
+### Beta (Complete)
 - [x] Swift analyzer with Accelerate DSP
 - [x] Beatgrid detection (onset + autocorrelation)
 - [x] Key detection with Camelot/Open Key mapping
 - [x] Energy analysis with band breakdown
+- [x] **Loudness analysis (EBU R128 + true peak)**
+- [x] **Audio embeddings (128-dim similarity vectors)**
 - [x] Section detection (intro/verse/build/drop/breakdown/outro)
 - [x] Cue generation (priority-based, beat-aligned)
 - [x] HTTP REST API bridge for web UI
 - [x] Zustand state management with API integration
+- [x] **Web Audio playback with AudioPlayer component**
 - [x] Export panel in Set Builder UI
-- [x] Web Audio playback hook
-- [ ] Core ML integration for ANE inference
-- [ ] gRPC integration for Swift analyzer
-- [ ] Embeddings/similarity for vibe continuity
-
-### v1.0
 - [x] Rekordbox XML export
 - [x] Serato crate export
 - [x] Traktor NML export
 - [x] Playwright-Go E2E tests
+- [x] API documentation
+
+### v1.0 (In Progress)
+- [ ] Core ML integration for ANE inference
+- [ ] gRPC streaming for real-time progress
+- [ ] Vibe-based set ordering using embeddings
 - [ ] Alpha acceptance: 100 tracks → 30-track set → export
+
+## API Reference
+
+See [docs/API.md](docs/API.md) for complete API documentation including:
+- Swift Analyzer CLI commands
+- HTTP REST endpoints
+- gRPC service definitions
+- Data type schemas
+- Error handling
 
 ## Contributing
 
@@ -659,6 +876,25 @@ PRs welcome! Keep commits scoped and include:
 - Test coverage for new features
 
 ## Changelog
+
+### v0.3.0-beta (2026-01-29)
+- **Loudness Analysis (EBU R128)**
+  - K-weighting filters per ITU-R BS.1770-4
+  - Integrated, momentary, short-term loudness (LUFS)
+  - Loudness range (LU) and true peak (dBTP)
+- **Audio Embeddings for Vibe Matching**
+  - 128-dimensional MFCC-like vectors
+  - Spectral centroid, rolloff, flatness, harmonic ratio
+  - Cosine similarity and weighted vibe similarity
+- **Web Audio Playback Integration**
+  - AudioPlayer component with play/pause/stop/seek
+  - Variable playback speed (0.5x–1.5x)
+  - Timeline with draggable playhead
+  - Synced with waveform visualization
+- **Documentation**
+  - API reference (docs/API.md)
+  - Updated quickstart with prerequisites
+  - gRPC vs HTTP protocol explanation
 
 ### v0.2.0-beta (2026-01-29)
 - **Swift Analyzer with Accelerate DSP** (full implementation)
