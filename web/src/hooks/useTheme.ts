@@ -11,12 +11,12 @@ function getSystemTheme(): ResolvedTheme {
 }
 
 function getStoredTheme(): Theme {
-  if (typeof localStorage === 'undefined') return 'light';
+  if (typeof localStorage === 'undefined') return 'dark';
   const stored = localStorage.getItem(STORAGE_KEY);
   if (stored === 'light' || stored === 'dark' || stored === 'auto') {
     return stored;
   }
-  return 'light'; // Light default
+  return 'dark'; // Default to dark for pro visuals
 }
 
 function resolveTheme(theme: Theme): ResolvedTheme {

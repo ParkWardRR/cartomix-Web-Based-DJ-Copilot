@@ -4,11 +4,11 @@
 
 # DJ Set Prep Copilot
 
-### Apple Silicon–Only DJ library brain for cueing, transitions, and set ordering
+### Apple Silicon–Only (M1–M5) DJ library brain for cueing, transitions, and set ordering
 
 [![Phase](https://img.shields.io/badge/phase-planning-blueviolet?style=for-the-badge)](#roadmap-snapshot-2026-01-29)
 [![Status](https://img.shields.io/badge/status-local--first-success?style=for-the-badge)](#what-this-is)
-[![Platform](https://img.shields.io/badge/platform-Apple%20Silicon%20M1--M4-000000?style=for-the-badge&logo=apple)](#apple-silicon-only)
+[![Platform](https://img.shields.io/badge/platform-Apple%20Silicon%20M1--M5-000000?style=for-the-badge&logo=apple)](#apple-silicon-only)
 [![Neural Engine](https://img.shields.io/badge/Apple%20Neural%20Engine-Core%20ML%2FANE-orange?style=for-the-badge&logo=apple)](#hardware-acceleration-m1-m4)
 [![Metal DSP](https://img.shields.io/badge/Metal-FFT%2FOnset%20GPU-1f87ff?style=for-the-badge&logo=apple)](#hardware-acceleration-m1-m4)
 [![Accelerate](https://img.shields.io/badge/Accelerate-vDSP%2FBLAS-34c759?style=for-the-badge&logo=apple)](#hardware-acceleration-m1-m4)
@@ -51,7 +51,7 @@ A local-first copilot for DJ set prep. It ingests your library, detects structur
 - **Rehearsal workflow**: dual‑deck preview with beat‑synced scrubbing and per‑candidate AB loops.
 
 ## Apple Silicon only
-- Built, tested, and tuned for **M1–M4**. Intel Macs are not supported.
+- Built, tested, and tuned for **M1–M5**. Intel Macs are not supported.
 - Assumes unified memory and ANE availability; fallback code paths are removed to keep performance consistent.
 - Core ML targets the ANE by default; GPU (Metal) is a secondary path for heavy FFTs and rendering.
 
@@ -67,8 +67,9 @@ A local-first copilot for DJ set prep. It ingests your library, detects structur
 - Up to 8 cue suggestions per track with confidence scores; export M3U/JSON/CSV (Rekordbox/Serato/Traktor planned).
 - Transition rehearsal: dual‑deck preview, beat‑synced scrubbing, AB loop per candidate.
 - Set ordering via weighted graph plus textual rationale for every pick.
+- Pro-first dark mode by default, with library filters (review-only, analyzed-only, high-energy) and quick stats for BPM/keys/analysis state.
 
-## Screenshots (Jan 29, 2026 - refreshed)
+## Screenshots (Jan 29, 2026 - refreshed, dark mode default)
 <div align="center">
 
 ![Algiers library + hero](docs/assets/screens/algiers-hero.png)
