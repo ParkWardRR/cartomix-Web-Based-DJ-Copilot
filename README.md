@@ -1,147 +1,369 @@
 <div align="center">
 
-<img src="docs/assets/logo.svg" alt="DJ Set Prep Copilot" width="120" />
+<img src="docs/assets/logo.svg" alt="Algiers - DJ Set Prep Copilot" width="120" />
 
-# DJ Set Prep Copilot
+# Algiers — DJ Set Prep Copilot
 
 ### Apple Silicon–Only (M1–M5) DJ library brain for cueing, transitions, and set ordering
 
-[![Phase](https://img.shields.io/badge/phase-planning-blueviolet?style=for-the-badge)](#roadmap-snapshot-2026-01-29)
+[![Phase](https://img.shields.io/badge/phase-alpha-blueviolet?style=for-the-badge)](#alpha-features)
+[![Version](https://img.shields.io/badge/version-0.1.0--alpha-blue?style=for-the-badge)](#changelog)
 [![Status](https://img.shields.io/badge/status-local--first-success?style=for-the-badge)](#what-this-is)
 [![Platform](https://img.shields.io/badge/platform-Apple%20Silicon%20M1--M5-000000?style=for-the-badge&logo=apple)](#apple-silicon-only)
-[![Neural Engine](https://img.shields.io/badge/Apple%20Neural%20Engine-Core%20ML%2FANE-orange?style=for-the-badge&logo=apple)](#hardware-acceleration-m1-m4)
-[![Metal DSP](https://img.shields.io/badge/Metal-FFT%2FOnset%20GPU-1f87ff?style=for-the-badge&logo=apple)](#hardware-acceleration-m1-m4)
-[![Accelerate](https://img.shields.io/badge/Accelerate-vDSP%2FBLAS-34c759?style=for-the-badge&logo=apple)](#hardware-acceleration-m1-m4)
+[![Neural Engine](https://img.shields.io/badge/Apple%20Neural%20Engine-Core%20ML%2FANE-orange?style=for-the-badge&logo=apple)](#hardware-acceleration-m1-m5)
+[![Metal DSP](https://img.shields.io/badge/Metal-FFT%2FOnset%20GPU-1f87ff?style=for-the-badge&logo=apple)](#hardware-acceleration-m1-m5)
+[![Accelerate](https://img.shields.io/badge/Accelerate-vDSP%2FBLAS-34c759?style=for-the-badge&logo=apple)](#hardware-acceleration-m1-m5)
 [![Go](https://img.shields.io/badge/Go-1.22+-00ADD8?style=for-the-badge&logo=go&logoColor=white)](#architecture)
 [![Swift](https://img.shields.io/badge/Swift-6.0-orange?style=for-the-badge&logo=swift&logoColor=white)](#architecture)
-[![React](https://img.shields.io/badge/React-18-61DAFB?style=for-the-badge&logo=react&logoColor=black)](#architecture)
+[![React](https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=black)](#architecture)
+[![D3.js](https://img.shields.io/badge/D3.js-7-F9A03C?style=for-the-badge&logo=d3.js&logoColor=white)](#pro-visualizations)
+[![Framer Motion](https://img.shields.io/badge/Framer%20Motion-11-0055FF?style=for-the-badge)](#pro-visualizations)
 [![Tests](https://img.shields.io/badge/tests-Go%20%7C%20Swift%20XCTest%20%7C%20Playwright--Go-ff69b4?style=for-the-badge)](#developer-loop)
 [![Docs](https://img.shields.io/badge/docs-PLAN.md-8e43e7?style=for-the-badge)](docs/PLAN.md)
 [![Roadmap](https://img.shields.io/badge/roadmap-2026--01--29-2979ff?style=for-the-badge)](docs/ROADMAP.md)
 [![License](https://img.shields.io/badge/license-Blue%20Oak%201.0.0-lightgray?style=for-the-badge)](LICENSE)
 [![PRs](https://img.shields.io/badge/PRs-welcome-17a2b8?style=for-the-badge)](#contributing)
 
-**Nothing ships to a cloud. Everything runs on your Mac’s ANE + Metal for fast, private analysis.**
+**Nothing ships to a cloud. Everything runs on your Mac's ANE + Metal for fast, private analysis.**
 
 </div>
 
 ---
 
-## Table of contents
-- [What this is](#what-this-is)
-- [Why it’s different](#why-its-different)
-- [Apple Silicon only](#apple-silicon-only)
-- [Hardware acceleration (M1–M4)](#hardware-acceleration-m1-m4)
-- [Feature highlights](#feature-highlights)
+## Table of Contents
+- [What This Is](#what-this-is)
+- [Alpha Features](#alpha-features)
+- [Pro Visualizations](#pro-visualizations)
+- [Why It's Different](#why-its-different)
+- [Apple Silicon Only](#apple-silicon-only)
+- [Hardware Acceleration (M1–M5)](#hardware-acceleration-m1-m5)
+- [Feature Highlights](#feature-highlights)
 - [Architecture](#architecture)
-- [Developer loop](#developer-loop)
-- [Project layout](#project-layout)
-- [Roadmap snapshot (2026-01-29)](#roadmap-snapshot-2026-01-29)
+- [Screenshots](#screenshots)
+- [Quick Start](#quick-start)
+- [Developer Loop](#developer-loop)
+- [Project Layout](#project-layout)
+- [Roadmap](#roadmap)
 - [Contributing](#contributing)
 - [License](#license)
 
-## What this is
+## What This Is
+
 A local-first copilot for DJ set prep. It ingests your library, detects structure, surfaces mixable sections, proposes cue points and transition windows, and optimizes set order with explainable scoring—while keeping you in control of the mix.
 
-## Why it’s different
-- **End-to-end local**: no cloud lock‑in; audio never leaves your Mac.
-- **Apple‑accelerated DSP**: tempo, key, and energy analysis run on Metal + Accelerate.
-- **AI where it helps**: ANE-powered models suggest cues/sections but every choice is editable.
-- **Explainable transitions**: every proposed segue cites tempo delta, key distance, energy window overlap, and beat‑grid alignment.
-- **Rehearsal workflow**: dual‑deck preview with beat‑synced scrubbing and per‑candidate AB loops.
+**Key Principles:**
+- End-to-end local: no cloud lock-in; audio never leaves your Mac
+- Apple-accelerated DSP: tempo, key, and energy analysis run on Metal + Accelerate
+- AI where it helps: ANE-powered models suggest cues/sections but every choice is editable
+- Explainable transitions: every proposed segue cites tempo delta, key distance, energy window overlap, and beat-grid alignment
 
-## Apple Silicon only
-- Built, tested, and tuned for **M1–M5**. Intel Macs are not supported.
-- Assumes unified memory and ANE availability; fallback code paths are removed to keep performance consistent.
-- Core ML targets the ANE by default; GPU (Metal) is a secondary path for heavy FFTs and rendering.
+## Alpha Features
 
-## Hardware acceleration (M1–M4)
-- **ANE (Core ML)**: on‑device models score sections, energy envelopes, and downbeat confidence without leaving RAM; drawn from the roadmap’s stabilization focus on fast, local inference.
-- **Metal (GPU)**: real‑time spectrograms, onset detection, and waveform tiling; leverages the same “hardware hwaccel” stance as the imported roadmap’s VideoToolbox items, adapted here for audio.
-- **Accelerate (vDSP/BLAS)**: bulk FFTs for beatgrid estimation and harmonic key detection, mirroring the roadmap’s emphasis on streaming scanners instead of buffering entire datasets.
-- **Unified memory**: long-running scans use chunked pipelines to avoid pressure; backpressure hooks align with roadmap items about streaming and graceful cancellation.
+v0.1.0-alpha brings the first complete UI with professional-grade visualizations:
 
-## Feature highlights
-- Resumable library ingest (WAV/AIFF/MP3/AAC/ALAC/FLAC).
-- Beatgrid, key, energy, and section detection with “needs review” surfacing.
-- Up to 8 cue suggestions per track with confidence scores; export M3U/JSON/CSV (Rekordbox/Serato/Traktor planned).
-- Transition rehearsal: dual‑deck preview, beat‑synced scrubbing, AB loop per candidate.
-- Set ordering via weighted graph plus textual rationale for every pick.
-- Pro-first dark mode by default, with library filters (review-only, analyzed-only, high-energy) and quick stats for BPM/keys/analysis state.
-- Library sorting (energy, BPM), dashboard stats (avg edge score, analyzed/pending), and checksum-verified export bundles for confident handoff.
+- **Live Dashboard** — Animated stats with real-time analysis progress, BPM/key distribution charts
+- **Canvas Waveform Renderer** — High-performance waveform with section overlays, cue markers, playhead, and beat grid
+- **Real-time Spectrum Analyzer** — WebGL-style frequency visualization with mirror mode
+- **Set Energy Arc** — Animated SVG energy flow visualization across your set
+- **Transition Graph** — D3.js force-directed graph showing track connections and flow
+- **Three-View Layout** — Library, Set Builder, and Graph View modes
+- **Dark Mode Default** — Pro-first dark theme with light mode toggle
 
-## Screenshots (Jan 29, 2026 - refreshed, dark mode default)
-<div align="center">
+## Pro Visualizations
 
-![Algiers library + hero](docs/assets/screens/algiers-hero.png)
+Built with high-performance libraries for smooth 60fps rendering:
 
-![Set builder with transition rationale](docs/assets/screens/algiers-set-builder.png)
+| Component | Technology | Description |
+|-----------|-----------|-------------|
+| **Waveform Canvas** | Canvas 2D API | GPU-accelerated waveform with sections, cues, and beat markers |
+| **Spectrum Analyzer** | Canvas 2D + RAF | Real-time frequency bars with mirror/bars/circular modes |
+| **Energy Arc** | SVG + Framer Motion | Animated bezier curve showing set energy journey |
+| **Transition Graph** | D3.js Force | Interactive force-directed graph with zoom/pan/drag |
+| **BPM/Key Charts** | D3.js | Animated bar charts with hover tooltips |
+| **Live Stats** | Framer Motion | Spring-animated number counters and progress rings |
 
-</div>
+**Libraries Used:**
+- **D3.js 7** — Data visualization and force simulation
+- **Framer Motion 11** — Spring physics animations and gestures
+- **React Virtuoso 4** — Virtualized list rendering (ready for large libraries)
+- **Zustand 5** — Lightweight state management
 
-## Test fixtures
-- `make fixturegen` now emits deterministic WAVs (BPM ladder, swing click, tempo ramp, harmonic pad) plus `manifest.json` under `testdata/audio` for golden comparisons.
+## Why It's Different
 
-## Exports bundle
-- `ExportSet` now produces a ready-to-share tar.gz bundle containing playlist, analysis JSON, cues CSV, **and a SHA256 manifest** for quick verification. Validate locally with `go run ./cmd/exportverify --manifest <checksums.txt>`.
+| Feature | Algiers | Cloud-based Tools |
+|---------|---------|-------------------|
+| **Privacy** | Audio never leaves your Mac | Uploads to servers |
+| **Speed** | ANE + Metal acceleration | Network latency |
+| **Control** | Every edit is yours | AI decides for you |
+| **Explainability** | Shows why transitions work | Black box |
+| **Offline** | Works without internet | Requires connection |
+
+## Apple Silicon Only
+
+- Built, tested, and tuned for **M1–M5** (M1, M1 Pro/Max/Ultra, M2, M3, M4)
+- Assumes unified memory and ANE availability
+- Fallback code paths removed to keep performance consistent
+- Core ML targets the ANE by default; GPU (Metal) is a secondary path
+
+## Hardware Acceleration (M1–M5)
+
+| Engine | Use Case | Implementation |
+|--------|----------|----------------|
+| **ANE (Neural Engine)** | Section classification, energy models, downbeat confidence | Core ML with ANE preference |
+| **Metal (GPU)** | Real-time spectrograms, onset detection, waveform tiling | Metal Performance Shaders |
+| **Accelerate (vDSP/BLAS)** | FFT for beatgrid, harmonic key detection | Vectorized SIMD operations |
+| **Unified Memory** | Zero-copy data sharing between CPU/GPU/ANE | Chunked streaming pipelines |
+
+## Feature Highlights
+
+### Library Management
+- Resumable library ingest (WAV/AIFF/MP3/AAC/ALAC/FLAC)
+- Content-hash caching for instant re-scans
+- "Needs review" flagging for low-confidence analysis
+- Search by title, artist, or key
+
+### Analysis
+- Beatgrid detection (static + dynamic tempo maps)
+- Key detection with Camelot wheel mapping
+- Energy level (1-10) with per-section curves
+- Section detection (Intro/Break/Build/Drop/Outro)
+- Up to 8 cue suggestions per track with confidence scores
+
+### Set Planning
+- Weighted graph optimization with explainable scoring
+- Set modes: Warm-up, Peak-time, Open-format
+- Edge explanations: tempo delta, key relation, energy flow
+- Transition window matching (intro→outro overlap)
+
+### Export
+- M3U8 playlist
+- Analysis JSON with full track data
+- Cues CSV with beat/time indices
+- SHA256 checksum manifest
+- Ready-to-share tar.gz bundles
+- *Coming soon:* Rekordbox, Serato, Traktor formats
 
 ## Architecture
+
 ```mermaid
 flowchart TB
-    subgraph UI["🖥️ Web UI (React + Web Audio)"]
+    subgraph UI["Web UI (React 19 + D3.js + Framer Motion)"]
+      WF["Waveform Canvas"]
+      SP["Spectrum Analyzer"]
+      EA["Energy Arc"]
+      TG["Transition Graph"]
       API["gRPC-web / HTTP bridge"]
     end
 
-    subgraph ENGINE["🚀 Go Engine"]
+    subgraph ENGINE["Go Engine (1.22+)"]
       SCHED["Ingest + Scoring Scheduler"]
-      EXPORT["Exporters (M3U/JSON/CSV/Pro formats)"]
+      SCAN["Library Scanner"]
+      PLAN["Set Planner (Weighted Graph)"]
+      EXPORT["Exporters (M3U/JSON/CSV/Tar)"]
     end
 
-    subgraph ANALYZER["🍎 Swift Analyzer"]
+    subgraph ANALYZER["Swift Analyzer (6.0)"]
       DSP["Accelerate + Metal DSP"]
       ML["Core ML on ANE"]
+      BEAT["Beatgrid Detection"]
+      KEY["Key + Energy Analysis"]
     end
 
-    subgraph DATA["💾 Storage"]
-      DB["SQLite + blob store (local)"]
+    subgraph DATA["SQLite + Blob Store"]
+      DB["WAL-mode Database"]
+      BLOBS["Waveform Tiles + Embeddings"]
     end
 
     UI --> API --> ENGINE
     ENGINE --> ANALYZER
     ENGINE --> DATA
     ANALYZER --> DATA
+
+    WF -.-> API
+    SP -.-> API
+    EA -.-> PLAN
+    TG -.-> PLAN
 ```
 
-- **Go engine (1.22+)** schedules ingest, scoring, and exports.
-- **Swift analyzer (6.0)** handles DSP and ML, leaning on ANE + Metal.
-- **UI (React/TS)** runs locally, speaks gRPC-web/HTTP to the engine.
-- **SQLite + blobs** keep artifacts local; WAL + streaming writes to avoid RAM spikes.
+**Stack:**
+- **Go Engine (1.22+)** — gRPC server, job scheduling, scoring, exports
+- **Swift Analyzer (6.0)** — DSP (vDSP/Metal) and ML (Core ML/ANE)
+- **React UI (19)** — TypeScript, Vite, D3.js, Framer Motion
+- **SQLite (WAL)** — Local storage with streaming writes
 
-## Developer loop
-- Toolchains: Go 1.22, Swift 6 (see `go.mod`, `analyzer-swift/.swift-version`).
-- Run everything: `make test` (Go + Swift stubs).
-- Fixtures: `make fixturegen` writes placeholder manifests under `testdata/audio`.
-- CI: `.github/workflows/ci.yml` runs Go tests on Ubuntu and Swift tests on macOS.
+## Screenshots
 
-## Project layout
-- `cmd/` — entrypoints for the Go engine & bridge.
-- `analyzer-swift/` — Swift analyzer module (Metal + Core ML).
-- `docs/PLAN.md` — milestones, risks, task breakdown.
-- `docs/ROADMAP.md` — imported roadmap snapshot (2026-01-29) for ops hardening.
-- `spec.md` — product + tech spec.
-- `proto/` — gRPC/Protobuf contracts.
+<div align="center">
 
-## Roadmap snapshot (2026-01-29)
-Highlights pulled from `docs/ROADMAP.md`:
-- **Stabilization (0–2 wks):** tighten env parity, add schema migrations, stream scanners instead of buffering, surface batch errors, compute content hashes, expand readiness checks (fs, ffprobe, free space).
-- **Workflow integration (2–4 wks):** server-side cache preference, HTTP lookup in automation, better path translation, offline handling.
-- **Observability & ops (4–6 wks):** Prometheus/Grafana metrics, SSE/WS health, scheduled WAL/VACUUM/backup jobs, alert hooks.
-- **Feature adds (6–10 wks):** new endpoints, dedup/diff tooling, richer dashboard UX, QoS/rate limits, export/import segments.
-- **Packaging & cleanup:** hardened container image, unified media-extension docs, cleanup stray artifacts.
+### Library View with Pro Visualizations
+![Library View](docs/assets/screens/algiers-hero.png)
+
+### Set Builder with Energy Arc
+![Set Builder](docs/assets/screens/algiers-set-builder.png)
+
+</div>
+
+## Quick Start
+
+```bash
+# Clone the repository
+git clone https://github.com/cartomix/algiers.git
+cd algiers
+
+# Install Go dependencies
+go mod download
+
+# Install web dependencies
+cd web && npm install && cd ..
+
+# Generate proto stubs (if modified)
+make proto
+
+# Run tests
+make test
+
+# Start the engine (port 50051)
+go run ./cmd/engine
+
+# Start the web UI (separate terminal)
+cd web && npm run dev
+```
+
+Open http://localhost:5173 to see the UI.
+
+## Developer Loop
+
+| Command | Description |
+|---------|-------------|
+| `make test` | Run Go + Swift unit tests |
+| `make lint` | Run golangci-lint, swift-format, eslint |
+| `make proto` | Regenerate protobuf stubs |
+| `make fixturegen` | Generate test audio fixtures |
+| `make build` | Build engine + analyzer binaries |
+| `cd web && npm run dev` | Start Vite dev server |
+| `cd web && npm run build` | Production build |
+
+### Test Fixtures
+
+```bash
+make fixturegen
+```
+
+Generates deterministic WAV files under `testdata/audio/`:
+- BPM ladder (80–160 BPM click tracks)
+- Swing click (52-65% swing ratios)
+- Tempo ramp (128→100 BPM linear)
+- Harmonic pad (chord in known keys)
+- `manifest.json` for golden comparisons
+
+### Export Verification
+
+```bash
+go run ./cmd/exportverify --manifest <path>/checksums.txt
+```
+
+Validates SHA256 checksums for exported bundles.
+
+## Project Layout
+
+```
+.
+├── cmd/
+│   ├── engine/          # Go gRPC server entrypoint
+│   ├── exportverify/    # Checksum verification CLI
+│   └── fixturegen/      # Test audio generator
+├── analyzer-swift/      # Swift analyzer module (Metal + Core ML)
+│   ├── Package.swift
+│   └── Sources/
+├── internal/
+│   ├── analyzer/        # Analyzer interface + gRPC client
+│   ├── auth/            # gRPC auth interceptors
+│   ├── config/          # Server configuration
+│   ├── exporter/        # M3U/JSON/CSV/Tar exports
+│   ├── fixtures/        # WAV generator
+│   ├── planner/         # Set ordering algorithm
+│   ├── scanner/         # Library file scanner
+│   ├── server/          # gRPC server implementation
+│   └── storage/         # SQLite + blob store
+├── web/
+│   ├── src/
+│   │   ├── components/  # React components
+│   │   │   ├── WaveformCanvas.tsx
+│   │   │   ├── SpectrumAnalyzer.tsx
+│   │   │   ├── EnergyArc.tsx
+│   │   │   ├── TransitionGraph.tsx
+│   │   │   ├── LiveStats.tsx
+│   │   │   ├── BPMKeyChart.tsx
+│   │   │   └── ...
+│   │   ├── App.tsx
+│   │   └── types.ts
+│   └── package.json
+├── proto/               # gRPC/Protobuf contracts
+├── gen/go/              # Generated Go stubs
+├── docs/
+│   ├── PLAN.md          # Milestones and tasks
+│   └── ROADMAP.md       # Ops hardening checklist
+├── testdata/audio/      # Generated test fixtures
+└── Makefile
+```
+
+## Roadmap
+
+### Alpha (Current)
+- [x] gRPC engine with health checks
+- [x] Library scanner with content hashing
+- [x] SQLite storage with migrations
+- [x] Set planner with weighted graph
+- [x] Generic exports (M3U/JSON/CSV/Tar)
+- [x] Pro UI with visualizations
+- [x] Dark mode default
+
+### Beta (Next)
+- [ ] Swift analyzer with Accelerate DSP
+- [ ] Core ML integration for ANE inference
+- [ ] Beatgrid detection algorithm
+- [ ] Key detection with Camelot mapping
+- [ ] Web Audio playback integration
+- [ ] gRPC-web bridge for real data
+
+### v1.0
+- [ ] Rekordbox XML export
+- [ ] Serato crate export
+- [ ] Traktor NML export
+- [ ] Playwright-Go E2E tests
+- [ ] Alpha acceptance: 100 tracks → 30-track set → export
 
 ## Contributing
-- PRs welcome! Keep commits scoped; include repro steps and expected/actual behavior.
-- For Conductor support, email humans@conductor.build.
+
+PRs welcome! Keep commits scoped and include:
+- Repro steps for bugs
+- Expected vs actual behavior
+- Test coverage for new features
+
+For Conductor support, email humans@conductor.build.
+
+## Changelog
+
+### v0.1.0-alpha (2026-01-29)
+- Initial alpha release
+- Pro UI with D3.js visualizations
+- Canvas waveform renderer
+- Real-time spectrum analyzer
+- Energy arc and transition graph
+- Live stats dashboard
+- 16 demo tracks with realistic analysis
+- Dark mode default
 
 ## License
-Blue Oak Model License 1.0.0. See `LICENSE`.
+
+Blue Oak Model License 1.0.0. See [LICENSE](LICENSE).
+
+---
+
+<div align="center">
+
+**Built for DJs who want to prep smarter, not harder.**
+
+Made with Metal, Core ML, and too much coffee.
+
+</div>
