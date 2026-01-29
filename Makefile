@@ -55,11 +55,16 @@ screenshots-install:
 
 screenshots:
 	@echo "Ensure web UI is running: make run-web"
-	go run ./cmd/screenshots -headless=true -out=docs/assets/screens
+	@echo "Requires ffmpeg for GIF: brew install ffmpeg"
+	go run ./cmd/screenshots -headless=true -out=docs/assets/screens -gif=true
+
+screenshots-no-gif:
+	@echo "Ensure web UI is running: make run-web"
+	go run ./cmd/screenshots -headless=true -out=docs/assets/screens -gif=false
 
 screenshots-headed:
 	@echo "Ensure web UI is running: make run-web"
-	go run ./cmd/screenshots -headless=false -out=docs/assets/screens
+	go run ./cmd/screenshots -headless=false -out=docs/assets/screens -gif=false
 
 verify-export:
 	go run ./cmd/exportverify --manifest testdata/audio/set-checksums.txt --dir testdata/audio || echo "Provide your manifest path"

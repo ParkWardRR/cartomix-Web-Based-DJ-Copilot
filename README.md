@@ -1,30 +1,22 @@
 <div align="center">
 
-<img src="docs/assets/logo.svg" alt="Algiers - DJ Set Prep Copilot" width="120" />
+<img src="docs/assets/logo.svg" alt="Algiers - DJ Set Prep Copilot" width="100" />
 
 # Algiers — DJ Set Prep Copilot
 
-### Apple Silicon–Only (M1–M5) DJ library brain for cueing, transitions, and set ordering
+**Apple Silicon–native DJ prep tool: analyze, cue, transition, export — all local.**
 
-[![Phase](https://img.shields.io/badge/phase-alpha-blueviolet?style=for-the-badge)](#alpha-features)
-[![Version](https://img.shields.io/badge/version-0.1.0--alpha-blue?style=for-the-badge)](#changelog)
-[![Status](https://img.shields.io/badge/status-local--first-success?style=for-the-badge)](#what-this-is)
-[![Platform](https://img.shields.io/badge/platform-Apple%20Silicon%20M1--M5-000000?style=for-the-badge&logo=apple)](#apple-silicon-only)
-[![Neural Engine](https://img.shields.io/badge/Apple%20Neural%20Engine-Core%20ML%2FANE-orange?style=for-the-badge&logo=apple)](#hardware-acceleration-m1-m5)
-[![Metal DSP](https://img.shields.io/badge/Metal-FFT%2FOnset%20GPU-1f87ff?style=for-the-badge&logo=apple)](#hardware-acceleration-m1-m5)
-[![Accelerate](https://img.shields.io/badge/Accelerate-vDSP%2FBLAS-34c759?style=for-the-badge&logo=apple)](#hardware-acceleration-m1-m5)
-[![Go](https://img.shields.io/badge/Go-1.22+-00ADD8?style=for-the-badge&logo=go&logoColor=white)](#architecture)
-[![Swift](https://img.shields.io/badge/Swift-6.0-orange?style=for-the-badge&logo=swift&logoColor=white)](#architecture)
-[![React](https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=black)](#architecture)
-[![D3.js](https://img.shields.io/badge/D3.js-7-F9A03C?style=for-the-badge&logo=d3.js&logoColor=white)](#pro-visualizations)
-[![Framer Motion](https://img.shields.io/badge/Framer%20Motion-11-0055FF?style=for-the-badge)](#pro-visualizations)
-[![Tests](https://img.shields.io/badge/tests-Go%20%7C%20Swift%20XCTest%20%7C%20Playwright--Go-ff69b4?style=for-the-badge)](#developer-loop)
-[![Docs](https://img.shields.io/badge/docs-PLAN.md-8e43e7?style=for-the-badge)](docs/PLAN.md)
-[![Roadmap](https://img.shields.io/badge/roadmap-2026--01--29-2979ff?style=for-the-badge)](docs/ROADMAP.md)
-[![License](https://img.shields.io/badge/license-Blue%20Oak%201.0.0-lightgray?style=for-the-badge)](LICENSE)
-[![PRs](https://img.shields.io/badge/PRs-welcome-17a2b8?style=for-the-badge)](#contributing)
+![Algiers Demo](docs/assets/screens/algiers-demo.gif)
 
-**Nothing ships to a cloud. Everything runs on your Mac's ANE + Metal for fast, private analysis.**
+[![Phase](https://img.shields.io/badge/phase-alpha-blueviolet?style=flat-square)](#alpha-features)
+[![Version](https://img.shields.io/badge/version-0.1.0--alpha-blue?style=flat-square)](#changelog)
+[![Platform](https://img.shields.io/badge/Apple%20Silicon-M1--M5-000000?style=flat-square&logo=apple)](#apple-silicon-only)
+[![Go](https://img.shields.io/badge/Go-1.22+-00ADD8?style=flat-square&logo=go&logoColor=white)](#architecture)
+[![React](https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react&logoColor=black)](#architecture)
+[![D3.js](https://img.shields.io/badge/D3.js-7-F9A03C?style=flat-square&logo=d3.js&logoColor=white)](#pro-visualizations)
+[![License](https://img.shields.io/badge/license-Blue%20Oak%201.0.0-lightgray?style=flat-square)](LICENSE)
+
+**100% local. No cloud. ANE + Metal accelerated. Private by design.**
 
 </div>
 
@@ -193,24 +185,18 @@ flowchart TB
 
 ## Screenshots
 
-<div align="center">
+| Library View | Set Builder | Graph View |
+|:---:|:---:|:---:|
+| ![Library](docs/assets/screens/algiers-library-view.png) | ![Set Builder](docs/assets/screens/algiers-set-builder.png) | ![Graph](docs/assets/screens/algiers-graph-view.png) |
 
-### Library View with Pro Visualizations
-![Library View](docs/assets/screens/algiers-library-view.png)
+<details>
+<summary>More screenshots</summary>
 
-### Active Waveform with Spectrum Analyzer
-![Hero View](docs/assets/screens/algiers-hero.png)
+| Active Waveform | Light Mode |
+|:---:|:---:|
+| ![Hero](docs/assets/screens/algiers-hero.png) | ![Light](docs/assets/screens/algiers-light-mode.png) |
 
-### Set Builder with Energy Arc
-![Set Builder](docs/assets/screens/algiers-set-builder.png)
-
-### Transition Graph (D3.js Force-Directed)
-![Graph View](docs/assets/screens/algiers-graph-view.png)
-
-### Light Mode
-![Light Mode](docs/assets/screens/algiers-light-mode.png)
-
-</div>
+</details>
 
 ## Quick Start
 
@@ -276,32 +262,33 @@ go run ./cmd/exportverify --manifest <path>/checksums.txt
 
 Validates SHA256 checksums for exported bundles.
 
-### Screenshot Capture
+### Screenshot & GIF Capture
 
-Automated screenshot capture using Playwright-Go for README assets and visual regression testing.
+Automated screenshot and GIF capture using Playwright-Go for README assets.
 
 ```bash
-# One-time: Install Playwright browsers
+# One-time: Install Playwright browsers + ffmpeg
 make screenshots-install
+brew install ffmpeg  # for GIF conversion
 
 # Start the web UI (in a separate terminal)
 make run-web
 
-# Capture screenshots (headless mode)
+# Capture screenshots + animated GIF
 make screenshots
 
 # Or watch the browser (useful for debugging)
 make screenshots-headed
 ```
 
-The screenshot tool captures 5 views:
-- `algiers-library-view.png` — Library grid with filters
-- `algiers-hero.png` — Active waveform with spectrum analyzer
-- `algiers-set-builder.png` — Set Builder with energy arc
-- `algiers-graph-view.png` — D3.js transition graph
-- `algiers-light-mode.png` — Light mode theme
+**Output files:**
+- `algiers-demo.gif` — Animated hero for README
+- `algiers-library-view.png` — Library view
+- `algiers-set-builder.png` — Set Builder
+- `algiers-graph-view.png` — Transition graph
+- `algiers-light-mode.png` — Light mode
 
-Screenshots are saved to `docs/assets/screens/` at 1920x1080 @2x (retina).
+Screenshots at 1280x720 @2x (retina). GIF at 640px width, 12fps.
 
 ## Project Layout
 
