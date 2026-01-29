@@ -37,21 +37,30 @@
 ## Exports
 
 - [x] Generic: M3U8, analysis JSON, cues CSV with beat/time indices.
+- [x] Checksum manifest (SHA256) + tar.gz bundle for verified handoff.
 - [ ] Vendor: Rekordbox, Serato, Traktor writers; round-trip sanity with sample libraries.
 - [ ] Export CLI/API options and UI download links.
 
 ## Web UI (TS/React)
 
 - [x] Toolchain setup (Node 22, Vite/React 19, TS strict, eslint/prettier config).
-- [x] Theme system (Light default, Auto via prefers-color-scheme, manual toggle).
-- [ ] Screens: Library grid + filters; Track detail (waveform, beat markers, sections, cues); Set builder (order list + reasons + energy arc); Transition rehearsal (dual deck preview).
+- [x] Theme system (Dark default, Auto via prefers-color-scheme, manual toggle).
+- [x] High-performance visualization libraries (D3.js 7, Framer Motion 11, React Virtuoso 4, Zustand 5).
+- [x] Screens: Library grid + filters; Track detail (waveform, beat markers, sections, cues); Set builder (order list + reasons + energy arc); Transition rehearsal (dual deck preview).
+- [x] Canvas waveform renderer with section overlays, cue markers, beat grid, playhead.
+- [x] Real-time spectrum analyzer (mirror/bars/circular modes).
+- [x] Energy arc visualization with animated SVG.
+- [x] Transition graph (D3.js force-directed) with zoom/pan/drag.
+- [x] Live stats dashboard with animated counters and progress rings.
+- [x] BPM/key distribution charts.
+- [x] Three-view layout: Library, Set Builder, Graph View.
 - [ ] Audio preview: Web Audio + AudioWorklet player; streamed waveform tiles/PCM from engine.
 - [ ] gRPC-web or HTTP bridge; optimistic UI for cue edits; undo/redo.
 
 ## Fixtures & testing
 
-- [ ] Flesh fixturegen to render WAVs per spec (BPM ladder, swing, tempo ramp, phrase track, harmonic set, club noise) + golden JSON.
 - [x] Flesh fixturegen to render WAVs per spec (click ladder, swing, tempo ramp, harmonic pad) + manifest JSON.
+- [ ] Flesh fixturegen to render WAVs per spec (phrase track, harmonic set, club noise) + golden JSON.
 - [x] Unit tests: beatgrid math, scoring, DB migrations (Go side); Swift XCTest pending for DSP kernels.
 - [ ] Property tests: monotonic beats, cue bounds, export/import round-trip.
 - [ ] Integration: golden comparisons on fixture corpus.
@@ -68,6 +77,32 @@
 ## Packaging & alpha readiness
 
 - [x] Provide local run scripts: engine + analyzer-swift + ui dev server.
+- [x] Pro UI with visualizations ready for alpha demo.
+- [x] Updated README with alpha features, architecture, and changelog.
 - [ ] Versioning/analysis cache migration strategy; backup/export of DB.
 - [ ] Minimal docs: quickstart, API surface, test corpus instructions.
 - [ ] Alpha acceptance checklist: import 100 tracks, analyze, build 30-track set, rehearse transitions, export to Rekordbox/Serato/Traktor without manual metadata fixes.
+
+---
+
+## Alpha Release Summary (v0.1.0-alpha - 2026-01-29)
+
+### Completed
+- gRPC engine with health checks and graceful shutdown
+- Library scanner with SHA256 content hashing
+- SQLite storage with migrations and WAL mode
+- Set planner with weighted graph and explainable scoring
+- Generic exports (M3U8, JSON, CSV, checksums, tar.gz)
+- Pro UI with D3.js visualizations
+- Canvas waveform renderer
+- Real-time spectrum analyzer
+- Energy arc and transition graph
+- Live stats dashboard
+- Dark mode default
+
+### Next (Beta)
+- Swift analyzer with Accelerate DSP
+- Core ML integration for ANE inference
+- Beatgrid and key detection algorithms
+- Web Audio playback integration
+- gRPC-web bridge for real data

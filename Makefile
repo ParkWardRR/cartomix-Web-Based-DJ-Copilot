@@ -2,7 +2,7 @@ GO_TEST?=go test ./...
 SWIFT_TEST?=cd analyzer-swift && swift test
 WEB_DIR=web
 
-.PHONY: all test go-test swift-test web-test fixturegen proto proto-lint lint go-lint web-lint build go-build web-build run dev clean run-stack
+.PHONY: all test go-test swift-test web-test fixturegen proto proto-lint lint go-lint web-lint build go-build web-build run dev clean run-stack screenshots screenshots-install
 
 # Default target
 all: build
@@ -48,6 +48,18 @@ proto:
 # Fixture generation
 fixturegen:
 	go run ./cmd/fixturegen --out ./testdata/audio
+
+# Screenshots (requires web UI running at localhost:5173)
+screenshots-install:
+	go run github.com/playwright-community/playwright-go/cmd/playwright@latest install --with-deps chromium
+
+screenshots:
+	@echo "Ensure web UI is running: make run-web"
+	go run ./cmd/screenshots -headless=true -out=docs/assets/screens
+
+screenshots-headed:
+	@echo "Ensure web UI is running: make run-web"
+	go run ./cmd/screenshots -headless=false -out=docs/assets/screens
 
 verify-export:
 	go run ./cmd/exportverify --manifest testdata/audio/set-checksums.txt --dir testdata/audio || echo "Provide your manifest path"
