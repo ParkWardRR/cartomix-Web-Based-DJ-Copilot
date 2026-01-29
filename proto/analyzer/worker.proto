@@ -5,7 +5,7 @@ package cartomix.analyzer;
 option go_package = "github.com/cartomix/cancun/proto/analyzer;analyzer";
 
 import "google/protobuf/duration.proto";
-import "proto/common/types.proto";
+import "common/types.proto";
 
 service AnalyzerWorker {
   // Analyze a single track. The engine handles scheduling and retries.

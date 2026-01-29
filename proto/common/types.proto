@@ -38,14 +38,14 @@ message Section {
 
 enum CueType {
   CUE_TYPE_UNSPECIFIED = 0;
-  LOAD = 1;
-  FIRST_DOWNBEAT = 2;
-  INTRO_START = 3;
-  BREAKDOWN = 4;
-  BUILD = 5;
-  DROP = 6;
-  OUTRO_START = 7;
-  SAFETY_LOOP = 8;
+  CUE_LOAD = 1;
+  CUE_FIRST_DOWNBEAT = 2;
+  CUE_INTRO_START = 3;
+  CUE_BREAKDOWN = 4;
+  CUE_BUILD = 5;
+  CUE_DROP = 6;
+  CUE_OUTRO_START = 7;
+  CUE_SAFETY_LOOP = 8;
 }
 
 message CuePoint {

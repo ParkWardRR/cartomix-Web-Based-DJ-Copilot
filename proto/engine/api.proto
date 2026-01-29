@@ -6,7 +6,7 @@ option go_package = "github.com/cartomix/cancun/proto/engine;engine";
 
 import "google/protobuf/empty.proto";
 import "google/protobuf/duration.proto";
-import "proto/common/types.proto";
+import "common/types.proto";
 
 service EngineAPI {
   // Scan a folder or DJ export and enqueue tracks for analysis.
