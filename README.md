@@ -68,6 +68,15 @@ A local-first copilot for DJ set prep. It ingests your library, detects structur
 - Transition rehearsal: dual‑deck preview, beat‑synced scrubbing, AB loop per candidate.
 - Set ordering via weighted graph plus textual rationale for every pick.
 
+## Screenshots (Jan 29, 2026)
+<div align="center">
+
+![Algiers library + hero](docs/assets/screens/algiers-hero.png)
+
+![Set builder with transition rationale](docs/assets/screens/algiers-set-builder.png)
+
+</div>
+
 ## Architecture
 ```mermaid
 flowchart TB
