@@ -4,34 +4,62 @@ import (
 	"flag"
 	"fmt"
 	"log"
-	"os"
-	"path/filepath"
+	"strings"
+
+	"github.com/cartomix/cancun/internal/fixtures"
 )
 
-// Stubbed fixture generator; will later render deterministic WAV fixtures used in tests.
-// For now it just lays out folders and records the requested plan so pipelines stay green.
+// fixturegen produces deterministic WAV fixtures used by tests and demos.
 func main() {
 	outDir := flag.String("out", "./testdata/audio", "output directory for generated audio")
 	seed := flag.Int("seed", 1337, "random seed for deterministic fixtures")
-	bpmLadder := flag.String("bpm-ladder", "80,100,120,128,140,160", "comma-separated BPM ladder")
+	bpmLadderStr := flag.String("bpm-ladder", "80,100,120,128,140,160", "comma-separated BPM ladder")
 	includeSwing := flag.Bool("include-swing", true, "include swing/shuffle fixtures")
 	includeTempoRamp := flag.Bool("include-tempo-ramp", true, "include dynamic tempo fixtures")
-	includeHarmonic := flag.String("include-harmonic-keys", "8A,9A,10A,11A", "comma-separated keys for harmonic fixtures")
+	rampStart := flag.Float64("ramp-start-bpm", 128, "tempo ramp start BPM")
+	rampEnd := flag.Float64("ramp-end-bpm", 100, "tempo ramp end BPM")
+	includeHarmonic := flag.String("include-harmonic-keys", "8A", "comma-separated keys for harmonic fixtures")
 
 	flag.Parse()
 
-	if err := os.MkdirAll(*outDir, 0o755); err != nil {
-		log.Fatalf("failed to create output dir: %v", err)
+	var ladder []float64
+	for _, s := range strings.Split(*bpmLadderStr, ",") {
+		var v float64
+		_, err := fmt.Sscanf(strings.TrimSpace(s), "%f", &v)
+		if err == nil {
+			ladder = append(ladder, v)
+		}
+	}
+	if len(ladder) == 0 {
+		ladder = []float64{120}
 	}
 
-	// Placeholder manifest file describing what would be rendered.
-	manifest := filepath.Join(*outDir, "manifest.txt")
-	contents := fmt.Sprintf("seed=%d\nbpm_ladder=%s\ninclude_swing=%t\ninclude_tempo_ramp=%t\ninclude_harmonic=%s\n",
-		*seed, *bpmLadder, *includeSwing, *includeTempoRamp, *includeHarmonic)
+	keys := strings.Split(*includeHarmonic, ",")
+	includeChord := len(keys) > 0 && keys[0] != ""
 
-	if err := os.WriteFile(manifest, []byte(contents), 0o644); err != nil {
-		log.Fatalf("failed to write manifest: %v", err)
+	cfg := fixtures.Config{
+		OutputDir:    *outDir,
+		SampleRate:   48000,
+		Seed:         int64(*seed),
+		BPMLadder:    ladder,
+		SwingRatio:   0.6,
+		IncludeSwing: *includeSwing,
+		IncludeRamp:  *includeTempoRamp,
+		RampStartBPM: *rampStart,
+		RampEndBPM:   *rampEnd,
+		IncludeChord: includeChord,
+	}
+	if includeChord {
+		cfg.ChordKey = strings.TrimSpace(keys[0])
+		if cfg.ChordKey == "" {
+			cfg.ChordKey = "8A"
+		}
 	}
 
-	log.Printf("fixturegen stub wrote manifest to %s (audio synthesis TODO)", manifest)
+	manifest, err := fixtures.Generate(cfg)
+	if err != nil {
+		log.Fatalf("generate fixtures: %v", err)
+	}
+
+	log.Printf("fixturegen wrote %d fixtures to %s (sample_rate=%d)", len(manifest.Fixtures), cfg.OutputDir, cfg.SampleRate)
 }

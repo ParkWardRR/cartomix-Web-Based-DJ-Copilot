@@ -51,6 +51,7 @@
 ## Fixtures & testing
 
 - [ ] Flesh fixturegen to render WAVs per spec (BPM ladder, swing, tempo ramp, phrase track, harmonic set, club noise) + golden JSON.
+- [x] Flesh fixturegen to render WAVs per spec (click ladder, swing, tempo ramp, harmonic pad) + manifest JSON.
 - [x] Unit tests: beatgrid math, scoring, DB migrations (Go side); Swift XCTest pending for DSP kernels.
 - [ ] Property tests: monotonic beats, cue bounds, export/import round-trip.
 - [ ] Integration: golden comparisons on fixture corpus.
