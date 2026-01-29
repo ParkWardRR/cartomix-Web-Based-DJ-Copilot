@@ -199,6 +199,132 @@ func (KeyFormat) EnumDescriptor() ([]byte, []int) {
 	return file_common_types_proto_rawDescGZIP(), []int{2}
 }
 
+// DJ Section labels for custom training
+type DJSectionLabel int32
+
+const (
+	DJSectionLabel_DJ_SECTION_UNSPECIFIED DJSectionLabel = 0
+	DJSectionLabel_DJ_INTRO               DJSectionLabel = 1
+	DJSectionLabel_DJ_BUILD               DJSectionLabel = 2
+	DJSectionLabel_DJ_DROP                DJSectionLabel = 3
+	DJSectionLabel_DJ_BREAK               DJSectionLabel = 4
+	DJSectionLabel_DJ_OUTRO               DJSectionLabel = 5
+	DJSectionLabel_DJ_VERSE               DJSectionLabel = 6
+	DJSectionLabel_DJ_CHORUS              DJSectionLabel = 7
+)
+
+// Enum value maps for DJSectionLabel.
+var (
+	DJSectionLabel_name = map[int32]string{
+		0: "DJ_SECTION_UNSPECIFIED",
+		1: "DJ_INTRO",
+		2: "DJ_BUILD",
+		3: "DJ_DROP",
+		4: "DJ_BREAK",
+		5: "DJ_OUTRO",
+		6: "DJ_VERSE",
+		7: "DJ_CHORUS",
+	}
+	DJSectionLabel_value = map[string]int32{
+		"DJ_SECTION_UNSPECIFIED": 0,
+		"DJ_INTRO":               1,
+		"DJ_BUILD":               2,
+		"DJ_DROP":                3,
+		"DJ_BREAK":               4,
+		"DJ_OUTRO":               5,
+		"DJ_VERSE":               6,
+		"DJ_CHORUS":              7,
+	}
+)
+
+func (x DJSectionLabel) Enum() *DJSectionLabel {
+	p := new(DJSectionLabel)
+	*p = x
+	return p
+}
+
+func (x DJSectionLabel) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (DJSectionLabel) Descriptor() protoreflect.EnumDescriptor {
+	return file_common_types_proto_enumTypes[3].Descriptor()
+}
+
+func (DJSectionLabel) Type() protoreflect.EnumType {
+	return &file_common_types_proto_enumTypes[3]
+}
+
+func (x DJSectionLabel) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use DJSectionLabel.Descriptor instead.
+func (DJSectionLabel) EnumDescriptor() ([]byte, []int) {
+	return file_common_types_proto_rawDescGZIP(), []int{3}
+}
+
+type TrainingStatus int32
+
+const (
+	TrainingStatus_TRAINING_STATUS_UNSPECIFIED TrainingStatus = 0
+	TrainingStatus_TRAINING_PENDING            TrainingStatus = 1
+	TrainingStatus_TRAINING_PREPARING          TrainingStatus = 2
+	TrainingStatus_TRAINING_RUNNING            TrainingStatus = 3
+	TrainingStatus_TRAINING_EVALUATING         TrainingStatus = 4
+	TrainingStatus_TRAINING_COMPLETED          TrainingStatus = 5
+	TrainingStatus_TRAINING_FAILED             TrainingStatus = 6
+)
+
+// Enum value maps for TrainingStatus.
+var (
+	TrainingStatus_name = map[int32]string{
+		0: "TRAINING_STATUS_UNSPECIFIED",
+		1: "TRAINING_PENDING",
+		2: "TRAINING_PREPARING",
+		3: "TRAINING_RUNNING",
+		4: "TRAINING_EVALUATING",
+		5: "TRAINING_COMPLETED",
+		6: "TRAINING_FAILED",
+	}
+	TrainingStatus_value = map[string]int32{
+		"TRAINING_STATUS_UNSPECIFIED": 0,
+		"TRAINING_PENDING":            1,
+		"TRAINING_PREPARING":          2,
+		"TRAINING_RUNNING":            3,
+		"TRAINING_EVALUATING":         4,
+		"TRAINING_COMPLETED":          5,
+		"TRAINING_FAILED":             6,
+	}
+)
+
+func (x TrainingStatus) Enum() *TrainingStatus {
+	p := new(TrainingStatus)
+	*p = x
+	return p
+}
+
+func (x TrainingStatus) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (TrainingStatus) Descriptor() protoreflect.EnumDescriptor {
+	return file_common_types_proto_enumTypes[4].Descriptor()
+}
+
+func (TrainingStatus) Type() protoreflect.EnumType {
+	return &file_common_types_proto_enumTypes[4]
+}
+
+func (x TrainingStatus) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use TrainingStatus.Descriptor instead.
+func (TrainingStatus) EnumDescriptor() ([]byte, []int) {
+	return file_common_types_proto_rawDescGZIP(), []int{4}
+}
+
 // Track identity is a content hash + path to keep stable across moves.
 type TrackId struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
@@ -821,6 +947,9 @@ type Loudness struct {
 	state          protoimpl.MessageState `protogen:"open.v1"`
 	IntegratedLufs float32                `protobuf:"fixed32,1,opt,name=integrated_lufs,json=integratedLufs,proto3" json:"integrated_lufs,omitempty"`
 	TruePeakDb     float32                `protobuf:"fixed32,2,opt,name=true_peak_db,json=truePeakDb,proto3" json:"true_peak_db,omitempty"`
+	MomentaryLufs  float32                `protobuf:"fixed32,3,opt,name=momentary_lufs,json=momentaryLufs,proto3" json:"momentary_lufs,omitempty"`
+	ShortTermLufs  float32                `protobuf:"fixed32,4,opt,name=short_term_lufs,json=shortTermLufs,proto3" json:"short_term_lufs,omitempty"`
+	LoudnessRange  float32                `protobuf:"fixed32,5,opt,name=loudness_range,json=loudnessRange,proto3" json:"loudness_range,omitempty"`
 	unknownFields  protoimpl.UnknownFields
 	sizeCache      protoimpl.SizeCache
 }
@@ -869,27 +998,989 @@ func (x *Loudness) GetTruePeakDb() float32 {
 	return 0
 }
 
+func (x *Loudness) GetMomentaryLufs() float32 {
+	if x != nil {
+		return x.MomentaryLufs
+	}
+	return 0
+}
+
+func (x *Loudness) GetShortTermLufs() float32 {
+	if x != nil {
+		return x.ShortTermLufs
+	}
+	return 0
+}
+
+func (x *Loudness) GetLoudnessRange() float32 {
+	if x != nil {
+		return x.LoudnessRange
+	}
+	return 0
+}
+
+// OpenL3 512-dimensional embedding for vibe matching
+type OpenL3Embedding struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Vector        []float32              `protobuf:"fixed32,1,rep,packed,name=vector,proto3" json:"vector,omitempty"`                      // 512-dim pooled embedding
+	WindowCount   int32                  `protobuf:"varint,2,opt,name=window_count,json=windowCount,proto3" json:"window_count,omitempty"` // Number of 1-second windows processed
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *OpenL3Embedding) Reset() {
+	*x = OpenL3Embedding{}
+	mi := &file_common_types_proto_msgTypes[11]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *OpenL3Embedding) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*OpenL3Embedding) ProtoMessage() {}
+
+func (x *OpenL3Embedding) ProtoReflect() protoreflect.Message {
+	mi := &file_common_types_proto_msgTypes[11]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use OpenL3Embedding.ProtoReflect.Descriptor instead.
+func (*OpenL3Embedding) Descriptor() ([]byte, []int) {
+	return file_common_types_proto_rawDescGZIP(), []int{11}
+}
+
+func (x *OpenL3Embedding) GetVector() []float32 {
+	if x != nil {
+		return x.Vector
+	}
+	return nil
+}
+
+func (x *OpenL3Embedding) GetWindowCount() int32 {
+	if x != nil {
+		return x.WindowCount
+	}
+	return 0
+}
+
+// Sound classification result from Apple SoundAnalysis
+type SoundClassification struct {
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	PrimaryContext string                 `protobuf:"bytes,1,opt,name=primary_context,json=primaryContext,proto3" json:"primary_context,omitempty"` // music / speech / noise / silence
+	Confidence     float32                `protobuf:"fixed32,2,opt,name=confidence,proto3" json:"confidence,omitempty"`                             // 0..1
+	Events         []*SoundEvent          `protobuf:"bytes,3,rep,name=events,proto3" json:"events,omitempty"`
+	QaFlags        []*QAFlag              `protobuf:"bytes,4,rep,name=qa_flags,json=qaFlags,proto3" json:"qa_flags,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
+}
+
+func (x *SoundClassification) Reset() {
+	*x = SoundClassification{}
+	mi := &file_common_types_proto_msgTypes[12]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SoundClassification) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SoundClassification) ProtoMessage() {}
+
+func (x *SoundClassification) ProtoReflect() protoreflect.Message {
+	mi := &file_common_types_proto_msgTypes[12]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SoundClassification.ProtoReflect.Descriptor instead.
+func (*SoundClassification) Descriptor() ([]byte, []int) {
+	return file_common_types_proto_rawDescGZIP(), []int{12}
+}
+
+func (x *SoundClassification) GetPrimaryContext() string {
+	if x != nil {
+		return x.PrimaryContext
+	}
+	return ""
+}
+
+func (x *SoundClassification) GetConfidence() float32 {
+	if x != nil {
+		return x.Confidence
+	}
+	return 0
+}
+
+func (x *SoundClassification) GetEvents() []*SoundEvent {
+	if x != nil {
+		return x.Events
+	}
+	return nil
+}
+
+func (x *SoundClassification) GetQaFlags() []*QAFlag {
+	if x != nil {
+		return x.QaFlags
+	}
+	return nil
+}
+
+type SoundEvent struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Label         string                 `protobuf:"bytes,1,opt,name=label,proto3" json:"label,omitempty"`       // Apple's 300+ labels
+	Category      string                 `protobuf:"bytes,2,opt,name=category,proto3" json:"category,omitempty"` // DJ-mapped category
+	Confidence    float32                `protobuf:"fixed32,3,opt,name=confidence,proto3" json:"confidence,omitempty"`
+	StartTime     float64                `protobuf:"fixed64,4,opt,name=start_time,json=startTime,proto3" json:"start_time,omitempty"`
+	EndTime       float64                `protobuf:"fixed64,5,opt,name=end_time,json=endTime,proto3" json:"end_time,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SoundEvent) Reset() {
+	*x = SoundEvent{}
+	mi := &file_common_types_proto_msgTypes[13]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SoundEvent) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SoundEvent) ProtoMessage() {}
+
+func (x *SoundEvent) ProtoReflect() protoreflect.Message {
+	mi := &file_common_types_proto_msgTypes[13]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SoundEvent.ProtoReflect.Descriptor instead.
+func (*SoundEvent) Descriptor() ([]byte, []int) {
+	return file_common_types_proto_rawDescGZIP(), []int{13}
+}
+
+func (x *SoundEvent) GetLabel() string {
+	if x != nil {
+		return x.Label
+	}
+	return ""
+}
+
+func (x *SoundEvent) GetCategory() string {
+	if x != nil {
+		return x.Category
+	}
+	return ""
+}
+
+func (x *SoundEvent) GetConfidence() float32 {
+	if x != nil {
+		return x.Confidence
+	}
+	return 0
+}
+
+func (x *SoundEvent) GetStartTime() float64 {
+	if x != nil {
+		return x.StartTime
+	}
+	return 0
+}
+
+func (x *SoundEvent) GetEndTime() float64 {
+	if x != nil {
+		return x.EndTime
+	}
+	return 0
+}
+
+type QAFlag struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Type          string                 `protobuf:"bytes,1,opt,name=type,proto3" json:"type,omitempty"` // needs_review, mixed_content, speech_detected, low_confidence
+	Reason        string                 `protobuf:"bytes,2,opt,name=reason,proto3" json:"reason,omitempty"`
+	Severity      int32                  `protobuf:"varint,3,opt,name=severity,proto3" json:"severity,omitempty"` // 1-3
+	Dismissed     bool                   `protobuf:"varint,4,opt,name=dismissed,proto3" json:"dismissed,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *QAFlag) Reset() {
+	*x = QAFlag{}
+	mi := &file_common_types_proto_msgTypes[14]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *QAFlag) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*QAFlag) ProtoMessage() {}
+
+func (x *QAFlag) ProtoReflect() protoreflect.Message {
+	mi := &file_common_types_proto_msgTypes[14]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use QAFlag.ProtoReflect.Descriptor instead.
+func (*QAFlag) Descriptor() ([]byte, []int) {
+	return file_common_types_proto_rawDescGZIP(), []int{14}
+}
+
+func (x *QAFlag) GetType() string {
+	if x != nil {
+		return x.Type
+	}
+	return ""
+}
+
+func (x *QAFlag) GetReason() string {
+	if x != nil {
+		return x.Reason
+	}
+	return ""
+}
+
+func (x *QAFlag) GetSeverity() int32 {
+	if x != nil {
+		return x.Severity
+	}
+	return 0
+}
+
+func (x *QAFlag) GetDismissed() bool {
+	if x != nil {
+		return x.Dismissed
+	}
+	return false
+}
+
+// Similarity result with explanation
+type SimilarTrack struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            *TrackId               `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Title         string                 `protobuf:"bytes,2,opt,name=title,proto3" json:"title,omitempty"`
+	Artist        string                 `protobuf:"bytes,3,opt,name=artist,proto3" json:"artist,omitempty"`
+	Score         float32                `protobuf:"fixed32,4,opt,name=score,proto3" json:"score,omitempty"`                          // 0..1 combined score
+	Explanation   string                 `protobuf:"bytes,5,opt,name=explanation,proto3" json:"explanation,omitempty"`                // Human-readable
+	VibeMatch     float32                `protobuf:"fixed32,6,opt,name=vibe_match,json=vibeMatch,proto3" json:"vibe_match,omitempty"` // OpenL3 cosine similarity %
+	TempoMatch    float32                `protobuf:"fixed32,7,opt,name=tempo_match,json=tempoMatch,proto3" json:"tempo_match,omitempty"`
+	KeyMatch      float32                `protobuf:"fixed32,8,opt,name=key_match,json=keyMatch,proto3" json:"key_match,omitempty"`
+	EnergyMatch   float32                `protobuf:"fixed32,9,opt,name=energy_match,json=energyMatch,proto3" json:"energy_match,omitempty"`
+	BpmDelta      float32                `protobuf:"fixed32,10,opt,name=bpm_delta,json=bpmDelta,proto3" json:"bpm_delta,omitempty"`
+	KeyRelation   string                 `protobuf:"bytes,11,opt,name=key_relation,json=keyRelation,proto3" json:"key_relation,omitempty"` // same, compatible, harmonic, clash
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SimilarTrack) Reset() {
+	*x = SimilarTrack{}
+	mi := &file_common_types_proto_msgTypes[15]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SimilarTrack) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SimilarTrack) ProtoMessage() {}
+
+func (x *SimilarTrack) ProtoReflect() protoreflect.Message {
+	mi := &file_common_types_proto_msgTypes[15]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SimilarTrack.ProtoReflect.Descriptor instead.
+func (*SimilarTrack) Descriptor() ([]byte, []int) {
+	return file_common_types_proto_rawDescGZIP(), []int{15}
+}
+
+func (x *SimilarTrack) GetId() *TrackId {
+	if x != nil {
+		return x.Id
+	}
+	return nil
+}
+
+func (x *SimilarTrack) GetTitle() string {
+	if x != nil {
+		return x.Title
+	}
+	return ""
+}
+
+func (x *SimilarTrack) GetArtist() string {
+	if x != nil {
+		return x.Artist
+	}
+	return ""
+}
+
+func (x *SimilarTrack) GetScore() float32 {
+	if x != nil {
+		return x.Score
+	}
+	return 0
+}
+
+func (x *SimilarTrack) GetExplanation() string {
+	if x != nil {
+		return x.Explanation
+	}
+	return ""
+}
+
+func (x *SimilarTrack) GetVibeMatch() float32 {
+	if x != nil {
+		return x.VibeMatch
+	}
+	return 0
+}
+
+func (x *SimilarTrack) GetTempoMatch() float32 {
+	if x != nil {
+		return x.TempoMatch
+	}
+	return 0
+}
+
+func (x *SimilarTrack) GetKeyMatch() float32 {
+	if x != nil {
+		return x.KeyMatch
+	}
+	return 0
+}
+
+func (x *SimilarTrack) GetEnergyMatch() float32 {
+	if x != nil {
+		return x.EnergyMatch
+	}
+	return 0
+}
+
+func (x *SimilarTrack) GetBpmDelta() float32 {
+	if x != nil {
+		return x.BpmDelta
+	}
+	return 0
+}
+
+func (x *SimilarTrack) GetKeyRelation() string {
+	if x != nil {
+		return x.KeyRelation
+	}
+	return ""
+}
+
+// Training label for custom model training
+type TrainingLabel struct {
+	state            protoimpl.MessageState `protogen:"open.v1"`
+	Id               int64                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	TrackId          int64                  `protobuf:"varint,2,opt,name=track_id,json=trackId,proto3" json:"track_id,omitempty"`
+	ContentHash      string                 `protobuf:"bytes,3,opt,name=content_hash,json=contentHash,proto3" json:"content_hash,omitempty"`
+	TrackPath        string                 `protobuf:"bytes,4,opt,name=track_path,json=trackPath,proto3" json:"track_path,omitempty"`
+	LabelValue       DJSectionLabel         `protobuf:"varint,5,opt,name=label_value,json=labelValue,proto3,enum=cartomix.common.DJSectionLabel" json:"label_value,omitempty"`
+	StartBeat        int32                  `protobuf:"varint,6,opt,name=start_beat,json=startBeat,proto3" json:"start_beat,omitempty"`
+	EndBeat          int32                  `protobuf:"varint,7,opt,name=end_beat,json=endBeat,proto3" json:"end_beat,omitempty"`
+	StartTimeSeconds float64                `protobuf:"fixed64,8,opt,name=start_time_seconds,json=startTimeSeconds,proto3" json:"start_time_seconds,omitempty"`
+	EndTimeSeconds   float64                `protobuf:"fixed64,9,opt,name=end_time_seconds,json=endTimeSeconds,proto3" json:"end_time_seconds,omitempty"`
+	Source           string                 `protobuf:"bytes,10,opt,name=source,proto3" json:"source,omitempty"`                         // user, auto_detected, imported
+	CreatedAt        int64                  `protobuf:"varint,11,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"` // Unix timestamp
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
+}
+
+func (x *TrainingLabel) Reset() {
+	*x = TrainingLabel{}
+	mi := &file_common_types_proto_msgTypes[16]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *TrainingLabel) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*TrainingLabel) ProtoMessage() {}
+
+func (x *TrainingLabel) ProtoReflect() protoreflect.Message {
+	mi := &file_common_types_proto_msgTypes[16]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use TrainingLabel.ProtoReflect.Descriptor instead.
+func (*TrainingLabel) Descriptor() ([]byte, []int) {
+	return file_common_types_proto_rawDescGZIP(), []int{16}
+}
+
+func (x *TrainingLabel) GetId() int64 {
+	if x != nil {
+		return x.Id
+	}
+	return 0
+}
+
+func (x *TrainingLabel) GetTrackId() int64 {
+	if x != nil {
+		return x.TrackId
+	}
+	return 0
+}
+
+func (x *TrainingLabel) GetContentHash() string {
+	if x != nil {
+		return x.ContentHash
+	}
+	return ""
+}
+
+func (x *TrainingLabel) GetTrackPath() string {
+	if x != nil {
+		return x.TrackPath
+	}
+	return ""
+}
+
+func (x *TrainingLabel) GetLabelValue() DJSectionLabel {
+	if x != nil {
+		return x.LabelValue
+	}
+	return DJSectionLabel_DJ_SECTION_UNSPECIFIED
+}
+
+func (x *TrainingLabel) GetStartBeat() int32 {
+	if x != nil {
+		return x.StartBeat
+	}
+	return 0
+}
+
+func (x *TrainingLabel) GetEndBeat() int32 {
+	if x != nil {
+		return x.EndBeat
+	}
+	return 0
+}
+
+func (x *TrainingLabel) GetStartTimeSeconds() float64 {
+	if x != nil {
+		return x.StartTimeSeconds
+	}
+	return 0
+}
+
+func (x *TrainingLabel) GetEndTimeSeconds() float64 {
+	if x != nil {
+		return x.EndTimeSeconds
+	}
+	return 0
+}
+
+func (x *TrainingLabel) GetSource() string {
+	if x != nil {
+		return x.Source
+	}
+	return ""
+}
+
+func (x *TrainingLabel) GetCreatedAt() int64 {
+	if x != nil {
+		return x.CreatedAt
+	}
+	return 0
+}
+
+// Training job status
+type TrainingJob struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	JobId         string                 `protobuf:"bytes,1,opt,name=job_id,json=jobId,proto3" json:"job_id,omitempty"`
+	Status        TrainingStatus         `protobuf:"varint,2,opt,name=status,proto3,enum=cartomix.common.TrainingStatus" json:"status,omitempty"`
+	Progress      float32                `protobuf:"fixed32,3,opt,name=progress,proto3" json:"progress,omitempty"` // 0..1
+	CurrentEpoch  int32                  `protobuf:"varint,4,opt,name=current_epoch,json=currentEpoch,proto3" json:"current_epoch,omitempty"`
+	TotalEpochs   int32                  `protobuf:"varint,5,opt,name=total_epochs,json=totalEpochs,proto3" json:"total_epochs,omitempty"`
+	CurrentLoss   float32                `protobuf:"fixed32,6,opt,name=current_loss,json=currentLoss,proto3" json:"current_loss,omitempty"`
+	Accuracy      float32                `protobuf:"fixed32,7,opt,name=accuracy,proto3" json:"accuracy,omitempty"`
+	F1Score       float32                `protobuf:"fixed32,8,opt,name=f1_score,json=f1Score,proto3" json:"f1_score,omitempty"`
+	ModelPath     string                 `protobuf:"bytes,9,opt,name=model_path,json=modelPath,proto3" json:"model_path,omitempty"`
+	ModelVersion  int32                  `protobuf:"varint,10,opt,name=model_version,json=modelVersion,proto3" json:"model_version,omitempty"`
+	ErrorMessage  string                 `protobuf:"bytes,11,opt,name=error_message,json=errorMessage,proto3" json:"error_message,omitempty"`
+	LabelCounts   map[string]int32       `protobuf:"bytes,12,rep,name=label_counts,json=labelCounts,proto3" json:"label_counts,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"varint,2,opt,name=value"`
+	StartedAt     int64                  `protobuf:"varint,13,opt,name=started_at,json=startedAt,proto3" json:"started_at,omitempty"`
+	CompletedAt   int64                  `protobuf:"varint,14,opt,name=completed_at,json=completedAt,proto3" json:"completed_at,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *TrainingJob) Reset() {
+	*x = TrainingJob{}
+	mi := &file_common_types_proto_msgTypes[17]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *TrainingJob) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*TrainingJob) ProtoMessage() {}
+
+func (x *TrainingJob) ProtoReflect() protoreflect.Message {
+	mi := &file_common_types_proto_msgTypes[17]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use TrainingJob.ProtoReflect.Descriptor instead.
+func (*TrainingJob) Descriptor() ([]byte, []int) {
+	return file_common_types_proto_rawDescGZIP(), []int{17}
+}
+
+func (x *TrainingJob) GetJobId() string {
+	if x != nil {
+		return x.JobId
+	}
+	return ""
+}
+
+func (x *TrainingJob) GetStatus() TrainingStatus {
+	if x != nil {
+		return x.Status
+	}
+	return TrainingStatus_TRAINING_STATUS_UNSPECIFIED
+}
+
+func (x *TrainingJob) GetProgress() float32 {
+	if x != nil {
+		return x.Progress
+	}
+	return 0
+}
+
+func (x *TrainingJob) GetCurrentEpoch() int32 {
+	if x != nil {
+		return x.CurrentEpoch
+	}
+	return 0
+}
+
+func (x *TrainingJob) GetTotalEpochs() int32 {
+	if x != nil {
+		return x.TotalEpochs
+	}
+	return 0
+}
+
+func (x *TrainingJob) GetCurrentLoss() float32 {
+	if x != nil {
+		return x.CurrentLoss
+	}
+	return 0
+}
+
+func (x *TrainingJob) GetAccuracy() float32 {
+	if x != nil {
+		return x.Accuracy
+	}
+	return 0
+}
+
+func (x *TrainingJob) GetF1Score() float32 {
+	if x != nil {
+		return x.F1Score
+	}
+	return 0
+}
+
+func (x *TrainingJob) GetModelPath() string {
+	if x != nil {
+		return x.ModelPath
+	}
+	return ""
+}
+
+func (x *TrainingJob) GetModelVersion() int32 {
+	if x != nil {
+		return x.ModelVersion
+	}
+	return 0
+}
+
+func (x *TrainingJob) GetErrorMessage() string {
+	if x != nil {
+		return x.ErrorMessage
+	}
+	return ""
+}
+
+func (x *TrainingJob) GetLabelCounts() map[string]int32 {
+	if x != nil {
+		return x.LabelCounts
+	}
+	return nil
+}
+
+func (x *TrainingJob) GetStartedAt() int64 {
+	if x != nil {
+		return x.StartedAt
+	}
+	return 0
+}
+
+func (x *TrainingJob) GetCompletedAt() int64 {
+	if x != nil {
+		return x.CompletedAt
+	}
+	return 0
+}
+
+// Trained model version
+type ModelVersion struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Version       int32                  `protobuf:"varint,1,opt,name=version,proto3" json:"version,omitempty"`
+	ModelType     string                 `protobuf:"bytes,2,opt,name=model_type,json=modelType,proto3" json:"model_type,omitempty"` // dj_section
+	ModelPath     string                 `protobuf:"bytes,3,opt,name=model_path,json=modelPath,proto3" json:"model_path,omitempty"`
+	Accuracy      float32                `protobuf:"fixed32,4,opt,name=accuracy,proto3" json:"accuracy,omitempty"`
+	F1Score       float32                `protobuf:"fixed32,5,opt,name=f1_score,json=f1Score,proto3" json:"f1_score,omitempty"`
+	IsActive      bool                   `protobuf:"varint,6,opt,name=is_active,json=isActive,proto3" json:"is_active,omitempty"`
+	LabelCounts   map[string]int32       `protobuf:"bytes,7,rep,name=label_counts,json=labelCounts,proto3" json:"label_counts,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"varint,2,opt,name=value"`
+	TrainingJobId string                 `protobuf:"bytes,8,opt,name=training_job_id,json=trainingJobId,proto3" json:"training_job_id,omitempty"`
+	CreatedAt     int64                  `protobuf:"varint,9,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ModelVersion) Reset() {
+	*x = ModelVersion{}
+	mi := &file_common_types_proto_msgTypes[18]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ModelVersion) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ModelVersion) ProtoMessage() {}
+
+func (x *ModelVersion) ProtoReflect() protoreflect.Message {
+	mi := &file_common_types_proto_msgTypes[18]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ModelVersion.ProtoReflect.Descriptor instead.
+func (*ModelVersion) Descriptor() ([]byte, []int) {
+	return file_common_types_proto_rawDescGZIP(), []int{18}
+}
+
+func (x *ModelVersion) GetVersion() int32 {
+	if x != nil {
+		return x.Version
+	}
+	return 0
+}
+
+func (x *ModelVersion) GetModelType() string {
+	if x != nil {
+		return x.ModelType
+	}
+	return ""
+}
+
+func (x *ModelVersion) GetModelPath() string {
+	if x != nil {
+		return x.ModelPath
+	}
+	return ""
+}
+
+func (x *ModelVersion) GetAccuracy() float32 {
+	if x != nil {
+		return x.Accuracy
+	}
+	return 0
+}
+
+func (x *ModelVersion) GetF1Score() float32 {
+	if x != nil {
+		return x.F1Score
+	}
+	return 0
+}
+
+func (x *ModelVersion) GetIsActive() bool {
+	if x != nil {
+		return x.IsActive
+	}
+	return false
+}
+
+func (x *ModelVersion) GetLabelCounts() map[string]int32 {
+	if x != nil {
+		return x.LabelCounts
+	}
+	return nil
+}
+
+func (x *ModelVersion) GetTrainingJobId() string {
+	if x != nil {
+		return x.TrainingJobId
+	}
+	return ""
+}
+
+func (x *ModelVersion) GetCreatedAt() int64 {
+	if x != nil {
+		return x.CreatedAt
+	}
+	return 0
+}
+
+// Training label statistics
+type TrainingLabelStats struct {
+	state              protoimpl.MessageState `protogen:"open.v1"`
+	TotalLabels        int32                  `protobuf:"varint,1,opt,name=total_labels,json=totalLabels,proto3" json:"total_labels,omitempty"`
+	LabelCounts        map[string]int32       `protobuf:"bytes,2,rep,name=label_counts,json=labelCounts,proto3" json:"label_counts,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"varint,2,opt,name=value"`
+	TracksCovered      int32                  `protobuf:"varint,3,opt,name=tracks_covered,json=tracksCovered,proto3" json:"tracks_covered,omitempty"`
+	AvgPerTrack        float32                `protobuf:"fixed32,4,opt,name=avg_per_track,json=avgPerTrack,proto3" json:"avg_per_track,omitempty"`
+	ReadyForTraining   bool                   `protobuf:"varint,5,opt,name=ready_for_training,json=readyForTraining,proto3" json:"ready_for_training,omitempty"`
+	MinSamplesRequired int32                  `protobuf:"varint,6,opt,name=min_samples_required,json=minSamplesRequired,proto3" json:"min_samples_required,omitempty"`
+	unknownFields      protoimpl.UnknownFields
+	sizeCache          protoimpl.SizeCache
+}
+
+func (x *TrainingLabelStats) Reset() {
+	*x = TrainingLabelStats{}
+	mi := &file_common_types_proto_msgTypes[19]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *TrainingLabelStats) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*TrainingLabelStats) ProtoMessage() {}
+
+func (x *TrainingLabelStats) ProtoReflect() protoreflect.Message {
+	mi := &file_common_types_proto_msgTypes[19]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use TrainingLabelStats.ProtoReflect.Descriptor instead.
+func (*TrainingLabelStats) Descriptor() ([]byte, []int) {
+	return file_common_types_proto_rawDescGZIP(), []int{19}
+}
+
+func (x *TrainingLabelStats) GetTotalLabels() int32 {
+	if x != nil {
+		return x.TotalLabels
+	}
+	return 0
+}
+
+func (x *TrainingLabelStats) GetLabelCounts() map[string]int32 {
+	if x != nil {
+		return x.LabelCounts
+	}
+	return nil
+}
+
+func (x *TrainingLabelStats) GetTracksCovered() int32 {
+	if x != nil {
+		return x.TracksCovered
+	}
+	return 0
+}
+
+func (x *TrainingLabelStats) GetAvgPerTrack() float32 {
+	if x != nil {
+		return x.AvgPerTrack
+	}
+	return 0
+}
+
+func (x *TrainingLabelStats) GetReadyForTraining() bool {
+	if x != nil {
+		return x.ReadyForTraining
+	}
+	return false
+}
+
+func (x *TrainingLabelStats) GetMinSamplesRequired() int32 {
+	if x != nil {
+		return x.MinSamplesRequired
+	}
+	return 0
+}
+
+// ML settings
+type MLSettings struct {
+	state                 protoimpl.MessageState `protogen:"open.v1"`
+	SoundAnalysisEnabled  bool                   `protobuf:"varint,1,opt,name=sound_analysis_enabled,json=soundAnalysisEnabled,proto3" json:"sound_analysis_enabled,omitempty"`
+	Openl3Enabled         bool                   `protobuf:"varint,2,opt,name=openl3_enabled,json=openl3Enabled,proto3" json:"openl3_enabled,omitempty"`
+	DjSectionModelEnabled bool                   `protobuf:"varint,3,opt,name=dj_section_model_enabled,json=djSectionModelEnabled,proto3" json:"dj_section_model_enabled,omitempty"`
+	ShowExplanations      bool                   `protobuf:"varint,4,opt,name=show_explanations,json=showExplanations,proto3" json:"show_explanations,omitempty"`
+	SimilarityThreshold   float32                `protobuf:"fixed32,5,opt,name=similarity_threshold,json=similarityThreshold,proto3" json:"similarity_threshold,omitempty"`
+	unknownFields         protoimpl.UnknownFields
+	sizeCache             protoimpl.SizeCache
+}
+
+func (x *MLSettings) Reset() {
+	*x = MLSettings{}
+	mi := &file_common_types_proto_msgTypes[20]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *MLSettings) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*MLSettings) ProtoMessage() {}
+
+func (x *MLSettings) ProtoReflect() protoreflect.Message {
+	mi := &file_common_types_proto_msgTypes[20]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use MLSettings.ProtoReflect.Descriptor instead.
+func (*MLSettings) Descriptor() ([]byte, []int) {
+	return file_common_types_proto_rawDescGZIP(), []int{20}
+}
+
+func (x *MLSettings) GetSoundAnalysisEnabled() bool {
+	if x != nil {
+		return x.SoundAnalysisEnabled
+	}
+	return false
+}
+
+func (x *MLSettings) GetOpenl3Enabled() bool {
+	if x != nil {
+		return x.Openl3Enabled
+	}
+	return false
+}
+
+func (x *MLSettings) GetDjSectionModelEnabled() bool {
+	if x != nil {
+		return x.DjSectionModelEnabled
+	}
+	return false
+}
+
+func (x *MLSettings) GetShowExplanations() bool {
+	if x != nil {
+		return x.ShowExplanations
+	}
+	return false
+}
+
+func (x *MLSettings) GetSimilarityThreshold() float32 {
+	if x != nil {
+		return x.SimilarityThreshold
+	}
+	return 0
+}
+
 type TrackAnalysis struct {
-	state             protoimpl.MessageState `protogen:"open.v1"`
-	Id                *TrackId               `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	DurationSeconds   float64                `protobuf:"fixed64,2,opt,name=duration_seconds,json=durationSeconds,proto3" json:"duration_seconds,omitempty"`
-	Beatgrid          *Beatgrid              `protobuf:"bytes,3,opt,name=beatgrid,proto3" json:"beatgrid,omitempty"`
-	Key               *MusicalKey            `protobuf:"bytes,4,opt,name=key,proto3" json:"key,omitempty"`
-	EnergyGlobal      int32                  `protobuf:"varint,5,opt,name=energy_global,json=energyGlobal,proto3" json:"energy_global,omitempty"`
-	EnergySegments    []*EnergySegment       `protobuf:"bytes,6,rep,name=energy_segments,json=energySegments,proto3" json:"energy_segments,omitempty"`
-	Sections          []*Section             `protobuf:"bytes,7,rep,name=sections,proto3" json:"sections,omitempty"`
-	CuePoints         []*CuePoint            `protobuf:"bytes,8,rep,name=cue_points,json=cuePoints,proto3" json:"cue_points,omitempty"`
-	TransitionWindows []*TransitionWindow    `protobuf:"bytes,9,rep,name=transition_windows,json=transitionWindows,proto3" json:"transition_windows,omitempty"`
-	Loudness          *Loudness              `protobuf:"bytes,10,opt,name=loudness,proto3" json:"loudness,omitempty"`
-	Embedding         []byte                 `protobuf:"bytes,11,opt,name=embedding,proto3" json:"embedding,omitempty"` // float16/32 payload
-	AnalysisVersion   int32                  `protobuf:"varint,12,opt,name=analysis_version,json=analysisVersion,proto3" json:"analysis_version,omitempty"`
-	unknownFields     protoimpl.UnknownFields
-	sizeCache         protoimpl.SizeCache
+	state                  protoimpl.MessageState `protogen:"open.v1"`
+	Id                     *TrackId               `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	DurationSeconds        float64                `protobuf:"fixed64,2,opt,name=duration_seconds,json=durationSeconds,proto3" json:"duration_seconds,omitempty"`
+	Beatgrid               *Beatgrid              `protobuf:"bytes,3,opt,name=beatgrid,proto3" json:"beatgrid,omitempty"`
+	Key                    *MusicalKey            `protobuf:"bytes,4,opt,name=key,proto3" json:"key,omitempty"`
+	EnergyGlobal           int32                  `protobuf:"varint,5,opt,name=energy_global,json=energyGlobal,proto3" json:"energy_global,omitempty"`
+	EnergySegments         []*EnergySegment       `protobuf:"bytes,6,rep,name=energy_segments,json=energySegments,proto3" json:"energy_segments,omitempty"`
+	Sections               []*Section             `protobuf:"bytes,7,rep,name=sections,proto3" json:"sections,omitempty"`
+	CuePoints              []*CuePoint            `protobuf:"bytes,8,rep,name=cue_points,json=cuePoints,proto3" json:"cue_points,omitempty"`
+	TransitionWindows      []*TransitionWindow    `protobuf:"bytes,9,rep,name=transition_windows,json=transitionWindows,proto3" json:"transition_windows,omitempty"`
+	Loudness               *Loudness              `protobuf:"bytes,10,opt,name=loudness,proto3" json:"loudness,omitempty"`
+	Embedding              []byte                 `protobuf:"bytes,11,opt,name=embedding,proto3" json:"embedding,omitempty"` // 128-dim MFCC payload
+	AnalysisVersion        int32                  `protobuf:"varint,12,opt,name=analysis_version,json=analysisVersion,proto3" json:"analysis_version,omitempty"`
+	Openl3Embedding        *OpenL3Embedding       `protobuf:"bytes,13,opt,name=openl3_embedding,json=openl3Embedding,proto3" json:"openl3_embedding,omitempty"` // 512-dim vibe embedding
+	SoundClassification    *SoundClassification   `protobuf:"bytes,14,opt,name=sound_classification,json=soundClassification,proto3" json:"sound_classification,omitempty"`
+	SoundContext           string                 `protobuf:"bytes,15,opt,name=sound_context,json=soundContext,proto3" json:"sound_context,omitempty"` // music / speech / noise
+	SoundContextConfidence float32                `protobuf:"fixed32,16,opt,name=sound_context_confidence,json=soundContextConfidence,proto3" json:"sound_context_confidence,omitempty"`
+	HasQaFlags             bool                   `protobuf:"varint,17,opt,name=has_qa_flags,json=hasQaFlags,proto3" json:"has_qa_flags,omitempty"`
+	unknownFields          protoimpl.UnknownFields
+	sizeCache              protoimpl.SizeCache
 }
 
 func (x *TrackAnalysis) Reset() {
 	*x = TrackAnalysis{}
-	mi := &file_common_types_proto_msgTypes[11]
+	mi := &file_common_types_proto_msgTypes[21]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -901,7 +1992,7 @@ func (x *TrackAnalysis) String() string {
 func (*TrackAnalysis) ProtoMessage() {}
 
 func (x *TrackAnalysis) ProtoReflect() protoreflect.Message {
-	mi := &file_common_types_proto_msgTypes[11]
+	mi := &file_common_types_proto_msgTypes[21]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -914,7 +2005,7 @@ func (x *TrackAnalysis) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TrackAnalysis.ProtoReflect.Descriptor instead.
 func (*TrackAnalysis) Descriptor() ([]byte, []int) {
-	return file_common_types_proto_rawDescGZIP(), []int{11}
+	return file_common_types_proto_rawDescGZIP(), []int{21}
 }
 
 func (x *TrackAnalysis) GetId() *TrackId {
@@ -1001,6 +2092,41 @@ func (x *TrackAnalysis) GetAnalysisVersion() int32 {
 	return 0
 }
 
+func (x *TrackAnalysis) GetOpenl3Embedding() *OpenL3Embedding {
+	if x != nil {
+		return x.Openl3Embedding
+	}
+	return nil
+}
+
+func (x *TrackAnalysis) GetSoundClassification() *SoundClassification {
+	if x != nil {
+		return x.SoundClassification
+	}
+	return nil
+}
+
+func (x *TrackAnalysis) GetSoundContext() string {
+	if x != nil {
+		return x.SoundContext
+	}
+	return ""
+}
+
+func (x *TrackAnalysis) GetSoundContextConfidence() float32 {
+	if x != nil {
+		return x.SoundContextConfidence
+	}
+	return 0
+}
+
+func (x *TrackAnalysis) GetHasQaFlags() bool {
+	if x != nil {
+		return x.HasQaFlags
+	}
+	return false
+}
+
 type TrackSummary struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            *TrackId               `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
@@ -1017,7 +2143,7 @@ type TrackSummary struct {
 
 func (x *TrackSummary) Reset() {
 	*x = TrackSummary{}
-	mi := &file_common_types_proto_msgTypes[12]
+	mi := &file_common_types_proto_msgTypes[22]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1029,7 +2155,7 @@ func (x *TrackSummary) String() string {
 func (*TrackSummary) ProtoMessage() {}
 
 func (x *TrackSummary) ProtoReflect() protoreflect.Message {
-	mi := &file_common_types_proto_msgTypes[12]
+	mi := &file_common_types_proto_msgTypes[22]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1042,7 +2168,7 @@ func (x *TrackSummary) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TrackSummary.ProtoReflect.Descriptor instead.
 func (*TrackSummary) Descriptor() ([]byte, []int) {
-	return file_common_types_proto_rawDescGZIP(), []int{12}
+	return file_common_types_proto_rawDescGZIP(), []int{22}
 }
 
 func (x *TrackSummary) GetId() *TrackId {
@@ -1111,13 +2237,14 @@ type EdgeExplanation struct {
 	EnergyDelta   int32                  `protobuf:"varint,6,opt,name=energy_delta,json=energyDelta,proto3" json:"energy_delta,omitempty"`
 	KeyRelation   string                 `protobuf:"bytes,7,opt,name=key_relation,json=keyRelation,proto3" json:"key_relation,omitempty"` // e.g., "same key", "+1 Camelot"
 	WindowOverlap string                 `protobuf:"bytes,8,opt,name=window_overlap,json=windowOverlap,proto3" json:"window_overlap,omitempty"`
+	VibeMatch     float32                `protobuf:"fixed32,9,opt,name=vibe_match,json=vibeMatch,proto3" json:"vibe_match,omitempty"` // OpenL3 cosine similarity %
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *EdgeExplanation) Reset() {
 	*x = EdgeExplanation{}
-	mi := &file_common_types_proto_msgTypes[13]
+	mi := &file_common_types_proto_msgTypes[23]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1129,7 +2256,7 @@ func (x *EdgeExplanation) String() string {
 func (*EdgeExplanation) ProtoMessage() {}
 
 func (x *EdgeExplanation) ProtoReflect() protoreflect.Message {
-	mi := &file_common_types_proto_msgTypes[13]
+	mi := &file_common_types_proto_msgTypes[23]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1142,7 +2269,7 @@ func (x *EdgeExplanation) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use EdgeExplanation.ProtoReflect.Descriptor instead.
 func (*EdgeExplanation) Descriptor() ([]byte, []int) {
-	return file_common_types_proto_rawDescGZIP(), []int{13}
+	return file_common_types_proto_rawDescGZIP(), []int{23}
 }
 
 func (x *EdgeExplanation) GetFrom() *TrackId {
@@ -1199,6 +2326,13 @@ func (x *EdgeExplanation) GetWindowOverlap() string {
 		return x.WindowOverlap
 	}
 	return ""
+}
+
+func (x *EdgeExplanation) GetVibeMatch() float32 {
+	if x != nil {
+		return x.VibeMatch
+	}
+	return 0
 }
 
 var File_common_types_proto protoreflect.FileDescriptor
@@ -1266,11 +2400,125 @@ const file_common_types_proto_rawDesc = "" +
 	"confidence\x18\x03 \x01(\x02R\n" +
 	"confidence\x12\x1d\n" +
 	"\n" +
-	"is_dynamic\x18\x04 \x01(\bR\tisDynamic\"U\n" +
+	"is_dynamic\x18\x04 \x01(\bR\tisDynamic\"\xcb\x01\n" +
 	"\bLoudness\x12'\n" +
 	"\x0fintegrated_lufs\x18\x01 \x01(\x02R\x0eintegratedLufs\x12 \n" +
 	"\ftrue_peak_db\x18\x02 \x01(\x02R\n" +
-	"truePeakDb\"\xfa\x04\n" +
+	"truePeakDb\x12%\n" +
+	"\x0emomentary_lufs\x18\x03 \x01(\x02R\rmomentaryLufs\x12&\n" +
+	"\x0fshort_term_lufs\x18\x04 \x01(\x02R\rshortTermLufs\x12%\n" +
+	"\x0eloudness_range\x18\x05 \x01(\x02R\rloudnessRange\"L\n" +
+	"\x0fOpenL3Embedding\x12\x16\n" +
+	"\x06vector\x18\x01 \x03(\x02R\x06vector\x12!\n" +
+	"\fwindow_count\x18\x02 \x01(\x05R\vwindowCount\"\xc7\x01\n" +
+	"\x13SoundClassification\x12'\n" +
+	"\x0fprimary_context\x18\x01 \x01(\tR\x0eprimaryContext\x12\x1e\n" +
+	"\n" +
+	"confidence\x18\x02 \x01(\x02R\n" +
+	"confidence\x123\n" +
+	"\x06events\x18\x03 \x03(\v2\x1b.cartomix.common.SoundEventR\x06events\x122\n" +
+	"\bqa_flags\x18\x04 \x03(\v2\x17.cartomix.common.QAFlagR\aqaFlags\"\x98\x01\n" +
+	"\n" +
+	"SoundEvent\x12\x14\n" +
+	"\x05label\x18\x01 \x01(\tR\x05label\x12\x1a\n" +
+	"\bcategory\x18\x02 \x01(\tR\bcategory\x12\x1e\n" +
+	"\n" +
+	"confidence\x18\x03 \x01(\x02R\n" +
+	"confidence\x12\x1d\n" +
+	"\n" +
+	"start_time\x18\x04 \x01(\x01R\tstartTime\x12\x19\n" +
+	"\bend_time\x18\x05 \x01(\x01R\aendTime\"n\n" +
+	"\x06QAFlag\x12\x12\n" +
+	"\x04type\x18\x01 \x01(\tR\x04type\x12\x16\n" +
+	"\x06reason\x18\x02 \x01(\tR\x06reason\x12\x1a\n" +
+	"\bseverity\x18\x03 \x01(\x05R\bseverity\x12\x1c\n" +
+	"\tdismissed\x18\x04 \x01(\bR\tdismissed\"\xde\x02\n" +
+	"\fSimilarTrack\x12(\n" +
+	"\x02id\x18\x01 \x01(\v2\x18.cartomix.common.TrackIdR\x02id\x12\x14\n" +
+	"\x05title\x18\x02 \x01(\tR\x05title\x12\x16\n" +
+	"\x06artist\x18\x03 \x01(\tR\x06artist\x12\x14\n" +
+	"\x05score\x18\x04 \x01(\x02R\x05score\x12 \n" +
+	"\vexplanation\x18\x05 \x01(\tR\vexplanation\x12\x1d\n" +
+	"\n" +
+	"vibe_match\x18\x06 \x01(\x02R\tvibeMatch\x12\x1f\n" +
+	"\vtempo_match\x18\a \x01(\x02R\n" +
+	"tempoMatch\x12\x1b\n" +
+	"\tkey_match\x18\b \x01(\x02R\bkeyMatch\x12!\n" +
+	"\fenergy_match\x18\t \x01(\x02R\venergyMatch\x12\x1b\n" +
+	"\tbpm_delta\x18\n" +
+	" \x01(\x02R\bbpmDelta\x12!\n" +
+	"\fkey_relation\x18\v \x01(\tR\vkeyRelation\"\x87\x03\n" +
+	"\rTrainingLabel\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\x03R\x02id\x12\x19\n" +
+	"\btrack_id\x18\x02 \x01(\x03R\atrackId\x12!\n" +
+	"\fcontent_hash\x18\x03 \x01(\tR\vcontentHash\x12\x1d\n" +
+	"\n" +
+	"track_path\x18\x04 \x01(\tR\ttrackPath\x12@\n" +
+	"\vlabel_value\x18\x05 \x01(\x0e2\x1f.cartomix.common.DJSectionLabelR\n" +
+	"labelValue\x12\x1d\n" +
+	"\n" +
+	"start_beat\x18\x06 \x01(\x05R\tstartBeat\x12\x19\n" +
+	"\bend_beat\x18\a \x01(\x05R\aendBeat\x12,\n" +
+	"\x12start_time_seconds\x18\b \x01(\x01R\x10startTimeSeconds\x12(\n" +
+	"\x10end_time_seconds\x18\t \x01(\x01R\x0eendTimeSeconds\x12\x16\n" +
+	"\x06source\x18\n" +
+	" \x01(\tR\x06source\x12\x1d\n" +
+	"\n" +
+	"created_at\x18\v \x01(\x03R\tcreatedAt\"\xd8\x04\n" +
+	"\vTrainingJob\x12\x15\n" +
+	"\x06job_id\x18\x01 \x01(\tR\x05jobId\x127\n" +
+	"\x06status\x18\x02 \x01(\x0e2\x1f.cartomix.common.TrainingStatusR\x06status\x12\x1a\n" +
+	"\bprogress\x18\x03 \x01(\x02R\bprogress\x12#\n" +
+	"\rcurrent_epoch\x18\x04 \x01(\x05R\fcurrentEpoch\x12!\n" +
+	"\ftotal_epochs\x18\x05 \x01(\x05R\vtotalEpochs\x12!\n" +
+	"\fcurrent_loss\x18\x06 \x01(\x02R\vcurrentLoss\x12\x1a\n" +
+	"\baccuracy\x18\a \x01(\x02R\baccuracy\x12\x19\n" +
+	"\bf1_score\x18\b \x01(\x02R\af1Score\x12\x1d\n" +
+	"\n" +
+	"model_path\x18\t \x01(\tR\tmodelPath\x12#\n" +
+	"\rmodel_version\x18\n" +
+	" \x01(\x05R\fmodelVersion\x12#\n" +
+	"\rerror_message\x18\v \x01(\tR\ferrorMessage\x12P\n" +
+	"\flabel_counts\x18\f \x03(\v2-.cartomix.common.TrainingJob.LabelCountsEntryR\vlabelCounts\x12\x1d\n" +
+	"\n" +
+	"started_at\x18\r \x01(\x03R\tstartedAt\x12!\n" +
+	"\fcompleted_at\x18\x0e \x01(\x03R\vcompletedAt\x1a>\n" +
+	"\x10LabelCountsEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
+	"\x05value\x18\x02 \x01(\x05R\x05value:\x028\x01\"\x94\x03\n" +
+	"\fModelVersion\x12\x18\n" +
+	"\aversion\x18\x01 \x01(\x05R\aversion\x12\x1d\n" +
+	"\n" +
+	"model_type\x18\x02 \x01(\tR\tmodelType\x12\x1d\n" +
+	"\n" +
+	"model_path\x18\x03 \x01(\tR\tmodelPath\x12\x1a\n" +
+	"\baccuracy\x18\x04 \x01(\x02R\baccuracy\x12\x19\n" +
+	"\bf1_score\x18\x05 \x01(\x02R\af1Score\x12\x1b\n" +
+	"\tis_active\x18\x06 \x01(\bR\bisActive\x12Q\n" +
+	"\flabel_counts\x18\a \x03(\v2..cartomix.common.ModelVersion.LabelCountsEntryR\vlabelCounts\x12&\n" +
+	"\x0ftraining_job_id\x18\b \x01(\tR\rtrainingJobId\x12\x1d\n" +
+	"\n" +
+	"created_at\x18\t \x01(\x03R\tcreatedAt\x1a>\n" +
+	"\x10LabelCountsEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
+	"\x05value\x18\x02 \x01(\x05R\x05value:\x028\x01\"\xfb\x02\n" +
+	"\x12TrainingLabelStats\x12!\n" +
+	"\ftotal_labels\x18\x01 \x01(\x05R\vtotalLabels\x12W\n" +
+	"\flabel_counts\x18\x02 \x03(\v24.cartomix.common.TrainingLabelStats.LabelCountsEntryR\vlabelCounts\x12%\n" +
+	"\x0etracks_covered\x18\x03 \x01(\x05R\rtracksCovered\x12\"\n" +
+	"\ravg_per_track\x18\x04 \x01(\x02R\vavgPerTrack\x12,\n" +
+	"\x12ready_for_training\x18\x05 \x01(\bR\x10readyForTraining\x120\n" +
+	"\x14min_samples_required\x18\x06 \x01(\x05R\x12minSamplesRequired\x1a>\n" +
+	"\x10LabelCountsEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
+	"\x05value\x18\x02 \x01(\x05R\x05value:\x028\x01\"\x82\x02\n" +
+	"\n" +
+	"MLSettings\x124\n" +
+	"\x16sound_analysis_enabled\x18\x01 \x01(\bR\x14soundAnalysisEnabled\x12%\n" +
+	"\x0eopenl3_enabled\x18\x02 \x01(\bR\ropenl3Enabled\x127\n" +
+	"\x18dj_section_model_enabled\x18\x03 \x01(\bR\x15djSectionModelEnabled\x12+\n" +
+	"\x11show_explanations\x18\x04 \x01(\bR\x10showExplanations\x121\n" +
+	"\x14similarity_threshold\x18\x05 \x01(\x02R\x13similarityThreshold\"\xa1\a\n" +
 	"\rTrackAnalysis\x12(\n" +
 	"\x02id\x18\x01 \x01(\v2\x18.cartomix.common.TrackIdR\x02id\x12)\n" +
 	"\x10duration_seconds\x18\x02 \x01(\x01R\x0fdurationSeconds\x125\n" +
@@ -1285,7 +2533,13 @@ const file_common_types_proto_rawDesc = "" +
 	"\bloudness\x18\n" +
 	" \x01(\v2\x19.cartomix.common.LoudnessR\bloudness\x12\x1c\n" +
 	"\tembedding\x18\v \x01(\fR\tembedding\x12)\n" +
-	"\x10analysis_version\x18\f \x01(\x05R\x0fanalysisVersion\"\xf4\x01\n" +
+	"\x10analysis_version\x18\f \x01(\x05R\x0fanalysisVersion\x12K\n" +
+	"\x10openl3_embedding\x18\r \x01(\v2 .cartomix.common.OpenL3EmbeddingR\x0fopenl3Embedding\x12W\n" +
+	"\x14sound_classification\x18\x0e \x01(\v2$.cartomix.common.SoundClassificationR\x13soundClassification\x12#\n" +
+	"\rsound_context\x18\x0f \x01(\tR\fsoundContext\x128\n" +
+	"\x18sound_context_confidence\x18\x10 \x01(\x02R\x16soundContextConfidence\x12 \n" +
+	"\fhas_qa_flags\x18\x11 \x01(\bR\n" +
+	"hasQaFlags\"\xf4\x01\n" +
 	"\fTrackSummary\x12(\n" +
 	"\x02id\x18\x01 \x01(\v2\x18.cartomix.common.TrackIdR\x02id\x12\x14\n" +
 	"\x05title\x18\x02 \x01(\tR\x05title\x12\x16\n" +
@@ -1294,7 +2548,7 @@ const file_common_types_proto_rawDesc = "" +
 	"\x03key\x18\x05 \x01(\v2\x1b.cartomix.common.MusicalKeyR\x03key\x12\x16\n" +
 	"\x06energy\x18\x06 \x01(\x05R\x06energy\x12\x1b\n" +
 	"\tcue_count\x18\a \x01(\x05R\bcueCount\x12\x16\n" +
-	"\x06status\x18\b \x01(\tR\x06status\"\xa5\x02\n" +
+	"\x06status\x18\b \x01(\tR\x06status\"\xc4\x02\n" +
 	"\x0fEdgeExplanation\x12,\n" +
 	"\x04from\x18\x01 \x01(\v2\x18.cartomix.common.TrackIdR\x04from\x12(\n" +
 	"\x02to\x18\x02 \x01(\v2\x18.cartomix.common.TrackIdR\x02to\x12\x14\n" +
@@ -1304,7 +2558,9 @@ const file_common_types_proto_rawDesc = "" +
 	"tempoDelta\x12!\n" +
 	"\fenergy_delta\x18\x06 \x01(\x05R\venergyDelta\x12!\n" +
 	"\fkey_relation\x18\a \x01(\tR\vkeyRelation\x12%\n" +
-	"\x0ewindow_overlap\x18\b \x01(\tR\rwindowOverlap*r\n" +
+	"\x0ewindow_overlap\x18\b \x01(\tR\rwindowOverlap\x12\x1d\n" +
+	"\n" +
+	"vibe_match\x18\t \x01(\x02R\tvibeMatch*r\n" +
 	"\fSectionLabel\x12\x1d\n" +
 	"\x19SECTION_LABEL_UNSPECIFIED\x10\x00\x12\t\n" +
 	"\x05INTRO\x10\x01\x12\t\n" +
@@ -1326,7 +2582,24 @@ const file_common_types_proto_rawDesc = "" +
 	"\tKeyFormat\x12\x1a\n" +
 	"\x16KEY_FORMAT_UNSPECIFIED\x10\x00\x12\f\n" +
 	"\bOPEN_KEY\x10\x01\x12\v\n" +
-	"\aCAMELOT\x10\x02B\xa8\x01\n" +
+	"\aCAMELOT\x10\x02*\x8e\x01\n" +
+	"\x0eDJSectionLabel\x12\x1a\n" +
+	"\x16DJ_SECTION_UNSPECIFIED\x10\x00\x12\f\n" +
+	"\bDJ_INTRO\x10\x01\x12\f\n" +
+	"\bDJ_BUILD\x10\x02\x12\v\n" +
+	"\aDJ_DROP\x10\x03\x12\f\n" +
+	"\bDJ_BREAK\x10\x04\x12\f\n" +
+	"\bDJ_OUTRO\x10\x05\x12\f\n" +
+	"\bDJ_VERSE\x10\x06\x12\r\n" +
+	"\tDJ_CHORUS\x10\a*\xbb\x01\n" +
+	"\x0eTrainingStatus\x12\x1f\n" +
+	"\x1bTRAINING_STATUS_UNSPECIFIED\x10\x00\x12\x14\n" +
+	"\x10TRAINING_PENDING\x10\x01\x12\x16\n" +
+	"\x12TRAINING_PREPARING\x10\x02\x12\x14\n" +
+	"\x10TRAINING_RUNNING\x10\x03\x12\x17\n" +
+	"\x13TRAINING_EVALUATING\x10\x04\x12\x16\n" +
+	"\x12TRAINING_COMPLETED\x10\x05\x12\x13\n" +
+	"\x0fTRAINING_FAILED\x10\x06B\xa8\x01\n" +
 	"\x13com.cartomix.commonB\n" +
 	"TypesProtoP\x01Z(github.com/cartomix/cancun/gen/go/common\xa2\x02\x03CCX\xaa\x02\x0fCartomix.Common\xca\x02\x0fCartomix\\Common\xe2\x02\x1bCartomix\\Common\\GPBMetadata\xea\x02\x10Cartomix::Commonb\x06proto3"
 
@@ -1342,53 +2615,78 @@ func file_common_types_proto_rawDescGZIP() []byte {
 	return file_common_types_proto_rawDescData
 }
 
-var file_common_types_proto_enumTypes = make([]protoimpl.EnumInfo, 3)
-var file_common_types_proto_msgTypes = make([]protoimpl.MessageInfo, 14)
+var file_common_types_proto_enumTypes = make([]protoimpl.EnumInfo, 5)
+var file_common_types_proto_msgTypes = make([]protoimpl.MessageInfo, 27)
 var file_common_types_proto_goTypes = []any{
 	(SectionLabel)(0),           // 0: cartomix.common.SectionLabel
 	(CueType)(0),                // 1: cartomix.common.CueType
 	(KeyFormat)(0),              // 2: cartomix.common.KeyFormat
-	(*TrackId)(nil),             // 3: cartomix.common.TrackId
-	(*BeatMarker)(nil),          // 4: cartomix.common.BeatMarker
-	(*Section)(nil),             // 5: cartomix.common.Section
-	(*CuePoint)(nil),            // 6: cartomix.common.CuePoint
-	(*TransitionWindow)(nil),    // 7: cartomix.common.TransitionWindow
-	(*MusicalKey)(nil),          // 8: cartomix.common.MusicalKey
-	(*EnergySegment)(nil),       // 9: cartomix.common.EnergySegment
-	(*WaveformTile)(nil),        // 10: cartomix.common.WaveformTile
-	(*TempoMapNode)(nil),        // 11: cartomix.common.TempoMapNode
-	(*Beatgrid)(nil),            // 12: cartomix.common.Beatgrid
-	(*Loudness)(nil),            // 13: cartomix.common.Loudness
-	(*TrackAnalysis)(nil),       // 14: cartomix.common.TrackAnalysis
-	(*TrackSummary)(nil),        // 15: cartomix.common.TrackSummary
-	(*EdgeExplanation)(nil),     // 16: cartomix.common.EdgeExplanation
-	(*durationpb.Duration)(nil), // 17: google.protobuf.Duration
+	(DJSectionLabel)(0),         // 3: cartomix.common.DJSectionLabel
+	(TrainingStatus)(0),         // 4: cartomix.common.TrainingStatus
+	(*TrackId)(nil),             // 5: cartomix.common.TrackId
+	(*BeatMarker)(nil),          // 6: cartomix.common.BeatMarker
+	(*Section)(nil),             // 7: cartomix.common.Section
+	(*CuePoint)(nil),            // 8: cartomix.common.CuePoint
+	(*TransitionWindow)(nil),    // 9: cartomix.common.TransitionWindow
+	(*MusicalKey)(nil),          // 10: cartomix.common.MusicalKey
+	(*EnergySegment)(nil),       // 11: cartomix.common.EnergySegment
+	(*WaveformTile)(nil),        // 12: cartomix.common.WaveformTile
+	(*TempoMapNode)(nil),        // 13: cartomix.common.TempoMapNode
+	(*Beatgrid)(nil),            // 14: cartomix.common.Beatgrid
+	(*Loudness)(nil),            // 15: cartomix.common.Loudness
+	(*OpenL3Embedding)(nil),     // 16: cartomix.common.OpenL3Embedding
+	(*SoundClassification)(nil), // 17: cartomix.common.SoundClassification
+	(*SoundEvent)(nil),          // 18: cartomix.common.SoundEvent
+	(*QAFlag)(nil),              // 19: cartomix.common.QAFlag
+	(*SimilarTrack)(nil),        // 20: cartomix.common.SimilarTrack
+	(*TrainingLabel)(nil),       // 21: cartomix.common.TrainingLabel
+	(*TrainingJob)(nil),         // 22: cartomix.common.TrainingJob
+	(*ModelVersion)(nil),        // 23: cartomix.common.ModelVersion
+	(*TrainingLabelStats)(nil),  // 24: cartomix.common.TrainingLabelStats
+	(*MLSettings)(nil),          // 25: cartomix.common.MLSettings
+	(*TrackAnalysis)(nil),       // 26: cartomix.common.TrackAnalysis
+	(*TrackSummary)(nil),        // 27: cartomix.common.TrackSummary
+	(*EdgeExplanation)(nil),     // 28: cartomix.common.EdgeExplanation
+	nil,                         // 29: cartomix.common.TrainingJob.LabelCountsEntry
+	nil,                         // 30: cartomix.common.ModelVersion.LabelCountsEntry
+	nil,                         // 31: cartomix.common.TrainingLabelStats.LabelCountsEntry
+	(*durationpb.Duration)(nil), // 32: google.protobuf.Duration
 }
 var file_common_types_proto_depIdxs = []int32{
-	17, // 0: cartomix.common.BeatMarker.time:type_name -> google.protobuf.Duration
+	32, // 0: cartomix.common.BeatMarker.time:type_name -> google.protobuf.Duration
 	0,  // 1: cartomix.common.Section.label:type_name -> cartomix.common.SectionLabel
-	17, // 2: cartomix.common.CuePoint.time:type_name -> google.protobuf.Duration
+	32, // 2: cartomix.common.CuePoint.time:type_name -> google.protobuf.Duration
 	1,  // 3: cartomix.common.CuePoint.type:type_name -> cartomix.common.CueType
 	2,  // 4: cartomix.common.MusicalKey.format:type_name -> cartomix.common.KeyFormat
-	4,  // 5: cartomix.common.Beatgrid.beats:type_name -> cartomix.common.BeatMarker
-	11, // 6: cartomix.common.Beatgrid.tempo_map:type_name -> cartomix.common.TempoMapNode
-	3,  // 7: cartomix.common.TrackAnalysis.id:type_name -> cartomix.common.TrackId
-	12, // 8: cartomix.common.TrackAnalysis.beatgrid:type_name -> cartomix.common.Beatgrid
-	8,  // 9: cartomix.common.TrackAnalysis.key:type_name -> cartomix.common.MusicalKey
-	9,  // 10: cartomix.common.TrackAnalysis.energy_segments:type_name -> cartomix.common.EnergySegment
-	5,  // 11: cartomix.common.TrackAnalysis.sections:type_name -> cartomix.common.Section
-	6,  // 12: cartomix.common.TrackAnalysis.cue_points:type_name -> cartomix.common.CuePoint
-	7,  // 13: cartomix.common.TrackAnalysis.transition_windows:type_name -> cartomix.common.TransitionWindow
-	13, // 14: cartomix.common.TrackAnalysis.loudness:type_name -> cartomix.common.Loudness
-	3,  // 15: cartomix.common.TrackSummary.id:type_name -> cartomix.common.TrackId
-	8,  // 16: cartomix.common.TrackSummary.key:type_name -> cartomix.common.MusicalKey
-	3,  // 17: cartomix.common.EdgeExplanation.from:type_name -> cartomix.common.TrackId
-	3,  // 18: cartomix.common.EdgeExplanation.to:type_name -> cartomix.common.TrackId
-	19, // [19:19] is the sub-list for method output_type
-	19, // [19:19] is the sub-list for method input_type
-	19, // [19:19] is the sub-list for extension type_name
-	19, // [19:19] is the sub-list for extension extendee
-	0,  // [0:19] is the sub-list for field type_name
+	6,  // 5: cartomix.common.Beatgrid.beats:type_name -> cartomix.common.BeatMarker
+	13, // 6: cartomix.common.Beatgrid.tempo_map:type_name -> cartomix.common.TempoMapNode
+	18, // 7: cartomix.common.SoundClassification.events:type_name -> cartomix.common.SoundEvent
+	19, // 8: cartomix.common.SoundClassification.qa_flags:type_name -> cartomix.common.QAFlag
+	5,  // 9: cartomix.common.SimilarTrack.id:type_name -> cartomix.common.TrackId
+	3,  // 10: cartomix.common.TrainingLabel.label_value:type_name -> cartomix.common.DJSectionLabel
+	4,  // 11: cartomix.common.TrainingJob.status:type_name -> cartomix.common.TrainingStatus
+	29, // 12: cartomix.common.TrainingJob.label_counts:type_name -> cartomix.common.TrainingJob.LabelCountsEntry
+	30, // 13: cartomix.common.ModelVersion.label_counts:type_name -> cartomix.common.ModelVersion.LabelCountsEntry
+	31, // 14: cartomix.common.TrainingLabelStats.label_counts:type_name -> cartomix.common.TrainingLabelStats.LabelCountsEntry
+	5,  // 15: cartomix.common.TrackAnalysis.id:type_name -> cartomix.common.TrackId
+	14, // 16: cartomix.common.TrackAnalysis.beatgrid:type_name -> cartomix.common.Beatgrid
+	10, // 17: cartomix.common.TrackAnalysis.key:type_name -> cartomix.common.MusicalKey
+	11, // 18: cartomix.common.TrackAnalysis.energy_segments:type_name -> cartomix.common.EnergySegment
+	7,  // 19: cartomix.common.TrackAnalysis.sections:type_name -> cartomix.common.Section
+	8,  // 20: cartomix.common.TrackAnalysis.cue_points:type_name -> cartomix.common.CuePoint
+	9,  // 21: cartomix.common.TrackAnalysis.transition_windows:type_name -> cartomix.common.TransitionWindow
+	15, // 22: cartomix.common.TrackAnalysis.loudness:type_name -> cartomix.common.Loudness
+	16, // 23: cartomix.common.TrackAnalysis.openl3_embedding:type_name -> cartomix.common.OpenL3Embedding
+	17, // 24: cartomix.common.TrackAnalysis.sound_classification:type_name -> cartomix.common.SoundClassification
+	5,  // 25: cartomix.common.TrackSummary.id:type_name -> cartomix.common.TrackId
+	10, // 26: cartomix.common.TrackSummary.key:type_name -> cartomix.common.MusicalKey
+	5,  // 27: cartomix.common.EdgeExplanation.from:type_name -> cartomix.common.TrackId
+	5,  // 28: cartomix.common.EdgeExplanation.to:type_name -> cartomix.common.TrackId
+	29, // [29:29] is the sub-list for method output_type
+	29, // [29:29] is the sub-list for method input_type
+	29, // [29:29] is the sub-list for extension type_name
+	29, // [29:29] is the sub-list for extension extendee
+	0,  // [0:29] is the sub-list for field type_name
 }
 
 func init() { file_common_types_proto_init() }
@@ -1401,8 +2699,8 @@ func file_common_types_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_common_types_proto_rawDesc), len(file_common_types_proto_rawDesc)),
-			NumEnums:      3,
-			NumMessages:   14,
+			NumEnums:      5,
+			NumMessages:   27,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

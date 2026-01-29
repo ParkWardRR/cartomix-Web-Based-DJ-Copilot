@@ -132,3 +132,8 @@ func (d *DB) QueryRow(query string, args ...any) *sql.Row {
 func (d *DB) Begin() (*sql.Tx, error) {
 	return d.db.Begin()
 }
+
+// Ping checks database connectivity.
+func (d *DB) Ping() error {
+	return d.db.Ping()
+}

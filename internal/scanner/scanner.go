@@ -41,7 +41,7 @@ type ScanResult struct {
 	Error       error
 }
 
-// ScanProgress reports scanning progress.
+// ScanProgress reports scanning progress with enhanced details.
 type ScanProgress struct {
 	Path        string
 	Status      string // queued, processing, done, skipped, error
@@ -51,6 +51,16 @@ type ScanProgress struct {
 	TrackID     int64
 	IsNew       bool
 	ContentHash string
+
+	// Enhanced progress fields (v1.0)
+	CurrentFile    string  // Filename being processed (without path)
+	Percent        float32 // Overall progress 0-100
+	ElapsedMs      int64   // Elapsed time in milliseconds
+	ETAMs          int64   // Estimated time remaining in milliseconds
+	NewTracksFound int64   // Count of new tracks discovered
+	SkippedCached  int64   // Count of tracks skipped (already in DB)
+	BytesProcessed int64   // Total bytes processed so far
+	BytesTotal     int64   // Total bytes to process (if known)
 }
 
 // NewScanner creates a new file scanner.
@@ -59,23 +69,31 @@ func NewScanner(db *storage.DB, logger *slog.Logger) *Scanner {
 }
 
 // Scan recursively scans the given roots for audio files.
-// Progress is reported via the progress channel.
+// Progress is reported via the progress channel with enhanced details.
 func (s *Scanner) Scan(ctx context.Context, roots []string, forceRescan bool, progress chan<- ScanProgress) error {
 	defer close(progress)
 
-	// First pass: count files
+	startTime := time.Now()
+
+	// First pass: count files and total bytes
 	var total int64
+	var bytesTotal int64
 	for _, root := range roots {
-		count, err := s.countFiles(root)
+		count, bytes, err := s.countFilesWithBytes(root)
 		if err != nil {
 			s.logger.Warn("failed to count files in root", "root", root, "error", err)
 			continue
 		}
 		total += count
+		bytesTotal += bytes
 	}
 
 	// Second pass: process files
 	var processed int64
+	var newTracksFound int64
+	var skippedCached int64
+	var bytesProcessed int64
+
 	for _, root := range roots {
 		err := filepath.WalkDir(root, func(path string, d os.DirEntry, err error) error {
 			if err != nil {
@@ -97,8 +115,16 @@ func (s *Scanner) Scan(ctx context.Context, roots []string, forceRescan bool, pr
 				return nil // Skip unsupported formats
 			}
 
+			// Get file size for byte tracking
+			info, _ := d.Info()
+			var fileSize int64
+			if info != nil {
+				fileSize = info.Size()
+			}
+
 			result := s.processFile(path, forceRescan)
 			processed++
+			bytesProcessed += fileSize
 
 			status := "done"
 			errMsg := ""
@@ -107,18 +133,45 @@ func (s *Scanner) Scan(ctx context.Context, roots []string, forceRescan bool, pr
 				errMsg = result.Error.Error()
 			} else if !result.IsNew {
 				status = "skipped"
+				skippedCached++
+			} else {
+				newTracksFound++
+			}
+
+			// Calculate timing
+			elapsed := time.Since(startTime)
+			elapsedMs := elapsed.Milliseconds()
+
+			// Calculate ETA based on progress
+			var etaMs int64
+			var percent float32
+			if total > 0 {
+				percent = float32(processed) / float32(total) * 100
+				if processed > 0 {
+					avgTimePerFile := float64(elapsedMs) / float64(processed)
+					remainingFiles := total - processed
+					etaMs = int64(avgTimePerFile * float64(remainingFiles))
+				}
 			}
 
 			select {
 			case progress <- ScanProgress{
-				Path:        path,
-				Status:      status,
-				Error:       errMsg,
-				Processed:   processed,
-				Total:       total,
-				TrackID:     result.TrackID,
-				IsNew:       result.IsNew,
-				ContentHash: result.ContentHash,
+				Path:           path,
+				Status:         status,
+				Error:          errMsg,
+				Processed:      processed,
+				Total:          total,
+				TrackID:        result.TrackID,
+				IsNew:          result.IsNew,
+				ContentHash:    result.ContentHash,
+				CurrentFile:    filepath.Base(path),
+				Percent:        percent,
+				ElapsedMs:      elapsedMs,
+				ETAMs:          etaMs,
+				NewTracksFound: newTracksFound,
+				SkippedCached:  skippedCached,
+				BytesProcessed: bytesProcessed,
+				BytesTotal:     bytesTotal,
 			}:
 			case <-ctx.Done():
 				return ctx.Err()
@@ -133,6 +186,25 @@ func (s *Scanner) Scan(ctx context.Context, roots []string, forceRescan bool, pr
 	}
 
 	return nil
+}
+
+func (s *Scanner) countFilesWithBytes(root string) (int64, int64, error) {
+	var count int64
+	var totalBytes int64
+	err := filepath.WalkDir(root, func(path string, d os.DirEntry, err error) error {
+		if err != nil || d.IsDir() {
+			return nil
+		}
+		ext := strings.ToLower(filepath.Ext(path))
+		if SupportedFormats[ext] {
+			count++
+			if info, err := d.Info(); err == nil {
+				totalBytes += info.Size()
+			}
+		}
+		return nil
+	})
+	return count, totalBytes, err
 }
 
 func (s *Scanner) countFiles(root string) (int64, error) {

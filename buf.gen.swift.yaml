@@ -1,0 +1,14 @@
+version: v2
+managed:
+  enabled: true
+plugins:
+  - local: protoc-gen-swift
+    out: analyzer-swift/Sources/AnalyzerSwift/Generated
+    opt:
+      - Visibility=Public
+  - local: protoc-gen-grpc-swift
+    out: analyzer-swift/Sources/AnalyzerSwift/Generated
+    opt:
+      - Visibility=Public
+      - Server=true
+      - Client=true

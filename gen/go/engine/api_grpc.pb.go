@@ -12,6 +12,7 @@ import (
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
+	emptypb "google.golang.org/protobuf/types/known/emptypb"
 )
 
 // This is a compile-time assertion to ensure that this generated file
@@ -20,12 +21,27 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	EngineAPI_ScanLibrary_FullMethodName   = "/cartomix.engine.EngineAPI/ScanLibrary"
-	EngineAPI_AnalyzeTracks_FullMethodName = "/cartomix.engine.EngineAPI/AnalyzeTracks"
-	EngineAPI_ListTracks_FullMethodName    = "/cartomix.engine.EngineAPI/ListTracks"
-	EngineAPI_GetTrack_FullMethodName      = "/cartomix.engine.EngineAPI/GetTrack"
-	EngineAPI_ProposeSet_FullMethodName    = "/cartomix.engine.EngineAPI/ProposeSet"
-	EngineAPI_ExportSet_FullMethodName     = "/cartomix.engine.EngineAPI/ExportSet"
+	EngineAPI_ScanLibrary_FullMethodName            = "/cartomix.engine.EngineAPI/ScanLibrary"
+	EngineAPI_AnalyzeTracks_FullMethodName          = "/cartomix.engine.EngineAPI/AnalyzeTracks"
+	EngineAPI_ListTracks_FullMethodName             = "/cartomix.engine.EngineAPI/ListTracks"
+	EngineAPI_GetTrack_FullMethodName               = "/cartomix.engine.EngineAPI/GetTrack"
+	EngineAPI_ProposeSet_FullMethodName             = "/cartomix.engine.EngineAPI/ProposeSet"
+	EngineAPI_ExportSet_FullMethodName              = "/cartomix.engine.EngineAPI/ExportSet"
+	EngineAPI_GetSimilarTracks_FullMethodName       = "/cartomix.engine.EngineAPI/GetSimilarTracks"
+	EngineAPI_GetMLSettings_FullMethodName          = "/cartomix.engine.EngineAPI/GetMLSettings"
+	EngineAPI_UpdateMLSettings_FullMethodName       = "/cartomix.engine.EngineAPI/UpdateMLSettings"
+	EngineAPI_ListTrainingLabels_FullMethodName     = "/cartomix.engine.EngineAPI/ListTrainingLabels"
+	EngineAPI_AddTrainingLabel_FullMethodName       = "/cartomix.engine.EngineAPI/AddTrainingLabel"
+	EngineAPI_DeleteTrainingLabel_FullMethodName    = "/cartomix.engine.EngineAPI/DeleteTrainingLabel"
+	EngineAPI_GetTrainingLabelStats_FullMethodName  = "/cartomix.engine.EngineAPI/GetTrainingLabelStats"
+	EngineAPI_StartTraining_FullMethodName          = "/cartomix.engine.EngineAPI/StartTraining"
+	EngineAPI_GetTrainingJob_FullMethodName         = "/cartomix.engine.EngineAPI/GetTrainingJob"
+	EngineAPI_ListTrainingJobs_FullMethodName       = "/cartomix.engine.EngineAPI/ListTrainingJobs"
+	EngineAPI_StreamTrainingProgress_FullMethodName = "/cartomix.engine.EngineAPI/StreamTrainingProgress"
+	EngineAPI_ListModelVersions_FullMethodName      = "/cartomix.engine.EngineAPI/ListModelVersions"
+	EngineAPI_ActivateModelVersion_FullMethodName   = "/cartomix.engine.EngineAPI/ActivateModelVersion"
+	EngineAPI_DeleteModelVersion_FullMethodName     = "/cartomix.engine.EngineAPI/DeleteModelVersion"
+	EngineAPI_HealthCheck_FullMethodName            = "/cartomix.engine.EngineAPI/HealthCheck"
 )
 
 // EngineAPIClient is the client API for EngineAPI service.
@@ -44,6 +60,27 @@ type EngineAPIClient interface {
 	ProposeSet(ctx context.Context, in *SetPlanRequest, opts ...grpc.CallOption) (*SetPlanResponse, error)
 	// Export playlist + cues + analysis artifacts.
 	ExportSet(ctx context.Context, in *ExportRequest, opts ...grpc.CallOption) (*ExportResponse, error)
+	// Find tracks similar to a given track with explainable scoring.
+	GetSimilarTracks(ctx context.Context, in *SimilarTracksRequest, opts ...grpc.CallOption) (*SimilarTracksResponse, error)
+	// Get/update ML settings.
+	GetMLSettings(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*common.MLSettings, error)
+	UpdateMLSettings(ctx context.Context, in *common.MLSettings, opts ...grpc.CallOption) (*common.MLSettings, error)
+	// Training label CRUD
+	ListTrainingLabels(ctx context.Context, in *ListLabelsRequest, opts ...grpc.CallOption) (*ListLabelsResponse, error)
+	AddTrainingLabel(ctx context.Context, in *AddLabelRequest, opts ...grpc.CallOption) (*AddLabelResponse, error)
+	DeleteTrainingLabel(ctx context.Context, in *DeleteLabelRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	GetTrainingLabelStats(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*common.TrainingLabelStats, error)
+	// Training job management
+	StartTraining(ctx context.Context, in *StartTrainingRequest, opts ...grpc.CallOption) (*StartTrainingResponse, error)
+	GetTrainingJob(ctx context.Context, in *GetJobRequest, opts ...grpc.CallOption) (*common.TrainingJob, error)
+	ListTrainingJobs(ctx context.Context, in *ListJobsRequest, opts ...grpc.CallOption) (*ListJobsResponse, error)
+	StreamTrainingProgress(ctx context.Context, in *GetJobRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[TrainingProgressUpdate], error)
+	// Model version management
+	ListModelVersions(ctx context.Context, in *ListModelsRequest, opts ...grpc.CallOption) (*ListModelsResponse, error)
+	ActivateModelVersion(ctx context.Context, in *ActivateModelRequest, opts ...grpc.CallOption) (*common.ModelVersion, error)
+	DeleteModelVersion(ctx context.Context, in *DeleteModelRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	// Health check
+	HealthCheck(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*HealthResponse, error)
 }
 
 type engineAPIClient struct {
@@ -141,6 +178,165 @@ func (c *engineAPIClient) ExportSet(ctx context.Context, in *ExportRequest, opts
 	return out, nil
 }
 
+func (c *engineAPIClient) GetSimilarTracks(ctx context.Context, in *SimilarTracksRequest, opts ...grpc.CallOption) (*SimilarTracksResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(SimilarTracksResponse)
+	err := c.cc.Invoke(ctx, EngineAPI_GetSimilarTracks_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *engineAPIClient) GetMLSettings(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*common.MLSettings, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(common.MLSettings)
+	err := c.cc.Invoke(ctx, EngineAPI_GetMLSettings_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *engineAPIClient) UpdateMLSettings(ctx context.Context, in *common.MLSettings, opts ...grpc.CallOption) (*common.MLSettings, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(common.MLSettings)
+	err := c.cc.Invoke(ctx, EngineAPI_UpdateMLSettings_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *engineAPIClient) ListTrainingLabels(ctx context.Context, in *ListLabelsRequest, opts ...grpc.CallOption) (*ListLabelsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListLabelsResponse)
+	err := c.cc.Invoke(ctx, EngineAPI_ListTrainingLabels_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *engineAPIClient) AddTrainingLabel(ctx context.Context, in *AddLabelRequest, opts ...grpc.CallOption) (*AddLabelResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(AddLabelResponse)
+	err := c.cc.Invoke(ctx, EngineAPI_AddTrainingLabel_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *engineAPIClient) DeleteTrainingLabel(ctx context.Context, in *DeleteLabelRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, EngineAPI_DeleteTrainingLabel_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *engineAPIClient) GetTrainingLabelStats(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*common.TrainingLabelStats, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(common.TrainingLabelStats)
+	err := c.cc.Invoke(ctx, EngineAPI_GetTrainingLabelStats_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *engineAPIClient) StartTraining(ctx context.Context, in *StartTrainingRequest, opts ...grpc.CallOption) (*StartTrainingResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(StartTrainingResponse)
+	err := c.cc.Invoke(ctx, EngineAPI_StartTraining_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *engineAPIClient) GetTrainingJob(ctx context.Context, in *GetJobRequest, opts ...grpc.CallOption) (*common.TrainingJob, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(common.TrainingJob)
+	err := c.cc.Invoke(ctx, EngineAPI_GetTrainingJob_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *engineAPIClient) ListTrainingJobs(ctx context.Context, in *ListJobsRequest, opts ...grpc.CallOption) (*ListJobsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListJobsResponse)
+	err := c.cc.Invoke(ctx, EngineAPI_ListTrainingJobs_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *engineAPIClient) StreamTrainingProgress(ctx context.Context, in *GetJobRequest, opts ...grpc.CallOption) (grpc.ServerStreamingClient[TrainingProgressUpdate], error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	stream, err := c.cc.NewStream(ctx, &EngineAPI_ServiceDesc.Streams[3], EngineAPI_StreamTrainingProgress_FullMethodName, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &grpc.GenericClientStream[GetJobRequest, TrainingProgressUpdate]{ClientStream: stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type EngineAPI_StreamTrainingProgressClient = grpc.ServerStreamingClient[TrainingProgressUpdate]
+
+func (c *engineAPIClient) ListModelVersions(ctx context.Context, in *ListModelsRequest, opts ...grpc.CallOption) (*ListModelsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ListModelsResponse)
+	err := c.cc.Invoke(ctx, EngineAPI_ListModelVersions_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *engineAPIClient) ActivateModelVersion(ctx context.Context, in *ActivateModelRequest, opts ...grpc.CallOption) (*common.ModelVersion, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(common.ModelVersion)
+	err := c.cc.Invoke(ctx, EngineAPI_ActivateModelVersion_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *engineAPIClient) DeleteModelVersion(ctx context.Context, in *DeleteModelRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, EngineAPI_DeleteModelVersion_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *engineAPIClient) HealthCheck(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*HealthResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(HealthResponse)
+	err := c.cc.Invoke(ctx, EngineAPI_HealthCheck_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // EngineAPIServer is the server API for EngineAPI service.
 // All implementations must embed UnimplementedEngineAPIServer
 // for forward compatibility.
@@ -157,6 +353,27 @@ type EngineAPIServer interface {
 	ProposeSet(context.Context, *SetPlanRequest) (*SetPlanResponse, error)
 	// Export playlist + cues + analysis artifacts.
 	ExportSet(context.Context, *ExportRequest) (*ExportResponse, error)
+	// Find tracks similar to a given track with explainable scoring.
+	GetSimilarTracks(context.Context, *SimilarTracksRequest) (*SimilarTracksResponse, error)
+	// Get/update ML settings.
+	GetMLSettings(context.Context, *emptypb.Empty) (*common.MLSettings, error)
+	UpdateMLSettings(context.Context, *common.MLSettings) (*common.MLSettings, error)
+	// Training label CRUD
+	ListTrainingLabels(context.Context, *ListLabelsRequest) (*ListLabelsResponse, error)
+	AddTrainingLabel(context.Context, *AddLabelRequest) (*AddLabelResponse, error)
+	DeleteTrainingLabel(context.Context, *DeleteLabelRequest) (*emptypb.Empty, error)
+	GetTrainingLabelStats(context.Context, *emptypb.Empty) (*common.TrainingLabelStats, error)
+	// Training job management
+	StartTraining(context.Context, *StartTrainingRequest) (*StartTrainingResponse, error)
+	GetTrainingJob(context.Context, *GetJobRequest) (*common.TrainingJob, error)
+	ListTrainingJobs(context.Context, *ListJobsRequest) (*ListJobsResponse, error)
+	StreamTrainingProgress(*GetJobRequest, grpc.ServerStreamingServer[TrainingProgressUpdate]) error
+	// Model version management
+	ListModelVersions(context.Context, *ListModelsRequest) (*ListModelsResponse, error)
+	ActivateModelVersion(context.Context, *ActivateModelRequest) (*common.ModelVersion, error)
+	DeleteModelVersion(context.Context, *DeleteModelRequest) (*emptypb.Empty, error)
+	// Health check
+	HealthCheck(context.Context, *emptypb.Empty) (*HealthResponse, error)
 	mustEmbedUnimplementedEngineAPIServer()
 }
 
@@ -184,6 +401,51 @@ func (UnimplementedEngineAPIServer) ProposeSet(context.Context, *SetPlanRequest)
 }
 func (UnimplementedEngineAPIServer) ExportSet(context.Context, *ExportRequest) (*ExportResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method ExportSet not implemented")
+}
+func (UnimplementedEngineAPIServer) GetSimilarTracks(context.Context, *SimilarTracksRequest) (*SimilarTracksResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetSimilarTracks not implemented")
+}
+func (UnimplementedEngineAPIServer) GetMLSettings(context.Context, *emptypb.Empty) (*common.MLSettings, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetMLSettings not implemented")
+}
+func (UnimplementedEngineAPIServer) UpdateMLSettings(context.Context, *common.MLSettings) (*common.MLSettings, error) {
+	return nil, status.Error(codes.Unimplemented, "method UpdateMLSettings not implemented")
+}
+func (UnimplementedEngineAPIServer) ListTrainingLabels(context.Context, *ListLabelsRequest) (*ListLabelsResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListTrainingLabels not implemented")
+}
+func (UnimplementedEngineAPIServer) AddTrainingLabel(context.Context, *AddLabelRequest) (*AddLabelResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method AddTrainingLabel not implemented")
+}
+func (UnimplementedEngineAPIServer) DeleteTrainingLabel(context.Context, *DeleteLabelRequest) (*emptypb.Empty, error) {
+	return nil, status.Error(codes.Unimplemented, "method DeleteTrainingLabel not implemented")
+}
+func (UnimplementedEngineAPIServer) GetTrainingLabelStats(context.Context, *emptypb.Empty) (*common.TrainingLabelStats, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetTrainingLabelStats not implemented")
+}
+func (UnimplementedEngineAPIServer) StartTraining(context.Context, *StartTrainingRequest) (*StartTrainingResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method StartTraining not implemented")
+}
+func (UnimplementedEngineAPIServer) GetTrainingJob(context.Context, *GetJobRequest) (*common.TrainingJob, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetTrainingJob not implemented")
+}
+func (UnimplementedEngineAPIServer) ListTrainingJobs(context.Context, *ListJobsRequest) (*ListJobsResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListTrainingJobs not implemented")
+}
+func (UnimplementedEngineAPIServer) StreamTrainingProgress(*GetJobRequest, grpc.ServerStreamingServer[TrainingProgressUpdate]) error {
+	return status.Error(codes.Unimplemented, "method StreamTrainingProgress not implemented")
+}
+func (UnimplementedEngineAPIServer) ListModelVersions(context.Context, *ListModelsRequest) (*ListModelsResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ListModelVersions not implemented")
+}
+func (UnimplementedEngineAPIServer) ActivateModelVersion(context.Context, *ActivateModelRequest) (*common.ModelVersion, error) {
+	return nil, status.Error(codes.Unimplemented, "method ActivateModelVersion not implemented")
+}
+func (UnimplementedEngineAPIServer) DeleteModelVersion(context.Context, *DeleteModelRequest) (*emptypb.Empty, error) {
+	return nil, status.Error(codes.Unimplemented, "method DeleteModelVersion not implemented")
+}
+func (UnimplementedEngineAPIServer) HealthCheck(context.Context, *emptypb.Empty) (*HealthResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method HealthCheck not implemented")
 }
 func (UnimplementedEngineAPIServer) mustEmbedUnimplementedEngineAPIServer() {}
 func (UnimplementedEngineAPIServer) testEmbeddedByValue()                   {}
@@ -293,6 +555,269 @@ func _EngineAPI_ExportSet_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
+func _EngineAPI_GetSimilarTracks_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SimilarTracksRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(EngineAPIServer).GetSimilarTracks(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: EngineAPI_GetSimilarTracks_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(EngineAPIServer).GetSimilarTracks(ctx, req.(*SimilarTracksRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _EngineAPI_GetMLSettings_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(emptypb.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(EngineAPIServer).GetMLSettings(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: EngineAPI_GetMLSettings_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(EngineAPIServer).GetMLSettings(ctx, req.(*emptypb.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _EngineAPI_UpdateMLSettings_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(common.MLSettings)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(EngineAPIServer).UpdateMLSettings(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: EngineAPI_UpdateMLSettings_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(EngineAPIServer).UpdateMLSettings(ctx, req.(*common.MLSettings))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _EngineAPI_ListTrainingLabels_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListLabelsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(EngineAPIServer).ListTrainingLabels(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: EngineAPI_ListTrainingLabels_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(EngineAPIServer).ListTrainingLabels(ctx, req.(*ListLabelsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _EngineAPI_AddTrainingLabel_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AddLabelRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(EngineAPIServer).AddTrainingLabel(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: EngineAPI_AddTrainingLabel_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(EngineAPIServer).AddTrainingLabel(ctx, req.(*AddLabelRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _EngineAPI_DeleteTrainingLabel_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteLabelRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(EngineAPIServer).DeleteTrainingLabel(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: EngineAPI_DeleteTrainingLabel_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(EngineAPIServer).DeleteTrainingLabel(ctx, req.(*DeleteLabelRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _EngineAPI_GetTrainingLabelStats_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(emptypb.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(EngineAPIServer).GetTrainingLabelStats(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: EngineAPI_GetTrainingLabelStats_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(EngineAPIServer).GetTrainingLabelStats(ctx, req.(*emptypb.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _EngineAPI_StartTraining_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(StartTrainingRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(EngineAPIServer).StartTraining(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: EngineAPI_StartTraining_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(EngineAPIServer).StartTraining(ctx, req.(*StartTrainingRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _EngineAPI_GetTrainingJob_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetJobRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(EngineAPIServer).GetTrainingJob(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: EngineAPI_GetTrainingJob_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(EngineAPIServer).GetTrainingJob(ctx, req.(*GetJobRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _EngineAPI_ListTrainingJobs_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListJobsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(EngineAPIServer).ListTrainingJobs(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: EngineAPI_ListTrainingJobs_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(EngineAPIServer).ListTrainingJobs(ctx, req.(*ListJobsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _EngineAPI_StreamTrainingProgress_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(GetJobRequest)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(EngineAPIServer).StreamTrainingProgress(m, &grpc.GenericServerStream[GetJobRequest, TrainingProgressUpdate]{ServerStream: stream})
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type EngineAPI_StreamTrainingProgressServer = grpc.ServerStreamingServer[TrainingProgressUpdate]
+
+func _EngineAPI_ListModelVersions_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListModelsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(EngineAPIServer).ListModelVersions(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: EngineAPI_ListModelVersions_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(EngineAPIServer).ListModelVersions(ctx, req.(*ListModelsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _EngineAPI_ActivateModelVersion_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ActivateModelRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(EngineAPIServer).ActivateModelVersion(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: EngineAPI_ActivateModelVersion_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(EngineAPIServer).ActivateModelVersion(ctx, req.(*ActivateModelRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _EngineAPI_DeleteModelVersion_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteModelRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(EngineAPIServer).DeleteModelVersion(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: EngineAPI_DeleteModelVersion_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(EngineAPIServer).DeleteModelVersion(ctx, req.(*DeleteModelRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _EngineAPI_HealthCheck_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(emptypb.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(EngineAPIServer).HealthCheck(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: EngineAPI_HealthCheck_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(EngineAPIServer).HealthCheck(ctx, req.(*emptypb.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // EngineAPI_ServiceDesc is the grpc.ServiceDesc for EngineAPI service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -312,6 +837,62 @@ var EngineAPI_ServiceDesc = grpc.ServiceDesc{
 			MethodName: "ExportSet",
 			Handler:    _EngineAPI_ExportSet_Handler,
 		},
+		{
+			MethodName: "GetSimilarTracks",
+			Handler:    _EngineAPI_GetSimilarTracks_Handler,
+		},
+		{
+			MethodName: "GetMLSettings",
+			Handler:    _EngineAPI_GetMLSettings_Handler,
+		},
+		{
+			MethodName: "UpdateMLSettings",
+			Handler:    _EngineAPI_UpdateMLSettings_Handler,
+		},
+		{
+			MethodName: "ListTrainingLabels",
+			Handler:    _EngineAPI_ListTrainingLabels_Handler,
+		},
+		{
+			MethodName: "AddTrainingLabel",
+			Handler:    _EngineAPI_AddTrainingLabel_Handler,
+		},
+		{
+			MethodName: "DeleteTrainingLabel",
+			Handler:    _EngineAPI_DeleteTrainingLabel_Handler,
+		},
+		{
+			MethodName: "GetTrainingLabelStats",
+			Handler:    _EngineAPI_GetTrainingLabelStats_Handler,
+		},
+		{
+			MethodName: "StartTraining",
+			Handler:    _EngineAPI_StartTraining_Handler,
+		},
+		{
+			MethodName: "GetTrainingJob",
+			Handler:    _EngineAPI_GetTrainingJob_Handler,
+		},
+		{
+			MethodName: "ListTrainingJobs",
+			Handler:    _EngineAPI_ListTrainingJobs_Handler,
+		},
+		{
+			MethodName: "ListModelVersions",
+			Handler:    _EngineAPI_ListModelVersions_Handler,
+		},
+		{
+			MethodName: "ActivateModelVersion",
+			Handler:    _EngineAPI_ActivateModelVersion_Handler,
+		},
+		{
+			MethodName: "DeleteModelVersion",
+			Handler:    _EngineAPI_DeleteModelVersion_Handler,
+		},
+		{
+			MethodName: "HealthCheck",
+			Handler:    _EngineAPI_HealthCheck_Handler,
+		},
 	},
 	Streams: []grpc.StreamDesc{
 		{
@@ -327,6 +908,11 @@ var EngineAPI_ServiceDesc = grpc.ServiceDesc{
 		{
 			StreamName:    "ListTracks",
 			Handler:       _EngineAPI_ListTracks_Handler,
+			ServerStreams: true,
+		},
+		{
+			StreamName:    "StreamTrainingProgress",
+			Handler:       _EngineAPI_StreamTrainingProgress_Handler,
 			ServerStreams: true,
 		},
 	},

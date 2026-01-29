@@ -8,7 +8,8 @@
 
 <!-- Status & Version -->
 [![Phase](https://img.shields.io/badge/beta-blueviolet?style=for-the-badge)](#beta-features)
-[![Version](https://img.shields.io/badge/v0.4.0-blue?style=for-the-badge)](#changelog)
+[![Version](https://img.shields.io/badge/v0.5.1-blue?style=for-the-badge)](#changelog)
+[![E2E Tests](https://img.shields.io/badge/E2E%20Tests-7%2F7%20Passing-brightgreen?style=for-the-badge)](#developer-loop)
 [![Local-First](https://img.shields.io/badge/local--first-success?style=for-the-badge)](#what-this-is)
 [![Privacy](https://img.shields.io/badge/100%25%20Local-222222?style=for-the-badge&logo=lock&logoColor=white)](#what-this-is)
 [![Offline](https://img.shields.io/badge/Offline%20Ready-00C853?style=for-the-badge)](#why-its-different)
@@ -25,11 +26,13 @@
 [![OpenL3](https://img.shields.io/badge/OpenL3%20512--dim-8B5CF6?style=for-the-badge)](#ml-powered-similarity)
 [![Vibe Match](https://img.shields.io/badge/Vibe%20Matching-EC4899?style=for-the-badge)](#ml-powered-similarity)
 [![Explainable](https://img.shields.io/badge/Explainable%20AI-10B981?style=for-the-badge)](#explainable-transitions)
+[![Custom Training](https://img.shields.io/badge/Custom%20Training-F59E0B?style=for-the-badge)](#custom-ml-training)
+[![SoundAnalysis](https://img.shields.io/badge/Apple%20SoundAnalysis-FF3B30?style=for-the-badge)](#apple-soundanalysis)
 
 <!-- Backend Stack -->
 [![Go](https://img.shields.io/badge/Go%201.24-00ADD8?style=for-the-badge&logo=go&logoColor=white)](#architecture)
 [![Swift](https://img.shields.io/badge/Swift%206-F05138?style=for-the-badge&logo=swift&logoColor=white)](#architecture)
-[![gRPC](https://img.shields.io/badge/gRPC-4285F4?style=for-the-badge&logo=google&logoColor=white)](#communication-protocols)
+[![gRPC](https://img.shields.io/badge/gRPC%20Streaming-4285F4?style=for-the-badge&logo=google&logoColor=white)](#communication-protocols)
 [![HTTP](https://img.shields.io/badge/HTTP%20REST-009688?style=for-the-badge)](#communication-protocols)
 [![SQLite](https://img.shields.io/badge/SQLite%20WAL-003B57?style=for-the-badge&logo=sqlite&logoColor=white)](#architecture)
 [![Protobuf](https://img.shields.io/badge/Protobuf-4285F4?style=for-the-badge&logo=google&logoColor=white)](#architecture)
@@ -73,6 +76,8 @@
 - [Why It's Different](#why-its-different)
 - [Apple Silicon Deep Dive](#apple-silicon-deep-dive)
 - [ML-Powered Similarity](#ml-powered-similarity)
+- [Apple SoundAnalysis](#apple-soundanalysis)
+- [Custom ML Training](#custom-ml-training)
 - [Explainable Transitions](#explainable-transitions)
 - [Beta Features](#beta-features)
 - [Pro Visualizations](#pro-visualizations)
@@ -87,6 +92,12 @@
 - [Roadmap](#roadmap)
 - [Contributing](#contributing)
 - [License](#license)
+
+> 📖 **See also:**
+> - [Installation Guide](INSTALL.md) for one-command install, system requirements, troubleshooting
+> - [AI/ML Architecture Guide](docs/AI-ML.md) for deep dive into OpenL3, SoundAnalysis, and custom training
+> - [ML Training Guide](docs/ML-TRAINING.md) for detailed custom model training documentation
+> - [gRPC Migration Guide](docs/gRPC-MIGRATION.md) for migrating from HTTP REST to gRPC
 
 ## What This Is
 
@@ -352,6 +363,157 @@ Algiers combines all three: OpenL3 for vibe, BPM/key for technical compatibility
 
 ---
 
+## Apple SoundAnalysis
+
+Algiers integrates **Apple's SoundAnalysis framework** (Layer 1) to detect audio context and generate quality flags — all running locally on your Mac.
+
+### Built-in Classifier (300+ Labels)
+
+Apple's SNClassifySoundRequest provides zero-training classification of sounds:
+
+```swift
+// Using Apple's built-in sound classifier
+let request = try SNClassifySoundRequest(classifierIdentifier: .version1)
+let analyzer = SNAudioStreamAnalyzer(format: audioFormat)
+try analyzer.add(request, withObserver: self)
+```
+
+### DJ-Relevant Categories
+
+The raw Apple labels are mapped to DJ-relevant categories:
+
+| Category | Example Labels | Use Case |
+|----------|----------------|----------|
+| **Music** | `music`, `electronic_music`, `hip_hop_music` | Primary audio content |
+| **Speech** | `speech`, `singing`, `crowd` | Crowd noise, vocals |
+| **Noise** | `noise`, `static`, `hum` | QA flagging |
+| **Silence** | `silence` | Track boundaries |
+
+### QA Flag Generation
+
+Based on classification results, Algiers generates actionable QA flags:
+
+| Flag | Trigger | Action |
+|------|---------|--------|
+| `needs_review` | Low confidence (<0.5) on primary context | Manual review suggested |
+| `mixed_content` | Speech + music in same track | Check for vocal samples |
+| `speech_detected` | >10s of continuous speech | May need review |
+| `low_confidence` | Analysis confidence below threshold | Re-analyze or manual check |
+
+```json
+GET /api/tracks/{id}
+
+{
+  "sound_context": "music",
+  "sound_context_confidence": 0.94,
+  "qa_flags": [
+    {
+      "type": "mixed_content",
+      "reason": "Speech detected in music track (2.3s at 1:42)",
+      "dismissed": false
+    }
+  ]
+}
+```
+
+---
+
+## Custom ML Training
+
+> 📖 **Full documentation:** [docs/ML-TRAINING.md](docs/ML-TRAINING.md)
+
+Algiers supports **opt-in custom model training** (Layer 3) for DJ-specific section classification. Train your own model to recognize Intro, Build, Drop, Breakdown, and Outro sections based on your labeling style.
+
+### 3-Layer ML Architecture
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                     Algiers ML Architecture                              │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                          │
+│  ┌──────────────┐   ┌──────────────┐   ┌──────────────┐                │
+│  │   Layer 1    │   │   Layer 2    │   │   Layer 3    │                │
+│  │              │   │              │   │              │                │
+│  │ SoundAnalysis│   │   OpenL3     │   │Custom Section│                │
+│  │  (Built-in)  │   │ (Embeddings) │   │  (Training)  │                │
+│  │              │   │              │   │              │                │
+│  │  300+ labels │   │   512-dim    │   │  7 DJ labels │                │
+│  │  Zero config │   │  Vibe match  │   │  Your data   │                │
+│  └──────────────┘   └──────────────┘   └──────────────┘                │
+│         │                  │                  │                         │
+│         │                  │                  │                         │
+│         ▼                  ▼                  ▼                         │
+│  ┌──────────────────────────────────────────────────────────┐          │
+│  │              All run on Apple Neural Engine               │          │
+│  │                   (ANE) — Local Only                      │          │
+│  └──────────────────────────────────────────────────────────┘          │
+│                                                                          │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+### DJ Section Labels
+
+| Label | Color | Description |
+|-------|-------|-------------|
+| `intro` | 🟢 Green | Track opening, minimal elements |
+| `build` | 🟡 Yellow | Energy rising, tension building |
+| `drop` | 🔴 Red | Main energy peak, full arrangement |
+| `break` | 🟣 Purple | Breakdown, stripped back |
+| `outro` | 🔵 Blue | Track ending, elements fading |
+| `verse` | ⬛ Gray | Vocal or melodic verse |
+| `chorus` | 🩷 Pink | Hook or main phrase |
+
+### Training Workflow
+
+1. **Label tracks** — Add section labels via the Training UI
+2. **Review stats** — Ensure minimum 10 samples per class
+3. **Train model** — Click "Start Training" (uses Create ML)
+4. **Activate model** — Choose best version for inference
+5. **Rollback** — Restore previous version if needed
+
+```
+┌─────────────┐    ┌─────────────┐    ┌─────────────┐    ┌─────────────┐
+│   Label     │───▶│   Train     │───▶│  Evaluate   │───▶│  Activate   │
+│   Tracks    │    │   Model     │    │   Results   │    │   Version   │
+│             │    │             │    │             │    │             │
+│ Min 10/class│    │ Create ML   │    │ Accuracy %  │    │ One-click   │
+│ 7 labels    │    │ On ANE      │    │ F1 Score    │    │ Rollback    │
+└─────────────┘    └─────────────┘    └─────────────┘    └─────────────┘
+```
+
+### Training API
+
+```bash
+# Add a training label
+curl -X POST http://localhost:8080/api/training/labels \
+  -H "Content-Type: application/json" \
+  -d '{
+    "track_id": 123,
+    "label_value": "drop",
+    "start_beat": 64,
+    "end_beat": 128,
+    "start_time_seconds": 32.0,
+    "end_time_seconds": 64.0
+  }'
+
+# Check if ready to train
+curl http://localhost:8080/api/training/labels/stats
+# {"total_labels": 142, "label_counts": {"drop": 28, "build": 25, ...}, "ready_for_training": true}
+
+# Start training
+curl -X POST http://localhost:8080/api/training/start
+# {"job_id": "job_1706550000", "message": "training job started"}
+
+# Check progress
+curl http://localhost:8080/api/training/jobs/job_1706550000
+# {"status": "training", "progress": 0.6, "current_epoch": 6, "total_epochs": 10}
+
+# Activate a model version
+curl -X POST http://localhost:8080/api/training/models/2/activate
+```
+
+---
+
 ## Explainable Transitions
 
 Every transition suggestion includes a **human-readable explanation** of why it works:
@@ -384,9 +546,29 @@ Every transition suggestion includes a **human-readable explanation** of why it 
 
 ## Beta Features
 
-v0.4.0-beta brings ML-powered similarity search with explainable AI:
+v0.5.1-beta brings **enhanced gRPC streaming progress** and comprehensive E2E testing:
 
-### ML & Similarity
+### gRPC Streaming Progress (v0.5.1 - NEW)
+- **Real-time Progress** — Current file, percent complete, elapsed time, ETA
+- **Byte-level Tracking** — Total bytes processed and remaining for scans
+- **Stage Timing** — Per-stage breakdown with millisecond precision
+- **Track Metadata** — Title, artist, duration included in analysis progress
+- **Validation Metrics** — Loss, accuracy for training progress
+
+### ML Training (v0.5.0)
+- **Custom DJ Section Training** — Train your own Intro/Build/Drop/Break/Outro classifier
+- **Create ML Integration** — Uses Apple's MLSoundClassifier on Neural Engine
+- **Model Versioning** — Keep multiple versions, activate/rollback with one click
+- **Training UI** — Label tracks, monitor progress, manage models
+- **Training API** — Full REST API for labels, jobs, and model versions
+
+### Apple SoundAnalysis (v0.5.0)
+- **Built-in Classifier** — 300+ audio labels with zero configuration
+- **Sound Context Detection** — Music/speech/noise classification
+- **QA Flag Generation** — Automatic quality flags (needs_review, mixed_content)
+- **Primary Context** — Dominant audio type with confidence score
+
+### ML & Similarity (v0.4.0)
 - **OpenL3 Embeddings** — 512-dimensional vectors from Core ML on ANE
 - **Vibe Matching** — Find tracks that "feel" similar beyond BPM/key
 - **Similarity Search API** — `GET /api/tracks/{id}/similar` with explanations
@@ -400,6 +582,10 @@ v0.4.0-beta brings ML-powered similarity search with explainable AI:
 - **Web Audio Playback** — Full browser-based audio with play/pause/seek/speed
 
 ### UI & Visualization
+- **Training Screen** — Dataset table, label editor, progress card, model versions
+- **Analysis Panel** — DSP + ML results with confidence bars and QA flags
+- **Similar Tracks Panel** — Ranked list with explainable scores
+- **Model Settings** — Feature toggles, disk usage, latency estimates
 - **Live Dashboard** — Animated stats with real-time analysis progress
 - **Canvas Waveform** — High-performance waveform with sections, cues, playhead
 - **Spectrum Analyzer** — WebGL-style frequency visualization with mirror mode
@@ -521,30 +707,60 @@ flowchart LR
 
 ## Communication Protocols
 
-### Why HTTP REST (Current)
-
-The web UI and Swift analyzer use **HTTP REST** for communication:
+Algiers supports **both HTTP REST and gRPC** for maximum flexibility:
 
 ```
-┌─────────┐       HTTP/JSON        ┌──────────┐       HTTP/JSON       ┌────────────┐
-│ Web UI  │ ◄──────────────────► │ Go Engine│ ◄───────────────────► │Swift Analzr│
-│ (React) │    /api/tracks         │  (Go)    │    /analyze           │  (Swift)   │
-└─────────┘    /api/similar        └──────────┘    /health             └────────────┘
+                           ┌─────────────────────────────────┐
+                           │         Go Engine               │
+                           │                                 │
+┌─────────┐    HTTP REST   │  ┌──────────┐  ┌──────────┐   │    HTTP/gRPC    ┌────────────┐
+│ Web UI  │ ◄────────────► │  │HTTP API  │  │gRPC API  │   │ ◄────────────► │Swift Analzr│
+│ (React) │   (deprecated) │  │ :8080    │  │ :50051   │   │                 │  (Swift)   │
+└─────────┘                │  └──────────┘  └──────────┘   │                 └────────────┘
+                           │                                 │
+                           └─────────────────────────────────┘
 ```
 
-**Advantages:**
+### gRPC API (Recommended)
+
+The gRPC API provides maximum performance with real-time streaming:
+
+| Feature | HTTP REST | gRPC |
+|---------|-----------|------|
+| **Protocol** | HTTP/1.1 + JSON | HTTP/2 + Protobuf |
+| **Streaming** | Limited (polling) | Full bidirectional |
+| **Latency** | ~100ms | ~10ms |
+| **Code Gen** | Manual | Automatic (10+ languages) |
+
+**gRPC Methods:**
+- `ScanLibrary` — Stream scan progress with file counts, byte progress, ETA
+- `AnalyzeTracks` — Stream per-track analysis with stage timings and overall job progress
+- `ListTracks` — Stream track summaries
+- `StreamTrainingProgress` — Real-time training with validation metrics and stage breakdowns
+- Full training, similarity, and model version management
+
+**Enhanced Streaming Progress (v1.0):**
+```
+ScanProgress: current_file, percent, elapsed_ms, eta_ms, bytes_processed, bytes_total
+AnalyzeProgress: track_index, total_tracks, overall_percent, stage_timings[], stage_message
+TrainingProgress: validation_loss, validation_accuracy, samples_processed, current_stage
+```
+
+> 📖 See [gRPC Migration Guide](docs/gRPC-MIGRATION.md) for complete migration instructions.
+
+### HTTP REST API (Deprecated)
+
+The HTTP REST API remains available for backward compatibility but is **deprecated**:
+
+- All responses include `Sunset: Wed, 01 Jul 2026 00:00:00 GMT` header
+- All responses include `Deprecation: true` header
+- New features may not be added to HTTP API
+- Planned removal: July 2026
+
+**Advantages (why it still exists):**
 - **Simplicity** — Easy to debug with curl, browser DevTools
 - **Browser-native** — No additional libraries (fetch API)
 - **Human-readable** — JSON responses are easy to inspect
-
-### Why gRPC (Future)
-
-gRPC is planned for high-throughput production deployments:
-
-**Advantages:**
-- **Performance** — Binary protobuf is 3-10x smaller than JSON
-- **Streaming** — Native support for real-time progress updates
-- **Type Safety** — Generated stubs catch errors at compile time
 
 ---
 
@@ -567,15 +783,40 @@ gRPC is planned for high-throughput production deployments:
 
 ## Quick Start
 
-### Prerequisites
+### One-Command Install (Recommended)
+
+```bash
+git clone https://github.com/cartomix/algiers.git
+cd algiers
+make install
+```
+
+That's it! The installer handles all dependencies automatically.
+
+### Run
+
+```bash
+# Start all services
+make run-stack
+
+# Open in browser
+open http://localhost:5173
+```
+
+> 📖 **Full installation guide:** [INSTALL.md](INSTALL.md) — System requirements, manual installation, troubleshooting
+
+<details>
+<summary>Manual installation (advanced)</summary>
+
+#### Prerequisites
 
 - **macOS 13+** (Ventura or later)
-- **Apple Silicon** (M1/M2/M3/M4)
+- **Apple Silicon** (M1/M2/M3/M4/M5)
 - **Go 1.24+** — `brew install go`
 - **Node.js 22+** — `brew install node`
 - **Swift 6+** — Comes with Xcode Command Line Tools
 
-### Build & Run
+#### Build & Run
 
 ```bash
 # Clone the repository
@@ -604,6 +845,8 @@ cd web && npm run dev
 ```
 
 Open http://localhost:5173 to see the UI.
+
+</details>
 
 ### Analyze a Track
 
@@ -664,7 +907,29 @@ See [docs/API.md](docs/API.md) for complete API documentation including:
 | `make proto` | Regenerate protobuf stubs |
 | `make build` | Build engine + analyzer binaries |
 | `cd web && npm run dev` | Start Vite dev server |
-| `make screenshots` | Capture UI screenshots |
+| `make screenshots` | Capture UI screenshots with Playwright |
+| `go test ./internal/e2e/...` | Run E2E tests (requires running services) |
+
+### Test Status
+
+| Test Suite | Status | Description |
+|------------|--------|-------------|
+| **Go Unit Tests** | ✅ 41/41 Passing | Storage, planner, exporter, similarity |
+| **E2E Tests** | ✅ 7/7 Passing | UI loads, Library, Set Builder, Graph, Theme, API |
+| **Golden Tests** | ✅ Passing | Rekordbox, Serato, Traktor exports |
+| **Property Tests** | ✅ Passing | Planner monotonicity, cue bounds |
+
+### E2E Test Coverage
+
+```
+TestUILoads         - Verifies app loads and renders
+TestLibraryView     - Verifies library navigation and track grid
+TestSetBuilder      - Verifies Set Builder view and energy arc
+TestGraphView       - Verifies D3.js force-directed graph
+TestThemeToggle     - Verifies dark/light theme switching
+TestAPIHealth       - Verifies /api/health endpoint
+TestAPIListTracks   - Verifies /api/tracks endpoint
+```
 
 ---
 
@@ -720,12 +985,67 @@ See [docs/API.md](docs/API.md) for complete API documentation including:
 - [x] Rekordbox/Serato/Traktor exports
 - [x] Playwright-Go E2E tests
 
-### v1.0 (In Progress)
-- [ ] Apple SoundAnalysis integration (music/speech/noise classification)
-- [ ] Custom DJ section model training (Intro/Build/Drop/Break/Outro)
-- [ ] UI components for similar tracks and ML settings
-- [ ] gRPC streaming for real-time progress
+### v0.5.0-beta (Complete)
+- [x] **Apple SoundAnalysis** — 300+ label classifier, QA flags
+- [x] **Custom DJ section training** — Create ML integration
+- [x] **Model versioning** — Activate, rollback, delete
+- [x] **Training UI** — Dataset table, label editor, progress card
+- [x] **Analysis Panel** — DSP + ML results display
+- [x] **Similar Tracks panel** — Explainable scoring
+
+### v1.0 (In Progress) — Core Stability
+- [x] Full gRPC API with streaming support
+- [x] gRPC interceptors (logging, metrics, recovery)
+- [x] HTTP REST deprecation notices
+- [x] **Metal/ANE requirement check** — Graceful failure on unsupported hardware
+- [x] **gRPC server for Swift analyzer** — Proto-compatible with error handling
+- [x] **Web Audio AudioWorklet player** — Real-time analysis + streaming
+- [x] **Extended fixturegen** — Phrase tracks, harmonic sets, club noise
+- [x] **DB versioning + backup** — Analysis cache versioning, backup/restore
+- [x] **gRPC streaming progress events** — Job %, current file, stage timings, ETA, byte progress
+- [ ] gRPC-web for browser clients
+- [ ] Cancel/timeout support for long scans
+- [ ] Waveform-based label painting (drag to select)
 - [ ] Alpha acceptance: 100 tracks → 30-track set → export
+- [ ] CI/CD pipeline (macOS runner with Swift/Go/Playwright)
+
+### v1.1 (Future) — Editable Analysis
+*"AI suggestions → AI assist" — Trust through user control*
+- [ ] **Override layer** — User-editable beatgrid, key, cues, sections, loudness
+- [ ] **Lock flags** — Prevent re-analysis from overwriting user edits
+- [ ] **Analysis versioning** — Store `analyzer_version`, `model_version`, `params`
+- [ ] **Content hash caching** — Safe cache reuse across runs/machines
+- [ ] **Auto-labeling** — Model suggests labels, user confirms
+- [ ] **Transfer learning** — Pre-trained base model for faster training
+- [ ] **Label import** — Import cue points from Rekordbox/Serato
+
+### v1.2 (Future) — Scalable Similarity
+*Fast ANN + explainable reranking*
+- [ ] **Two-stage similarity** — (1) Fast ANN on embeddings, (2) Rerank with BPM/key/energy
+- [ ] **Section-level embeddings** — Per intro/build/drop/outro, not just track mean
+- [ ] **Explain similarity view** — Show contributing windows + confidence bands
+- [ ] **Selectable OpenL3 configs** — Content type, input repr, embedding size
+- [ ] **Transition window detection** — Auto-detect mixable sections
+- [ ] **Energy curve matching** — Find tracks with compatible energy arcs
+
+### v1.3 (Future) — Export Verification & Reliability
+- [ ] **Export round-trip tests** — Automated export→import/parse→compare
+- [ ] **Golden export fixtures** — Versioned fixtures to catch silent corruption
+- [ ] **Cue templates** — "First downbeat", "bass-in", "breakdown", "mix-out" defaults
+- [ ] **Global scheduler** — Per-engine concurrency limits + backpressure
+- [ ] **Analysis bundles** — Params JSON + summary metrics per track for debugging
+- [ ] **Real-time analysis** — Stream audio while analyzing
+- [ ] **Hardware control surface** — MIDI mapping for cue review
+- [ ] **Stems export** — AI-separated stems for transition layers
+- [ ] **Club mode** — Full-screen visualization for live performance
+- [ ] **Collaborative playlists** — Share set plans with other DJs
+
+### Future Exploration
+- [ ] **Mood detection** — Happy/sad/dark/euphoric classification
+- [ ] **Genre embedding** — Fine-grained genre similarity
+- [ ] **Crowd energy prediction** — ML model trained on live recordings
+- [ ] **Transition synthesis** — AI-generated transition clips
+- [ ] **Voice-controlled prep** — "Find something like this but higher energy"
 
 ---
 
@@ -739,6 +1059,36 @@ PRs welcome! Keep commits scoped and include:
 ---
 
 ## Changelog
+
+### v0.5.1-beta (2026-01-29)
+- **Enhanced gRPC Streaming Progress**
+  - `ScanLibrary`: Current file name, percent progress, elapsed/ETA timing, byte-level progress
+  - `AnalyzeTracks`: Track index/total, overall job percent, per-stage timing breakdown, track metadata
+  - `StreamTrainingProgress`: Validation loss/accuracy, samples processed, 5-stage pipeline with timings
+  - All streams include elapsed time (ms) and ETA calculation
+
+### v0.5.0-beta (2026-01-29)
+- **Custom DJ Section Training (Layer 3)**
+  - Create ML MLSoundClassifier integration for ANE inference
+  - 7 DJ section labels: intro, build, drop, break, outro, verse, chorus
+  - Training job management with progress tracking
+  - Model versioning with activate/rollback/delete
+  - Full REST API for training labels, jobs, and models
+- **Apple SoundAnalysis (Layer 1)**
+  - Built-in classifier with 300+ audio labels
+  - Sound context detection (music/speech/noise/silence)
+  - QA flag generation (needs_review, mixed_content, speech_detected)
+  - Primary context with confidence scoring
+- **Training UI**
+  - TrainingScreen with dataset table and label statistics
+  - LabelEditor for adding section labels to tracks
+  - TrainingProgressCard with epoch/loss visualization
+  - ModelVersionsList with activate/delete actions
+- **Analysis Panel**
+  - DSP results with confidence bars
+  - ML sound context and events timeline
+  - QA flags with dismiss capability
+  - Embedding status indicator
 
 ### v0.4.0-beta (2026-01-29)
 - **OpenL3 ML Embeddings**

@@ -102,9 +102,9 @@ func TestUILoads(t *testing.T) {
 	}
 
 	// Verify app container exists
-	appContainer := page.Locator(".app-container")
+	appContainer := page.Locator(".app")
 	if count, err := appContainer.Count(); err != nil || count == 0 {
-		t.Error("expected app-container element")
+		t.Error("expected app element")
 	}
 }
 

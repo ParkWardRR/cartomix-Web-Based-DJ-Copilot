@@ -26,6 +26,7 @@ let package = Package(
             dependencies: [
                 "AnalyzerSwift",
                 .product(name: "GRPC", package: "grpc-swift"),
+                .product(name: "SwiftProtobuf", package: "swift-protobuf"),
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
                 .product(name: "Logging", package: "swift-log"),
             ]),

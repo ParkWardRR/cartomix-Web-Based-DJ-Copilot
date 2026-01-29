@@ -11,7 +11,7 @@ import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	_ "google.golang.org/protobuf/types/known/durationpb"
-	_ "google.golang.org/protobuf/types/known/emptypb"
+	emptypb "google.golang.org/protobuf/types/known/emptypb"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
@@ -129,14 +129,23 @@ func (x *ScanRequest) GetForceRescan() bool {
 }
 
 type ScanProgress struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Path          string                 `protobuf:"bytes,1,opt,name=path,proto3" json:"path,omitempty"`
-	Status        string                 `protobuf:"bytes,2,opt,name=status,proto3" json:"status,omitempty"` // queued / analyzing / done / skipped / error
-	Error         string                 `protobuf:"bytes,3,opt,name=error,proto3" json:"error,omitempty"`
-	Processed     int64                  `protobuf:"varint,4,opt,name=processed,proto3" json:"processed,omitempty"`
-	Total         int64                  `protobuf:"varint,5,opt,name=total,proto3" json:"total,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state     protoimpl.MessageState `protogen:"open.v1"`
+	Path      string                 `protobuf:"bytes,1,opt,name=path,proto3" json:"path,omitempty"`
+	Status    string                 `protobuf:"bytes,2,opt,name=status,proto3" json:"status,omitempty"` // queued / analyzing / done / skipped / error
+	Error     string                 `protobuf:"bytes,3,opt,name=error,proto3" json:"error,omitempty"`
+	Processed int64                  `protobuf:"varint,4,opt,name=processed,proto3" json:"processed,omitempty"`
+	Total     int64                  `protobuf:"varint,5,opt,name=total,proto3" json:"total,omitempty"`
+	// Enhanced progress fields (v1.0)
+	CurrentFile    string  `protobuf:"bytes,6,opt,name=current_file,json=currentFile,proto3" json:"current_file,omitempty"`              // Filename being processed (without path)
+	Percent        float32 `protobuf:"fixed32,7,opt,name=percent,proto3" json:"percent,omitempty"`                                       // Overall progress 0-100
+	ElapsedMs      int64   `protobuf:"varint,8,opt,name=elapsed_ms,json=elapsedMs,proto3" json:"elapsed_ms,omitempty"`                   // Elapsed time in milliseconds
+	EtaMs          int64   `protobuf:"varint,9,opt,name=eta_ms,json=etaMs,proto3" json:"eta_ms,omitempty"`                               // Estimated time remaining in milliseconds
+	NewTracksFound int64   `protobuf:"varint,10,opt,name=new_tracks_found,json=newTracksFound,proto3" json:"new_tracks_found,omitempty"` // Count of new tracks discovered
+	SkippedCached  int64   `protobuf:"varint,11,opt,name=skipped_cached,json=skippedCached,proto3" json:"skipped_cached,omitempty"`      // Count of tracks skipped (already in DB)
+	BytesProcessed int64   `protobuf:"varint,12,opt,name=bytes_processed,json=bytesProcessed,proto3" json:"bytes_processed,omitempty"`   // Total bytes processed so far
+	BytesTotal     int64   `protobuf:"varint,13,opt,name=bytes_total,json=bytesTotal,proto3" json:"bytes_total,omitempty"`               // Total bytes to process (if known)
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
 }
 
 func (x *ScanProgress) Reset() {
@@ -200,6 +209,62 @@ func (x *ScanProgress) GetProcessed() int64 {
 func (x *ScanProgress) GetTotal() int64 {
 	if x != nil {
 		return x.Total
+	}
+	return 0
+}
+
+func (x *ScanProgress) GetCurrentFile() string {
+	if x != nil {
+		return x.CurrentFile
+	}
+	return ""
+}
+
+func (x *ScanProgress) GetPercent() float32 {
+	if x != nil {
+		return x.Percent
+	}
+	return 0
+}
+
+func (x *ScanProgress) GetElapsedMs() int64 {
+	if x != nil {
+		return x.ElapsedMs
+	}
+	return 0
+}
+
+func (x *ScanProgress) GetEtaMs() int64 {
+	if x != nil {
+		return x.EtaMs
+	}
+	return 0
+}
+
+func (x *ScanProgress) GetNewTracksFound() int64 {
+	if x != nil {
+		return x.NewTracksFound
+	}
+	return 0
+}
+
+func (x *ScanProgress) GetSkippedCached() int64 {
+	if x != nil {
+		return x.SkippedCached
+	}
+	return 0
+}
+
+func (x *ScanProgress) GetBytesProcessed() int64 {
+	if x != nil {
+		return x.BytesProcessed
+	}
+	return 0
+}
+
+func (x *ScanProgress) GetBytesTotal() int64 {
+	if x != nil {
+		return x.BytesTotal
 	}
 	return 0
 }
@@ -281,14 +346,28 @@ func (x *AnalyzeRequest) GetAnalysisVersion() int32 {
 }
 
 type AnalyzeProgress struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Id            *common.TrackId        `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	Stage         string                 `protobuf:"bytes,2,opt,name=stage,proto3" json:"stage,omitempty"`   // decode / beatgrid / key / sections / cues / done
-	Status        string                 `protobuf:"bytes,3,opt,name=status,proto3" json:"status,omitempty"` // running / done / error
-	Error         string                 `protobuf:"bytes,4,opt,name=error,proto3" json:"error,omitempty"`
-	Percent       float32                `protobuf:"fixed32,5,opt,name=percent,proto3" json:"percent,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state   protoimpl.MessageState `protogen:"open.v1"`
+	Id      *common.TrackId        `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Stage   string                 `protobuf:"bytes,2,opt,name=stage,proto3" json:"stage,omitempty"`   // decode / beatgrid / key / energy / loudness / embeddings / sections / cues / done
+	Status  string                 `protobuf:"bytes,3,opt,name=status,proto3" json:"status,omitempty"` // running / done / error
+	Error   string                 `protobuf:"bytes,4,opt,name=error,proto3" json:"error,omitempty"`
+	Percent float32                `protobuf:"fixed32,5,opt,name=percent,proto3" json:"percent,omitempty"`
+	// Enhanced progress fields (v1.0)
+	CurrentFile    string  `protobuf:"bytes,6,opt,name=current_file,json=currentFile,proto3" json:"current_file,omitempty"`            // Filename being analyzed (without path)
+	TrackIndex     int32   `protobuf:"varint,7,opt,name=track_index,json=trackIndex,proto3" json:"track_index,omitempty"`              // Current track index (1-based)
+	TotalTracks    int32   `protobuf:"varint,8,opt,name=total_tracks,json=totalTracks,proto3" json:"total_tracks,omitempty"`           // Total tracks in this job
+	OverallPercent float32 `protobuf:"fixed32,9,opt,name=overall_percent,json=overallPercent,proto3" json:"overall_percent,omitempty"` // Overall job progress 0-100
+	ElapsedMs      int64   `protobuf:"varint,10,opt,name=elapsed_ms,json=elapsedMs,proto3" json:"elapsed_ms,omitempty"`                // Elapsed time in milliseconds
+	EtaMs          int64   `protobuf:"varint,11,opt,name=eta_ms,json=etaMs,proto3" json:"eta_ms,omitempty"`                            // Estimated time remaining in milliseconds
+	// Stage timing breakdown
+	StageTimings []*StageTiming `protobuf:"bytes,12,rep,name=stage_timings,json=stageTimings,proto3" json:"stage_timings,omitempty"` // Completed stage timings
+	StageMessage string         `protobuf:"bytes,13,opt,name=stage_message,json=stageMessage,proto3" json:"stage_message,omitempty"` // Human-readable stage description
+	// Track metadata (for UI display)
+	Title           string  `protobuf:"bytes,14,opt,name=title,proto3" json:"title,omitempty"`                                              // Track title (if known)
+	Artist          string  `protobuf:"bytes,15,opt,name=artist,proto3" json:"artist,omitempty"`                                            // Track artist (if known)
+	DurationSeconds float32 `protobuf:"fixed32,16,opt,name=duration_seconds,json=durationSeconds,proto3" json:"duration_seconds,omitempty"` // Track duration
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
 }
 
 func (x *AnalyzeProgress) Reset() {
@@ -356,6 +435,143 @@ func (x *AnalyzeProgress) GetPercent() float32 {
 	return 0
 }
 
+func (x *AnalyzeProgress) GetCurrentFile() string {
+	if x != nil {
+		return x.CurrentFile
+	}
+	return ""
+}
+
+func (x *AnalyzeProgress) GetTrackIndex() int32 {
+	if x != nil {
+		return x.TrackIndex
+	}
+	return 0
+}
+
+func (x *AnalyzeProgress) GetTotalTracks() int32 {
+	if x != nil {
+		return x.TotalTracks
+	}
+	return 0
+}
+
+func (x *AnalyzeProgress) GetOverallPercent() float32 {
+	if x != nil {
+		return x.OverallPercent
+	}
+	return 0
+}
+
+func (x *AnalyzeProgress) GetElapsedMs() int64 {
+	if x != nil {
+		return x.ElapsedMs
+	}
+	return 0
+}
+
+func (x *AnalyzeProgress) GetEtaMs() int64 {
+	if x != nil {
+		return x.EtaMs
+	}
+	return 0
+}
+
+func (x *AnalyzeProgress) GetStageTimings() []*StageTiming {
+	if x != nil {
+		return x.StageTimings
+	}
+	return nil
+}
+
+func (x *AnalyzeProgress) GetStageMessage() string {
+	if x != nil {
+		return x.StageMessage
+	}
+	return ""
+}
+
+func (x *AnalyzeProgress) GetTitle() string {
+	if x != nil {
+		return x.Title
+	}
+	return ""
+}
+
+func (x *AnalyzeProgress) GetArtist() string {
+	if x != nil {
+		return x.Artist
+	}
+	return ""
+}
+
+func (x *AnalyzeProgress) GetDurationSeconds() float32 {
+	if x != nil {
+		return x.DurationSeconds
+	}
+	return 0
+}
+
+type StageTiming struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Stage         string                 `protobuf:"bytes,1,opt,name=stage,proto3" json:"stage,omitempty"`                              // Stage name
+	DurationMs    int64                  `protobuf:"varint,2,opt,name=duration_ms,json=durationMs,proto3" json:"duration_ms,omitempty"` // Time spent in this stage
+	Completed     bool                   `protobuf:"varint,3,opt,name=completed,proto3" json:"completed,omitempty"`                     // Whether stage completed successfully
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *StageTiming) Reset() {
+	*x = StageTiming{}
+	mi := &file_engine_api_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *StageTiming) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*StageTiming) ProtoMessage() {}
+
+func (x *StageTiming) ProtoReflect() protoreflect.Message {
+	mi := &file_engine_api_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use StageTiming.ProtoReflect.Descriptor instead.
+func (*StageTiming) Descriptor() ([]byte, []int) {
+	return file_engine_api_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *StageTiming) GetStage() string {
+	if x != nil {
+		return x.Stage
+	}
+	return ""
+}
+
+func (x *StageTiming) GetDurationMs() int64 {
+	if x != nil {
+		return x.DurationMs
+	}
+	return 0
+}
+
+func (x *StageTiming) GetCompleted() bool {
+	if x != nil {
+		return x.Completed
+	}
+	return false
+}
+
 type ListTracksRequest struct {
 	state           protoimpl.MessageState `protogen:"open.v1"`
 	Query           string                 `protobuf:"bytes,1,opt,name=query,proto3" json:"query,omitempty"` // simple search
@@ -368,7 +584,7 @@ type ListTracksRequest struct {
 
 func (x *ListTracksRequest) Reset() {
 	*x = ListTracksRequest{}
-	mi := &file_engine_api_proto_msgTypes[4]
+	mi := &file_engine_api_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -380,7 +596,7 @@ func (x *ListTracksRequest) String() string {
 func (*ListTracksRequest) ProtoMessage() {}
 
 func (x *ListTracksRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_engine_api_proto_msgTypes[4]
+	mi := &file_engine_api_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -393,7 +609,7 @@ func (x *ListTracksRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListTracksRequest.ProtoReflect.Descriptor instead.
 func (*ListTracksRequest) Descriptor() ([]byte, []int) {
-	return file_engine_api_proto_rawDescGZIP(), []int{4}
+	return file_engine_api_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *ListTracksRequest) GetQuery() string {
@@ -433,7 +649,7 @@ type GetTrackRequest struct {
 
 func (x *GetTrackRequest) Reset() {
 	*x = GetTrackRequest{}
-	mi := &file_engine_api_proto_msgTypes[5]
+	mi := &file_engine_api_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -445,7 +661,7 @@ func (x *GetTrackRequest) String() string {
 func (*GetTrackRequest) ProtoMessage() {}
 
 func (x *GetTrackRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_engine_api_proto_msgTypes[5]
+	mi := &file_engine_api_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -458,7 +674,7 @@ func (x *GetTrackRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetTrackRequest.ProtoReflect.Descriptor instead.
 func (*GetTrackRequest) Descriptor() ([]byte, []int) {
-	return file_engine_api_proto_rawDescGZIP(), []int{5}
+	return file_engine_api_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *GetTrackRequest) GetId() *common.TrackId {
@@ -482,7 +698,7 @@ type SetPlanRequest struct {
 
 func (x *SetPlanRequest) Reset() {
 	*x = SetPlanRequest{}
-	mi := &file_engine_api_proto_msgTypes[6]
+	mi := &file_engine_api_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -494,7 +710,7 @@ func (x *SetPlanRequest) String() string {
 func (*SetPlanRequest) ProtoMessage() {}
 
 func (x *SetPlanRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_engine_api_proto_msgTypes[6]
+	mi := &file_engine_api_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -507,7 +723,7 @@ func (x *SetPlanRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SetPlanRequest.ProtoReflect.Descriptor instead.
 func (*SetPlanRequest) Descriptor() ([]byte, []int) {
-	return file_engine_api_proto_rawDescGZIP(), []int{6}
+	return file_engine_api_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *SetPlanRequest) GetTrackIds() []*common.TrackId {
@@ -562,7 +778,7 @@ type SetPlanResponse struct {
 
 func (x *SetPlanResponse) Reset() {
 	*x = SetPlanResponse{}
-	mi := &file_engine_api_proto_msgTypes[7]
+	mi := &file_engine_api_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -574,7 +790,7 @@ func (x *SetPlanResponse) String() string {
 func (*SetPlanResponse) ProtoMessage() {}
 
 func (x *SetPlanResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_engine_api_proto_msgTypes[7]
+	mi := &file_engine_api_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -587,7 +803,7 @@ func (x *SetPlanResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SetPlanResponse.ProtoReflect.Descriptor instead.
 func (*SetPlanResponse) Descriptor() ([]byte, []int) {
-	return file_engine_api_proto_rawDescGZIP(), []int{7}
+	return file_engine_api_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *SetPlanResponse) GetOrder() []*common.TrackId {
@@ -618,7 +834,7 @@ type ExportRequest struct {
 
 func (x *ExportRequest) Reset() {
 	*x = ExportRequest{}
-	mi := &file_engine_api_proto_msgTypes[8]
+	mi := &file_engine_api_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -630,7 +846,7 @@ func (x *ExportRequest) String() string {
 func (*ExportRequest) ProtoMessage() {}
 
 func (x *ExportRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_engine_api_proto_msgTypes[8]
+	mi := &file_engine_api_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -643,7 +859,7 @@ func (x *ExportRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ExportRequest.ProtoReflect.Descriptor instead.
 func (*ExportRequest) Descriptor() ([]byte, []int) {
-	return file_engine_api_proto_rawDescGZIP(), []int{8}
+	return file_engine_api_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *ExportRequest) GetTrackIds() []*common.TrackId {
@@ -700,7 +916,7 @@ type ExportResponse struct {
 
 func (x *ExportResponse) Reset() {
 	*x = ExportResponse{}
-	mi := &file_engine_api_proto_msgTypes[9]
+	mi := &file_engine_api_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -712,7 +928,7 @@ func (x *ExportResponse) String() string {
 func (*ExportResponse) ProtoMessage() {}
 
 func (x *ExportResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_engine_api_proto_msgTypes[9]
+	mi := &file_engine_api_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -725,7 +941,7 @@ func (x *ExportResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ExportResponse.ProtoReflect.Descriptor instead.
 func (*ExportResponse) Descriptor() ([]byte, []int) {
-	return file_engine_api_proto_rawDescGZIP(), []int{9}
+	return file_engine_api_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *ExportResponse) GetPlaylistPath() string {
@@ -756,6 +972,1148 @@ func (x *ExportResponse) GetVendorExports() []string {
 	return nil
 }
 
+type SimilarTracksRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	TrackId       *common.TrackId        `protobuf:"bytes,1,opt,name=track_id,json=trackId,proto3" json:"track_id,omitempty"`
+	Limit         int32                  `protobuf:"varint,2,opt,name=limit,proto3" json:"limit,omitempty"`                        // Max results (default 10)
+	MinScore      float32                `protobuf:"fixed32,3,opt,name=min_score,json=minScore,proto3" json:"min_score,omitempty"` // Minimum similarity score (0..1)
+	Constraints   *SimilarityConstraints `protobuf:"bytes,4,opt,name=constraints,proto3" json:"constraints,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SimilarTracksRequest) Reset() {
+	*x = SimilarTracksRequest{}
+	mi := &file_engine_api_proto_msgTypes[11]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SimilarTracksRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SimilarTracksRequest) ProtoMessage() {}
+
+func (x *SimilarTracksRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_engine_api_proto_msgTypes[11]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SimilarTracksRequest.ProtoReflect.Descriptor instead.
+func (*SimilarTracksRequest) Descriptor() ([]byte, []int) {
+	return file_engine_api_proto_rawDescGZIP(), []int{11}
+}
+
+func (x *SimilarTracksRequest) GetTrackId() *common.TrackId {
+	if x != nil {
+		return x.TrackId
+	}
+	return nil
+}
+
+func (x *SimilarTracksRequest) GetLimit() int32 {
+	if x != nil {
+		return x.Limit
+	}
+	return 0
+}
+
+func (x *SimilarTracksRequest) GetMinScore() float32 {
+	if x != nil {
+		return x.MinScore
+	}
+	return 0
+}
+
+func (x *SimilarTracksRequest) GetConstraints() *SimilarityConstraints {
+	if x != nil {
+		return x.Constraints
+	}
+	return nil
+}
+
+type SimilarityConstraints struct {
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	MaxBpmDelta    float64                `protobuf:"fixed64,1,opt,name=max_bpm_delta,json=maxBpmDelta,proto3" json:"max_bpm_delta,omitempty"`         // Max BPM difference
+	SameKeyOnly    bool                   `protobuf:"varint,2,opt,name=same_key_only,json=sameKeyOnly,proto3" json:"same_key_only,omitempty"`          // Only same/compatible keys
+	MaxEnergyDelta int32                  `protobuf:"varint,3,opt,name=max_energy_delta,json=maxEnergyDelta,proto3" json:"max_energy_delta,omitempty"` // Max energy level difference
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
+}
+
+func (x *SimilarityConstraints) Reset() {
+	*x = SimilarityConstraints{}
+	mi := &file_engine_api_proto_msgTypes[12]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SimilarityConstraints) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SimilarityConstraints) ProtoMessage() {}
+
+func (x *SimilarityConstraints) ProtoReflect() protoreflect.Message {
+	mi := &file_engine_api_proto_msgTypes[12]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SimilarityConstraints.ProtoReflect.Descriptor instead.
+func (*SimilarityConstraints) Descriptor() ([]byte, []int) {
+	return file_engine_api_proto_rawDescGZIP(), []int{12}
+}
+
+func (x *SimilarityConstraints) GetMaxBpmDelta() float64 {
+	if x != nil {
+		return x.MaxBpmDelta
+	}
+	return 0
+}
+
+func (x *SimilarityConstraints) GetSameKeyOnly() bool {
+	if x != nil {
+		return x.SameKeyOnly
+	}
+	return false
+}
+
+func (x *SimilarityConstraints) GetMaxEnergyDelta() int32 {
+	if x != nil {
+		return x.MaxEnergyDelta
+	}
+	return 0
+}
+
+type SimilarTracksResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	QueryTrack    *common.TrackId        `protobuf:"bytes,1,opt,name=query_track,json=queryTrack,proto3" json:"query_track,omitempty"`
+	Similar       []*common.SimilarTrack `protobuf:"bytes,2,rep,name=similar,proto3" json:"similar,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SimilarTracksResponse) Reset() {
+	*x = SimilarTracksResponse{}
+	mi := &file_engine_api_proto_msgTypes[13]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SimilarTracksResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SimilarTracksResponse) ProtoMessage() {}
+
+func (x *SimilarTracksResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_engine_api_proto_msgTypes[13]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SimilarTracksResponse.ProtoReflect.Descriptor instead.
+func (*SimilarTracksResponse) Descriptor() ([]byte, []int) {
+	return file_engine_api_proto_rawDescGZIP(), []int{13}
+}
+
+func (x *SimilarTracksResponse) GetQueryTrack() *common.TrackId {
+	if x != nil {
+		return x.QueryTrack
+	}
+	return nil
+}
+
+func (x *SimilarTracksResponse) GetSimilar() []*common.SimilarTrack {
+	if x != nil {
+		return x.Similar
+	}
+	return nil
+}
+
+type ListLabelsRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	TrackId       int64                  `protobuf:"varint,1,opt,name=track_id,json=trackId,proto3" json:"track_id,omitempty"`         // Optional filter by track
+	LabelValue    string                 `protobuf:"bytes,2,opt,name=label_value,json=labelValue,proto3" json:"label_value,omitempty"` // Optional filter by label type
+	Limit         int32                  `protobuf:"varint,3,opt,name=limit,proto3" json:"limit,omitempty"`
+	Offset        int32                  `protobuf:"varint,4,opt,name=offset,proto3" json:"offset,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListLabelsRequest) Reset() {
+	*x = ListLabelsRequest{}
+	mi := &file_engine_api_proto_msgTypes[14]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListLabelsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListLabelsRequest) ProtoMessage() {}
+
+func (x *ListLabelsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_engine_api_proto_msgTypes[14]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListLabelsRequest.ProtoReflect.Descriptor instead.
+func (*ListLabelsRequest) Descriptor() ([]byte, []int) {
+	return file_engine_api_proto_rawDescGZIP(), []int{14}
+}
+
+func (x *ListLabelsRequest) GetTrackId() int64 {
+	if x != nil {
+		return x.TrackId
+	}
+	return 0
+}
+
+func (x *ListLabelsRequest) GetLabelValue() string {
+	if x != nil {
+		return x.LabelValue
+	}
+	return ""
+}
+
+func (x *ListLabelsRequest) GetLimit() int32 {
+	if x != nil {
+		return x.Limit
+	}
+	return 0
+}
+
+func (x *ListLabelsRequest) GetOffset() int32 {
+	if x != nil {
+		return x.Offset
+	}
+	return 0
+}
+
+type ListLabelsResponse struct {
+	state         protoimpl.MessageState  `protogen:"open.v1"`
+	Labels        []*common.TrainingLabel `protobuf:"bytes,1,rep,name=labels,proto3" json:"labels,omitempty"`
+	Total         int32                   `protobuf:"varint,2,opt,name=total,proto3" json:"total,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListLabelsResponse) Reset() {
+	*x = ListLabelsResponse{}
+	mi := &file_engine_api_proto_msgTypes[15]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListLabelsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListLabelsResponse) ProtoMessage() {}
+
+func (x *ListLabelsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_engine_api_proto_msgTypes[15]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListLabelsResponse.ProtoReflect.Descriptor instead.
+func (*ListLabelsResponse) Descriptor() ([]byte, []int) {
+	return file_engine_api_proto_rawDescGZIP(), []int{15}
+}
+
+func (x *ListLabelsResponse) GetLabels() []*common.TrainingLabel {
+	if x != nil {
+		return x.Labels
+	}
+	return nil
+}
+
+func (x *ListLabelsResponse) GetTotal() int32 {
+	if x != nil {
+		return x.Total
+	}
+	return 0
+}
+
+type AddLabelRequest struct {
+	state            protoimpl.MessageState `protogen:"open.v1"`
+	TrackId          int64                  `protobuf:"varint,1,opt,name=track_id,json=trackId,proto3" json:"track_id,omitempty"`
+	LabelValue       string                 `protobuf:"bytes,2,opt,name=label_value,json=labelValue,proto3" json:"label_value,omitempty"` // intro, build, drop, break, outro, verse, chorus
+	StartBeat        int32                  `protobuf:"varint,3,opt,name=start_beat,json=startBeat,proto3" json:"start_beat,omitempty"`
+	EndBeat          int32                  `protobuf:"varint,4,opt,name=end_beat,json=endBeat,proto3" json:"end_beat,omitempty"`
+	StartTimeSeconds float64                `protobuf:"fixed64,5,opt,name=start_time_seconds,json=startTimeSeconds,proto3" json:"start_time_seconds,omitempty"`
+	EndTimeSeconds   float64                `protobuf:"fixed64,6,opt,name=end_time_seconds,json=endTimeSeconds,proto3" json:"end_time_seconds,omitempty"`
+	Source           string                 `protobuf:"bytes,7,opt,name=source,proto3" json:"source,omitempty"` // user, auto_detected, imported
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
+}
+
+func (x *AddLabelRequest) Reset() {
+	*x = AddLabelRequest{}
+	mi := &file_engine_api_proto_msgTypes[16]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AddLabelRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AddLabelRequest) ProtoMessage() {}
+
+func (x *AddLabelRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_engine_api_proto_msgTypes[16]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AddLabelRequest.ProtoReflect.Descriptor instead.
+func (*AddLabelRequest) Descriptor() ([]byte, []int) {
+	return file_engine_api_proto_rawDescGZIP(), []int{16}
+}
+
+func (x *AddLabelRequest) GetTrackId() int64 {
+	if x != nil {
+		return x.TrackId
+	}
+	return 0
+}
+
+func (x *AddLabelRequest) GetLabelValue() string {
+	if x != nil {
+		return x.LabelValue
+	}
+	return ""
+}
+
+func (x *AddLabelRequest) GetStartBeat() int32 {
+	if x != nil {
+		return x.StartBeat
+	}
+	return 0
+}
+
+func (x *AddLabelRequest) GetEndBeat() int32 {
+	if x != nil {
+		return x.EndBeat
+	}
+	return 0
+}
+
+func (x *AddLabelRequest) GetStartTimeSeconds() float64 {
+	if x != nil {
+		return x.StartTimeSeconds
+	}
+	return 0
+}
+
+func (x *AddLabelRequest) GetEndTimeSeconds() float64 {
+	if x != nil {
+		return x.EndTimeSeconds
+	}
+	return 0
+}
+
+func (x *AddLabelRequest) GetSource() string {
+	if x != nil {
+		return x.Source
+	}
+	return ""
+}
+
+type AddLabelResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            int64                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	Message       string                 `protobuf:"bytes,2,opt,name=message,proto3" json:"message,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AddLabelResponse) Reset() {
+	*x = AddLabelResponse{}
+	mi := &file_engine_api_proto_msgTypes[17]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AddLabelResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AddLabelResponse) ProtoMessage() {}
+
+func (x *AddLabelResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_engine_api_proto_msgTypes[17]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AddLabelResponse.ProtoReflect.Descriptor instead.
+func (*AddLabelResponse) Descriptor() ([]byte, []int) {
+	return file_engine_api_proto_rawDescGZIP(), []int{17}
+}
+
+func (x *AddLabelResponse) GetId() int64 {
+	if x != nil {
+		return x.Id
+	}
+	return 0
+}
+
+func (x *AddLabelResponse) GetMessage() string {
+	if x != nil {
+		return x.Message
+	}
+	return ""
+}
+
+type DeleteLabelRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            int64                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeleteLabelRequest) Reset() {
+	*x = DeleteLabelRequest{}
+	mi := &file_engine_api_proto_msgTypes[18]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeleteLabelRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeleteLabelRequest) ProtoMessage() {}
+
+func (x *DeleteLabelRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_engine_api_proto_msgTypes[18]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeleteLabelRequest.ProtoReflect.Descriptor instead.
+func (*DeleteLabelRequest) Descriptor() ([]byte, []int) {
+	return file_engine_api_proto_rawDescGZIP(), []int{18}
+}
+
+func (x *DeleteLabelRequest) GetId() int64 {
+	if x != nil {
+		return x.Id
+	}
+	return 0
+}
+
+type StartTrainingRequest struct {
+	state           protoimpl.MessageState `protogen:"open.v1"`
+	MaxEpochs       int32                  `protobuf:"varint,1,opt,name=max_epochs,json=maxEpochs,proto3" json:"max_epochs,omitempty"`                    // Optional, default 10
+	ValidationSplit float32                `protobuf:"fixed32,2,opt,name=validation_split,json=validationSplit,proto3" json:"validation_split,omitempty"` // Optional, default 0.2
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
+}
+
+func (x *StartTrainingRequest) Reset() {
+	*x = StartTrainingRequest{}
+	mi := &file_engine_api_proto_msgTypes[19]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *StartTrainingRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*StartTrainingRequest) ProtoMessage() {}
+
+func (x *StartTrainingRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_engine_api_proto_msgTypes[19]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use StartTrainingRequest.ProtoReflect.Descriptor instead.
+func (*StartTrainingRequest) Descriptor() ([]byte, []int) {
+	return file_engine_api_proto_rawDescGZIP(), []int{19}
+}
+
+func (x *StartTrainingRequest) GetMaxEpochs() int32 {
+	if x != nil {
+		return x.MaxEpochs
+	}
+	return 0
+}
+
+func (x *StartTrainingRequest) GetValidationSplit() float32 {
+	if x != nil {
+		return x.ValidationSplit
+	}
+	return 0
+}
+
+type StartTrainingResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	JobId         string                 `protobuf:"bytes,1,opt,name=job_id,json=jobId,proto3" json:"job_id,omitempty"`
+	Message       string                 `protobuf:"bytes,2,opt,name=message,proto3" json:"message,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *StartTrainingResponse) Reset() {
+	*x = StartTrainingResponse{}
+	mi := &file_engine_api_proto_msgTypes[20]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *StartTrainingResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*StartTrainingResponse) ProtoMessage() {}
+
+func (x *StartTrainingResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_engine_api_proto_msgTypes[20]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use StartTrainingResponse.ProtoReflect.Descriptor instead.
+func (*StartTrainingResponse) Descriptor() ([]byte, []int) {
+	return file_engine_api_proto_rawDescGZIP(), []int{20}
+}
+
+func (x *StartTrainingResponse) GetJobId() string {
+	if x != nil {
+		return x.JobId
+	}
+	return ""
+}
+
+func (x *StartTrainingResponse) GetMessage() string {
+	if x != nil {
+		return x.Message
+	}
+	return ""
+}
+
+type GetJobRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	JobId         string                 `protobuf:"bytes,1,opt,name=job_id,json=jobId,proto3" json:"job_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetJobRequest) Reset() {
+	*x = GetJobRequest{}
+	mi := &file_engine_api_proto_msgTypes[21]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetJobRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetJobRequest) ProtoMessage() {}
+
+func (x *GetJobRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_engine_api_proto_msgTypes[21]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetJobRequest.ProtoReflect.Descriptor instead.
+func (*GetJobRequest) Descriptor() ([]byte, []int) {
+	return file_engine_api_proto_rawDescGZIP(), []int{21}
+}
+
+func (x *GetJobRequest) GetJobId() string {
+	if x != nil {
+		return x.JobId
+	}
+	return ""
+}
+
+type ListJobsRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Limit         int32                  `protobuf:"varint,1,opt,name=limit,proto3" json:"limit,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListJobsRequest) Reset() {
+	*x = ListJobsRequest{}
+	mi := &file_engine_api_proto_msgTypes[22]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListJobsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListJobsRequest) ProtoMessage() {}
+
+func (x *ListJobsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_engine_api_proto_msgTypes[22]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListJobsRequest.ProtoReflect.Descriptor instead.
+func (*ListJobsRequest) Descriptor() ([]byte, []int) {
+	return file_engine_api_proto_rawDescGZIP(), []int{22}
+}
+
+func (x *ListJobsRequest) GetLimit() int32 {
+	if x != nil {
+		return x.Limit
+	}
+	return 0
+}
+
+type ListJobsResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Jobs          []*common.TrainingJob  `protobuf:"bytes,1,rep,name=jobs,proto3" json:"jobs,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListJobsResponse) Reset() {
+	*x = ListJobsResponse{}
+	mi := &file_engine_api_proto_msgTypes[23]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListJobsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListJobsResponse) ProtoMessage() {}
+
+func (x *ListJobsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_engine_api_proto_msgTypes[23]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListJobsResponse.ProtoReflect.Descriptor instead.
+func (*ListJobsResponse) Descriptor() ([]byte, []int) {
+	return file_engine_api_proto_rawDescGZIP(), []int{23}
+}
+
+func (x *ListJobsResponse) GetJobs() []*common.TrainingJob {
+	if x != nil {
+		return x.Jobs
+	}
+	return nil
+}
+
+type TrainingProgressUpdate struct {
+	state        protoimpl.MessageState `protogen:"open.v1"`
+	JobId        string                 `protobuf:"bytes,1,opt,name=job_id,json=jobId,proto3" json:"job_id,omitempty"`
+	Status       common.TrainingStatus  `protobuf:"varint,2,opt,name=status,proto3,enum=cartomix.common.TrainingStatus" json:"status,omitempty"`
+	Progress     float32                `protobuf:"fixed32,3,opt,name=progress,proto3" json:"progress,omitempty"`
+	CurrentEpoch int32                  `protobuf:"varint,4,opt,name=current_epoch,json=currentEpoch,proto3" json:"current_epoch,omitempty"`
+	TotalEpochs  int32                  `protobuf:"varint,5,opt,name=total_epochs,json=totalEpochs,proto3" json:"total_epochs,omitempty"`
+	CurrentLoss  float32                `protobuf:"fixed32,6,opt,name=current_loss,json=currentLoss,proto3" json:"current_loss,omitempty"`
+	Message      string                 `protobuf:"bytes,7,opt,name=message,proto3" json:"message,omitempty"`
+	// Enhanced progress fields (v1.0)
+	ElapsedMs          int64   `protobuf:"varint,8,opt,name=elapsed_ms,json=elapsedMs,proto3" json:"elapsed_ms,omitempty"`                              // Elapsed time in milliseconds
+	EtaMs              int64   `protobuf:"varint,9,opt,name=eta_ms,json=etaMs,proto3" json:"eta_ms,omitempty"`                                          // Estimated time remaining in milliseconds
+	ValidationLoss     float32 `protobuf:"fixed32,10,opt,name=validation_loss,json=validationLoss,proto3" json:"validation_loss,omitempty"`             // Validation loss (if available)
+	ValidationAccuracy float32 `protobuf:"fixed32,11,opt,name=validation_accuracy,json=validationAccuracy,proto3" json:"validation_accuracy,omitempty"` // Validation accuracy (if available)
+	SamplesProcessed   int32   `protobuf:"varint,12,opt,name=samples_processed,json=samplesProcessed,proto3" json:"samples_processed,omitempty"`        // Training samples processed this epoch
+	TotalSamples       int32   `protobuf:"varint,13,opt,name=total_samples,json=totalSamples,proto3" json:"total_samples,omitempty"`                    // Total training samples
+	// Stage breakdown
+	CurrentStage  string         `protobuf:"bytes,14,opt,name=current_stage,json=currentStage,proto3" json:"current_stage,omitempty"` // prepare_data / feature_extract / training / validation / export
+	StageTimings  []*StageTiming `protobuf:"bytes,15,rep,name=stage_timings,json=stageTimings,proto3" json:"stage_timings,omitempty"` // Completed stage timings
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *TrainingProgressUpdate) Reset() {
+	*x = TrainingProgressUpdate{}
+	mi := &file_engine_api_proto_msgTypes[24]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *TrainingProgressUpdate) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*TrainingProgressUpdate) ProtoMessage() {}
+
+func (x *TrainingProgressUpdate) ProtoReflect() protoreflect.Message {
+	mi := &file_engine_api_proto_msgTypes[24]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use TrainingProgressUpdate.ProtoReflect.Descriptor instead.
+func (*TrainingProgressUpdate) Descriptor() ([]byte, []int) {
+	return file_engine_api_proto_rawDescGZIP(), []int{24}
+}
+
+func (x *TrainingProgressUpdate) GetJobId() string {
+	if x != nil {
+		return x.JobId
+	}
+	return ""
+}
+
+func (x *TrainingProgressUpdate) GetStatus() common.TrainingStatus {
+	if x != nil {
+		return x.Status
+	}
+	return common.TrainingStatus(0)
+}
+
+func (x *TrainingProgressUpdate) GetProgress() float32 {
+	if x != nil {
+		return x.Progress
+	}
+	return 0
+}
+
+func (x *TrainingProgressUpdate) GetCurrentEpoch() int32 {
+	if x != nil {
+		return x.CurrentEpoch
+	}
+	return 0
+}
+
+func (x *TrainingProgressUpdate) GetTotalEpochs() int32 {
+	if x != nil {
+		return x.TotalEpochs
+	}
+	return 0
+}
+
+func (x *TrainingProgressUpdate) GetCurrentLoss() float32 {
+	if x != nil {
+		return x.CurrentLoss
+	}
+	return 0
+}
+
+func (x *TrainingProgressUpdate) GetMessage() string {
+	if x != nil {
+		return x.Message
+	}
+	return ""
+}
+
+func (x *TrainingProgressUpdate) GetElapsedMs() int64 {
+	if x != nil {
+		return x.ElapsedMs
+	}
+	return 0
+}
+
+func (x *TrainingProgressUpdate) GetEtaMs() int64 {
+	if x != nil {
+		return x.EtaMs
+	}
+	return 0
+}
+
+func (x *TrainingProgressUpdate) GetValidationLoss() float32 {
+	if x != nil {
+		return x.ValidationLoss
+	}
+	return 0
+}
+
+func (x *TrainingProgressUpdate) GetValidationAccuracy() float32 {
+	if x != nil {
+		return x.ValidationAccuracy
+	}
+	return 0
+}
+
+func (x *TrainingProgressUpdate) GetSamplesProcessed() int32 {
+	if x != nil {
+		return x.SamplesProcessed
+	}
+	return 0
+}
+
+func (x *TrainingProgressUpdate) GetTotalSamples() int32 {
+	if x != nil {
+		return x.TotalSamples
+	}
+	return 0
+}
+
+func (x *TrainingProgressUpdate) GetCurrentStage() string {
+	if x != nil {
+		return x.CurrentStage
+	}
+	return ""
+}
+
+func (x *TrainingProgressUpdate) GetStageTimings() []*StageTiming {
+	if x != nil {
+		return x.StageTimings
+	}
+	return nil
+}
+
+type ListModelsRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ModelType     string                 `protobuf:"bytes,1,opt,name=model_type,json=modelType,proto3" json:"model_type,omitempty"` // e.g., "dj_section"
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListModelsRequest) Reset() {
+	*x = ListModelsRequest{}
+	mi := &file_engine_api_proto_msgTypes[25]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListModelsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListModelsRequest) ProtoMessage() {}
+
+func (x *ListModelsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_engine_api_proto_msgTypes[25]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListModelsRequest.ProtoReflect.Descriptor instead.
+func (*ListModelsRequest) Descriptor() ([]byte, []int) {
+	return file_engine_api_proto_rawDescGZIP(), []int{25}
+}
+
+func (x *ListModelsRequest) GetModelType() string {
+	if x != nil {
+		return x.ModelType
+	}
+	return ""
+}
+
+type ListModelsResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Versions      []*common.ModelVersion `protobuf:"bytes,1,rep,name=versions,proto3" json:"versions,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListModelsResponse) Reset() {
+	*x = ListModelsResponse{}
+	mi := &file_engine_api_proto_msgTypes[26]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListModelsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListModelsResponse) ProtoMessage() {}
+
+func (x *ListModelsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_engine_api_proto_msgTypes[26]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListModelsResponse.ProtoReflect.Descriptor instead.
+func (*ListModelsResponse) Descriptor() ([]byte, []int) {
+	return file_engine_api_proto_rawDescGZIP(), []int{26}
+}
+
+func (x *ListModelsResponse) GetVersions() []*common.ModelVersion {
+	if x != nil {
+		return x.Versions
+	}
+	return nil
+}
+
+type ActivateModelRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ModelType     string                 `protobuf:"bytes,1,opt,name=model_type,json=modelType,proto3" json:"model_type,omitempty"`
+	Version       int32                  `protobuf:"varint,2,opt,name=version,proto3" json:"version,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ActivateModelRequest) Reset() {
+	*x = ActivateModelRequest{}
+	mi := &file_engine_api_proto_msgTypes[27]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ActivateModelRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ActivateModelRequest) ProtoMessage() {}
+
+func (x *ActivateModelRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_engine_api_proto_msgTypes[27]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ActivateModelRequest.ProtoReflect.Descriptor instead.
+func (*ActivateModelRequest) Descriptor() ([]byte, []int) {
+	return file_engine_api_proto_rawDescGZIP(), []int{27}
+}
+
+func (x *ActivateModelRequest) GetModelType() string {
+	if x != nil {
+		return x.ModelType
+	}
+	return ""
+}
+
+func (x *ActivateModelRequest) GetVersion() int32 {
+	if x != nil {
+		return x.Version
+	}
+	return 0
+}
+
+type DeleteModelRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ModelType     string                 `protobuf:"bytes,1,opt,name=model_type,json=modelType,proto3" json:"model_type,omitempty"`
+	Version       int32                  `protobuf:"varint,2,opt,name=version,proto3" json:"version,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeleteModelRequest) Reset() {
+	*x = DeleteModelRequest{}
+	mi := &file_engine_api_proto_msgTypes[28]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeleteModelRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeleteModelRequest) ProtoMessage() {}
+
+func (x *DeleteModelRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_engine_api_proto_msgTypes[28]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeleteModelRequest.ProtoReflect.Descriptor instead.
+func (*DeleteModelRequest) Descriptor() ([]byte, []int) {
+	return file_engine_api_proto_rawDescGZIP(), []int{28}
+}
+
+func (x *DeleteModelRequest) GetModelType() string {
+	if x != nil {
+		return x.ModelType
+	}
+	return ""
+}
+
+func (x *DeleteModelRequest) GetVersion() int32 {
+	if x != nil {
+		return x.Version
+	}
+	return 0
+}
+
+type HealthResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Healthy       bool                   `protobuf:"varint,1,opt,name=healthy,proto3" json:"healthy,omitempty"`
+	Version       string                 `protobuf:"bytes,2,opt,name=version,proto3" json:"version,omitempty"`
+	UptimeSeconds int64                  `protobuf:"varint,3,opt,name=uptime_seconds,json=uptimeSeconds,proto3" json:"uptime_seconds,omitempty"`
+	Services      map[string]string      `protobuf:"bytes,4,rep,name=services,proto3" json:"services,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"` // service name -> status
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *HealthResponse) Reset() {
+	*x = HealthResponse{}
+	mi := &file_engine_api_proto_msgTypes[29]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *HealthResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*HealthResponse) ProtoMessage() {}
+
+func (x *HealthResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_engine_api_proto_msgTypes[29]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use HealthResponse.ProtoReflect.Descriptor instead.
+func (*HealthResponse) Descriptor() ([]byte, []int) {
+	return file_engine_api_proto_rawDescGZIP(), []int{29}
+}
+
+func (x *HealthResponse) GetHealthy() bool {
+	if x != nil {
+		return x.Healthy
+	}
+	return false
+}
+
+func (x *HealthResponse) GetVersion() string {
+	if x != nil {
+		return x.Version
+	}
+	return ""
+}
+
+func (x *HealthResponse) GetUptimeSeconds() int64 {
+	if x != nil {
+		return x.UptimeSeconds
+	}
+	return 0
+}
+
+func (x *HealthResponse) GetServices() map[string]string {
+	if x != nil {
+		return x.Services
+	}
+	return nil
+}
+
 var File_engine_api_proto protoreflect.FileDescriptor
 
 const file_engine_api_proto_rawDesc = "" +
@@ -763,25 +2121,55 @@ const file_engine_api_proto_rawDesc = "" +
 	"\x10engine/api.proto\x12\x0fcartomix.engine\x1a\x1bgoogle/protobuf/empty.proto\x1a\x1egoogle/protobuf/duration.proto\x1a\x12common/types.proto\"F\n" +
 	"\vScanRequest\x12\x14\n" +
 	"\x05roots\x18\x01 \x03(\tR\x05roots\x12!\n" +
-	"\fforce_rescan\x18\x02 \x01(\bR\vforceRescan\"\x84\x01\n" +
+	"\fforce_rescan\x18\x02 \x01(\bR\vforceRescan\"\x92\x03\n" +
 	"\fScanProgress\x12\x12\n" +
 	"\x04path\x18\x01 \x01(\tR\x04path\x12\x16\n" +
 	"\x06status\x18\x02 \x01(\tR\x06status\x12\x14\n" +
 	"\x05error\x18\x03 \x01(\tR\x05error\x12\x1c\n" +
 	"\tprocessed\x18\x04 \x01(\x03R\tprocessed\x12\x14\n" +
-	"\x05total\x18\x05 \x01(\x03R\x05total\"\xc1\x01\n" +
+	"\x05total\x18\x05 \x01(\x03R\x05total\x12!\n" +
+	"\fcurrent_file\x18\x06 \x01(\tR\vcurrentFile\x12\x18\n" +
+	"\apercent\x18\a \x01(\x02R\apercent\x12\x1d\n" +
+	"\n" +
+	"elapsed_ms\x18\b \x01(\x03R\telapsedMs\x12\x15\n" +
+	"\x06eta_ms\x18\t \x01(\x03R\x05etaMs\x12(\n" +
+	"\x10new_tracks_found\x18\n" +
+	" \x01(\x03R\x0enewTracksFound\x12%\n" +
+	"\x0eskipped_cached\x18\v \x01(\x03R\rskippedCached\x12'\n" +
+	"\x0fbytes_processed\x18\f \x01(\x03R\x0ebytesProcessed\x12\x1f\n" +
+	"\vbytes_total\x18\r \x01(\x03R\n" +
+	"bytesTotal\"\xc1\x01\n" +
 	"\x0eAnalyzeRequest\x12\x14\n" +
 	"\x05paths\x18\x01 \x03(\tR\x05paths\x125\n" +
 	"\ttrack_ids\x18\x02 \x03(\v2\x18.cartomix.common.TrackIdR\btrackIds\x12\x14\n" +
 	"\x05force\x18\x03 \x01(\bR\x05force\x12!\n" +
 	"\fmax_parallel\x18\x04 \x01(\x05R\vmaxParallel\x12)\n" +
-	"\x10analysis_version\x18\x05 \x01(\x05R\x0fanalysisVersion\"\x99\x01\n" +
+	"\x10analysis_version\x18\x05 \x01(\x05R\x0fanalysisVersion\"\xa0\x04\n" +
 	"\x0fAnalyzeProgress\x12(\n" +
 	"\x02id\x18\x01 \x01(\v2\x18.cartomix.common.TrackIdR\x02id\x12\x14\n" +
 	"\x05stage\x18\x02 \x01(\tR\x05stage\x12\x16\n" +
 	"\x06status\x18\x03 \x01(\tR\x06status\x12\x14\n" +
 	"\x05error\x18\x04 \x01(\tR\x05error\x12\x18\n" +
-	"\apercent\x18\x05 \x01(\x02R\apercent\"\x86\x01\n" +
+	"\apercent\x18\x05 \x01(\x02R\apercent\x12!\n" +
+	"\fcurrent_file\x18\x06 \x01(\tR\vcurrentFile\x12\x1f\n" +
+	"\vtrack_index\x18\a \x01(\x05R\n" +
+	"trackIndex\x12!\n" +
+	"\ftotal_tracks\x18\b \x01(\x05R\vtotalTracks\x12'\n" +
+	"\x0foverall_percent\x18\t \x01(\x02R\x0eoverallPercent\x12\x1d\n" +
+	"\n" +
+	"elapsed_ms\x18\n" +
+	" \x01(\x03R\telapsedMs\x12\x15\n" +
+	"\x06eta_ms\x18\v \x01(\x03R\x05etaMs\x12A\n" +
+	"\rstage_timings\x18\f \x03(\v2\x1c.cartomix.engine.StageTimingR\fstageTimings\x12#\n" +
+	"\rstage_message\x18\r \x01(\tR\fstageMessage\x12\x14\n" +
+	"\x05title\x18\x0e \x01(\tR\x05title\x12\x16\n" +
+	"\x06artist\x18\x0f \x01(\tR\x06artist\x12)\n" +
+	"\x10duration_seconds\x18\x10 \x01(\x02R\x0fdurationSeconds\"b\n" +
+	"\vStageTiming\x12\x14\n" +
+	"\x05stage\x18\x01 \x01(\tR\x05stage\x12\x1f\n" +
+	"\vduration_ms\x18\x02 \x01(\x03R\n" +
+	"durationMs\x12\x1c\n" +
+	"\tcompleted\x18\x03 \x01(\bR\tcompleted\"\x86\x01\n" +
 	"\x11ListTracksRequest\x12\x14\n" +
 	"\x05query\x18\x01 \x01(\tR\x05query\x12*\n" +
 	"\x11needs_grid_review\x18\x02 \x01(\bR\x0fneedsGridReview\x12\x19\n" +
@@ -812,12 +2200,101 @@ const file_engine_api_proto_rawDesc = "" +
 	"\rplaylist_path\x18\x01 \x01(\tR\fplaylistPath\x12#\n" +
 	"\ranalysis_json\x18\x02 \x01(\tR\fanalysisJson\x12\x19\n" +
 	"\bcues_csv\x18\x03 \x01(\tR\acuesCsv\x12%\n" +
-	"\x0evendor_exports\x18\x04 \x03(\tR\rvendorExports*P\n" +
+	"\x0evendor_exports\x18\x04 \x03(\tR\rvendorExports\"\xc8\x01\n" +
+	"\x14SimilarTracksRequest\x123\n" +
+	"\btrack_id\x18\x01 \x01(\v2\x18.cartomix.common.TrackIdR\atrackId\x12\x14\n" +
+	"\x05limit\x18\x02 \x01(\x05R\x05limit\x12\x1b\n" +
+	"\tmin_score\x18\x03 \x01(\x02R\bminScore\x12H\n" +
+	"\vconstraints\x18\x04 \x01(\v2&.cartomix.engine.SimilarityConstraintsR\vconstraints\"\x89\x01\n" +
+	"\x15SimilarityConstraints\x12\"\n" +
+	"\rmax_bpm_delta\x18\x01 \x01(\x01R\vmaxBpmDelta\x12\"\n" +
+	"\rsame_key_only\x18\x02 \x01(\bR\vsameKeyOnly\x12(\n" +
+	"\x10max_energy_delta\x18\x03 \x01(\x05R\x0emaxEnergyDelta\"\x8b\x01\n" +
+	"\x15SimilarTracksResponse\x129\n" +
+	"\vquery_track\x18\x01 \x01(\v2\x18.cartomix.common.TrackIdR\n" +
+	"queryTrack\x127\n" +
+	"\asimilar\x18\x02 \x03(\v2\x1d.cartomix.common.SimilarTrackR\asimilar\"}\n" +
+	"\x11ListLabelsRequest\x12\x19\n" +
+	"\btrack_id\x18\x01 \x01(\x03R\atrackId\x12\x1f\n" +
+	"\vlabel_value\x18\x02 \x01(\tR\n" +
+	"labelValue\x12\x14\n" +
+	"\x05limit\x18\x03 \x01(\x05R\x05limit\x12\x16\n" +
+	"\x06offset\x18\x04 \x01(\x05R\x06offset\"b\n" +
+	"\x12ListLabelsResponse\x126\n" +
+	"\x06labels\x18\x01 \x03(\v2\x1e.cartomix.common.TrainingLabelR\x06labels\x12\x14\n" +
+	"\x05total\x18\x02 \x01(\x05R\x05total\"\xf7\x01\n" +
+	"\x0fAddLabelRequest\x12\x19\n" +
+	"\btrack_id\x18\x01 \x01(\x03R\atrackId\x12\x1f\n" +
+	"\vlabel_value\x18\x02 \x01(\tR\n" +
+	"labelValue\x12\x1d\n" +
+	"\n" +
+	"start_beat\x18\x03 \x01(\x05R\tstartBeat\x12\x19\n" +
+	"\bend_beat\x18\x04 \x01(\x05R\aendBeat\x12,\n" +
+	"\x12start_time_seconds\x18\x05 \x01(\x01R\x10startTimeSeconds\x12(\n" +
+	"\x10end_time_seconds\x18\x06 \x01(\x01R\x0eendTimeSeconds\x12\x16\n" +
+	"\x06source\x18\a \x01(\tR\x06source\"<\n" +
+	"\x10AddLabelResponse\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\x03R\x02id\x12\x18\n" +
+	"\amessage\x18\x02 \x01(\tR\amessage\"$\n" +
+	"\x12DeleteLabelRequest\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\x03R\x02id\"`\n" +
+	"\x14StartTrainingRequest\x12\x1d\n" +
+	"\n" +
+	"max_epochs\x18\x01 \x01(\x05R\tmaxEpochs\x12)\n" +
+	"\x10validation_split\x18\x02 \x01(\x02R\x0fvalidationSplit\"H\n" +
+	"\x15StartTrainingResponse\x12\x15\n" +
+	"\x06job_id\x18\x01 \x01(\tR\x05jobId\x12\x18\n" +
+	"\amessage\x18\x02 \x01(\tR\amessage\"&\n" +
+	"\rGetJobRequest\x12\x15\n" +
+	"\x06job_id\x18\x01 \x01(\tR\x05jobId\"'\n" +
+	"\x0fListJobsRequest\x12\x14\n" +
+	"\x05limit\x18\x01 \x01(\x05R\x05limit\"D\n" +
+	"\x10ListJobsResponse\x120\n" +
+	"\x04jobs\x18\x01 \x03(\v2\x1c.cartomix.common.TrainingJobR\x04jobs\"\xd3\x04\n" +
+	"\x16TrainingProgressUpdate\x12\x15\n" +
+	"\x06job_id\x18\x01 \x01(\tR\x05jobId\x127\n" +
+	"\x06status\x18\x02 \x01(\x0e2\x1f.cartomix.common.TrainingStatusR\x06status\x12\x1a\n" +
+	"\bprogress\x18\x03 \x01(\x02R\bprogress\x12#\n" +
+	"\rcurrent_epoch\x18\x04 \x01(\x05R\fcurrentEpoch\x12!\n" +
+	"\ftotal_epochs\x18\x05 \x01(\x05R\vtotalEpochs\x12!\n" +
+	"\fcurrent_loss\x18\x06 \x01(\x02R\vcurrentLoss\x12\x18\n" +
+	"\amessage\x18\a \x01(\tR\amessage\x12\x1d\n" +
+	"\n" +
+	"elapsed_ms\x18\b \x01(\x03R\telapsedMs\x12\x15\n" +
+	"\x06eta_ms\x18\t \x01(\x03R\x05etaMs\x12'\n" +
+	"\x0fvalidation_loss\x18\n" +
+	" \x01(\x02R\x0evalidationLoss\x12/\n" +
+	"\x13validation_accuracy\x18\v \x01(\x02R\x12validationAccuracy\x12+\n" +
+	"\x11samples_processed\x18\f \x01(\x05R\x10samplesProcessed\x12#\n" +
+	"\rtotal_samples\x18\r \x01(\x05R\ftotalSamples\x12#\n" +
+	"\rcurrent_stage\x18\x0e \x01(\tR\fcurrentStage\x12A\n" +
+	"\rstage_timings\x18\x0f \x03(\v2\x1c.cartomix.engine.StageTimingR\fstageTimings\"2\n" +
+	"\x11ListModelsRequest\x12\x1d\n" +
+	"\n" +
+	"model_type\x18\x01 \x01(\tR\tmodelType\"O\n" +
+	"\x12ListModelsResponse\x129\n" +
+	"\bversions\x18\x01 \x03(\v2\x1d.cartomix.common.ModelVersionR\bversions\"O\n" +
+	"\x14ActivateModelRequest\x12\x1d\n" +
+	"\n" +
+	"model_type\x18\x01 \x01(\tR\tmodelType\x12\x18\n" +
+	"\aversion\x18\x02 \x01(\x05R\aversion\"M\n" +
+	"\x12DeleteModelRequest\x12\x1d\n" +
+	"\n" +
+	"model_type\x18\x01 \x01(\tR\tmodelType\x12\x18\n" +
+	"\aversion\x18\x02 \x01(\x05R\aversion\"\xf3\x01\n" +
+	"\x0eHealthResponse\x12\x18\n" +
+	"\ahealthy\x18\x01 \x01(\bR\ahealthy\x12\x18\n" +
+	"\aversion\x18\x02 \x01(\tR\aversion\x12%\n" +
+	"\x0euptime_seconds\x18\x03 \x01(\x03R\ruptimeSeconds\x12I\n" +
+	"\bservices\x18\x04 \x03(\v2-.cartomix.engine.HealthResponse.ServicesEntryR\bservices\x1a;\n" +
+	"\rServicesEntry\x12\x10\n" +
+	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01*P\n" +
 	"\aSetMode\x12\x18\n" +
 	"\x14SET_MODE_UNSPECIFIED\x10\x00\x12\v\n" +
 	"\aWARM_UP\x10\x01\x12\r\n" +
 	"\tPEAK_TIME\x10\x02\x12\x0f\n" +
-	"\vOPEN_FORMAT\x10\x032\xef\x03\n" +
+	"\vOPEN_FORMAT\x10\x032\x8d\x0e\n" +
 	"\tEngineAPI\x12L\n" +
 	"\vScanLibrary\x12\x1c.cartomix.engine.ScanRequest\x1a\x1d.cartomix.engine.ScanProgress0\x01\x12T\n" +
 	"\rAnalyzeTracks\x12\x1f.cartomix.engine.AnalyzeRequest\x1a .cartomix.engine.AnalyzeProgress0\x01\x12Q\n" +
@@ -826,7 +2303,22 @@ const file_engine_api_proto_rawDesc = "" +
 	"\bGetTrack\x12 .cartomix.engine.GetTrackRequest\x1a\x1e.cartomix.common.TrackAnalysis\x12O\n" +
 	"\n" +
 	"ProposeSet\x12\x1f.cartomix.engine.SetPlanRequest\x1a .cartomix.engine.SetPlanResponse\x12L\n" +
-	"\tExportSet\x12\x1e.cartomix.engine.ExportRequest\x1a\x1f.cartomix.engine.ExportResponseB\xa6\x01\n" +
+	"\tExportSet\x12\x1e.cartomix.engine.ExportRequest\x1a\x1f.cartomix.engine.ExportResponse\x12a\n" +
+	"\x10GetSimilarTracks\x12%.cartomix.engine.SimilarTracksRequest\x1a&.cartomix.engine.SimilarTracksResponse\x12D\n" +
+	"\rGetMLSettings\x12\x16.google.protobuf.Empty\x1a\x1b.cartomix.common.MLSettings\x12L\n" +
+	"\x10UpdateMLSettings\x12\x1b.cartomix.common.MLSettings\x1a\x1b.cartomix.common.MLSettings\x12]\n" +
+	"\x12ListTrainingLabels\x12\".cartomix.engine.ListLabelsRequest\x1a#.cartomix.engine.ListLabelsResponse\x12W\n" +
+	"\x10AddTrainingLabel\x12 .cartomix.engine.AddLabelRequest\x1a!.cartomix.engine.AddLabelResponse\x12R\n" +
+	"\x13DeleteTrainingLabel\x12#.cartomix.engine.DeleteLabelRequest\x1a\x16.google.protobuf.Empty\x12T\n" +
+	"\x15GetTrainingLabelStats\x12\x16.google.protobuf.Empty\x1a#.cartomix.common.TrainingLabelStats\x12^\n" +
+	"\rStartTraining\x12%.cartomix.engine.StartTrainingRequest\x1a&.cartomix.engine.StartTrainingResponse\x12N\n" +
+	"\x0eGetTrainingJob\x12\x1e.cartomix.engine.GetJobRequest\x1a\x1c.cartomix.common.TrainingJob\x12W\n" +
+	"\x10ListTrainingJobs\x12 .cartomix.engine.ListJobsRequest\x1a!.cartomix.engine.ListJobsResponse\x12c\n" +
+	"\x16StreamTrainingProgress\x12\x1e.cartomix.engine.GetJobRequest\x1a'.cartomix.engine.TrainingProgressUpdate0\x01\x12\\\n" +
+	"\x11ListModelVersions\x12\".cartomix.engine.ListModelsRequest\x1a#.cartomix.engine.ListModelsResponse\x12\\\n" +
+	"\x14ActivateModelVersion\x12%.cartomix.engine.ActivateModelRequest\x1a\x1d.cartomix.common.ModelVersion\x12Q\n" +
+	"\x12DeleteModelVersion\x12#.cartomix.engine.DeleteModelRequest\x1a\x16.google.protobuf.Empty\x12F\n" +
+	"\vHealthCheck\x12\x16.google.protobuf.Empty\x1a\x1f.cartomix.engine.HealthResponseB\xa6\x01\n" +
 	"\x13com.cartomix.engineB\bApiProtoP\x01Z(github.com/cartomix/cancun/gen/go/engine\xa2\x02\x03CEX\xaa\x02\x0fCartomix.Engine\xca\x02\x0fCartomix\\Engine\xe2\x02\x1bCartomix\\Engine\\GPBMetadata\xea\x02\x10Cartomix::Engineb\x06proto3"
 
 var (
@@ -842,52 +2334,122 @@ func file_engine_api_proto_rawDescGZIP() []byte {
 }
 
 var file_engine_api_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_engine_api_proto_msgTypes = make([]protoimpl.MessageInfo, 10)
+var file_engine_api_proto_msgTypes = make([]protoimpl.MessageInfo, 31)
 var file_engine_api_proto_goTypes = []any{
-	(SetMode)(0),                   // 0: cartomix.engine.SetMode
-	(*ScanRequest)(nil),            // 1: cartomix.engine.ScanRequest
-	(*ScanProgress)(nil),           // 2: cartomix.engine.ScanProgress
-	(*AnalyzeRequest)(nil),         // 3: cartomix.engine.AnalyzeRequest
-	(*AnalyzeProgress)(nil),        // 4: cartomix.engine.AnalyzeProgress
-	(*ListTracksRequest)(nil),      // 5: cartomix.engine.ListTracksRequest
-	(*GetTrackRequest)(nil),        // 6: cartomix.engine.GetTrackRequest
-	(*SetPlanRequest)(nil),         // 7: cartomix.engine.SetPlanRequest
-	(*SetPlanResponse)(nil),        // 8: cartomix.engine.SetPlanResponse
-	(*ExportRequest)(nil),          // 9: cartomix.engine.ExportRequest
-	(*ExportResponse)(nil),         // 10: cartomix.engine.ExportResponse
-	(*common.TrackId)(nil),         // 11: cartomix.common.TrackId
-	(*common.EdgeExplanation)(nil), // 12: cartomix.common.EdgeExplanation
-	(*common.TrackSummary)(nil),    // 13: cartomix.common.TrackSummary
-	(*common.TrackAnalysis)(nil),   // 14: cartomix.common.TrackAnalysis
+	(SetMode)(0),                      // 0: cartomix.engine.SetMode
+	(*ScanRequest)(nil),               // 1: cartomix.engine.ScanRequest
+	(*ScanProgress)(nil),              // 2: cartomix.engine.ScanProgress
+	(*AnalyzeRequest)(nil),            // 3: cartomix.engine.AnalyzeRequest
+	(*AnalyzeProgress)(nil),           // 4: cartomix.engine.AnalyzeProgress
+	(*StageTiming)(nil),               // 5: cartomix.engine.StageTiming
+	(*ListTracksRequest)(nil),         // 6: cartomix.engine.ListTracksRequest
+	(*GetTrackRequest)(nil),           // 7: cartomix.engine.GetTrackRequest
+	(*SetPlanRequest)(nil),            // 8: cartomix.engine.SetPlanRequest
+	(*SetPlanResponse)(nil),           // 9: cartomix.engine.SetPlanResponse
+	(*ExportRequest)(nil),             // 10: cartomix.engine.ExportRequest
+	(*ExportResponse)(nil),            // 11: cartomix.engine.ExportResponse
+	(*SimilarTracksRequest)(nil),      // 12: cartomix.engine.SimilarTracksRequest
+	(*SimilarityConstraints)(nil),     // 13: cartomix.engine.SimilarityConstraints
+	(*SimilarTracksResponse)(nil),     // 14: cartomix.engine.SimilarTracksResponse
+	(*ListLabelsRequest)(nil),         // 15: cartomix.engine.ListLabelsRequest
+	(*ListLabelsResponse)(nil),        // 16: cartomix.engine.ListLabelsResponse
+	(*AddLabelRequest)(nil),           // 17: cartomix.engine.AddLabelRequest
+	(*AddLabelResponse)(nil),          // 18: cartomix.engine.AddLabelResponse
+	(*DeleteLabelRequest)(nil),        // 19: cartomix.engine.DeleteLabelRequest
+	(*StartTrainingRequest)(nil),      // 20: cartomix.engine.StartTrainingRequest
+	(*StartTrainingResponse)(nil),     // 21: cartomix.engine.StartTrainingResponse
+	(*GetJobRequest)(nil),             // 22: cartomix.engine.GetJobRequest
+	(*ListJobsRequest)(nil),           // 23: cartomix.engine.ListJobsRequest
+	(*ListJobsResponse)(nil),          // 24: cartomix.engine.ListJobsResponse
+	(*TrainingProgressUpdate)(nil),    // 25: cartomix.engine.TrainingProgressUpdate
+	(*ListModelsRequest)(nil),         // 26: cartomix.engine.ListModelsRequest
+	(*ListModelsResponse)(nil),        // 27: cartomix.engine.ListModelsResponse
+	(*ActivateModelRequest)(nil),      // 28: cartomix.engine.ActivateModelRequest
+	(*DeleteModelRequest)(nil),        // 29: cartomix.engine.DeleteModelRequest
+	(*HealthResponse)(nil),            // 30: cartomix.engine.HealthResponse
+	nil,                               // 31: cartomix.engine.HealthResponse.ServicesEntry
+	(*common.TrackId)(nil),            // 32: cartomix.common.TrackId
+	(*common.EdgeExplanation)(nil),    // 33: cartomix.common.EdgeExplanation
+	(*common.SimilarTrack)(nil),       // 34: cartomix.common.SimilarTrack
+	(*common.TrainingLabel)(nil),      // 35: cartomix.common.TrainingLabel
+	(*common.TrainingJob)(nil),        // 36: cartomix.common.TrainingJob
+	(common.TrainingStatus)(0),        // 37: cartomix.common.TrainingStatus
+	(*common.ModelVersion)(nil),       // 38: cartomix.common.ModelVersion
+	(*emptypb.Empty)(nil),             // 39: google.protobuf.Empty
+	(*common.MLSettings)(nil),         // 40: cartomix.common.MLSettings
+	(*common.TrackSummary)(nil),       // 41: cartomix.common.TrackSummary
+	(*common.TrackAnalysis)(nil),      // 42: cartomix.common.TrackAnalysis
+	(*common.TrainingLabelStats)(nil), // 43: cartomix.common.TrainingLabelStats
 }
 var file_engine_api_proto_depIdxs = []int32{
-	11, // 0: cartomix.engine.AnalyzeRequest.track_ids:type_name -> cartomix.common.TrackId
-	11, // 1: cartomix.engine.AnalyzeProgress.id:type_name -> cartomix.common.TrackId
-	11, // 2: cartomix.engine.GetTrackRequest.id:type_name -> cartomix.common.TrackId
-	11, // 3: cartomix.engine.SetPlanRequest.track_ids:type_name -> cartomix.common.TrackId
-	0,  // 4: cartomix.engine.SetPlanRequest.mode:type_name -> cartomix.engine.SetMode
-	11, // 5: cartomix.engine.SetPlanRequest.must_play:type_name -> cartomix.common.TrackId
-	11, // 6: cartomix.engine.SetPlanRequest.ban:type_name -> cartomix.common.TrackId
-	11, // 7: cartomix.engine.SetPlanResponse.order:type_name -> cartomix.common.TrackId
-	12, // 8: cartomix.engine.SetPlanResponse.explanations:type_name -> cartomix.common.EdgeExplanation
-	11, // 9: cartomix.engine.ExportRequest.track_ids:type_name -> cartomix.common.TrackId
-	1,  // 10: cartomix.engine.EngineAPI.ScanLibrary:input_type -> cartomix.engine.ScanRequest
-	3,  // 11: cartomix.engine.EngineAPI.AnalyzeTracks:input_type -> cartomix.engine.AnalyzeRequest
-	5,  // 12: cartomix.engine.EngineAPI.ListTracks:input_type -> cartomix.engine.ListTracksRequest
-	6,  // 13: cartomix.engine.EngineAPI.GetTrack:input_type -> cartomix.engine.GetTrackRequest
-	7,  // 14: cartomix.engine.EngineAPI.ProposeSet:input_type -> cartomix.engine.SetPlanRequest
-	9,  // 15: cartomix.engine.EngineAPI.ExportSet:input_type -> cartomix.engine.ExportRequest
-	2,  // 16: cartomix.engine.EngineAPI.ScanLibrary:output_type -> cartomix.engine.ScanProgress
-	4,  // 17: cartomix.engine.EngineAPI.AnalyzeTracks:output_type -> cartomix.engine.AnalyzeProgress
-	13, // 18: cartomix.engine.EngineAPI.ListTracks:output_type -> cartomix.common.TrackSummary
-	14, // 19: cartomix.engine.EngineAPI.GetTrack:output_type -> cartomix.common.TrackAnalysis
-	8,  // 20: cartomix.engine.EngineAPI.ProposeSet:output_type -> cartomix.engine.SetPlanResponse
-	10, // 21: cartomix.engine.EngineAPI.ExportSet:output_type -> cartomix.engine.ExportResponse
-	16, // [16:22] is the sub-list for method output_type
-	10, // [10:16] is the sub-list for method input_type
-	10, // [10:10] is the sub-list for extension type_name
-	10, // [10:10] is the sub-list for extension extendee
-	0,  // [0:10] is the sub-list for field type_name
+	32, // 0: cartomix.engine.AnalyzeRequest.track_ids:type_name -> cartomix.common.TrackId
+	32, // 1: cartomix.engine.AnalyzeProgress.id:type_name -> cartomix.common.TrackId
+	5,  // 2: cartomix.engine.AnalyzeProgress.stage_timings:type_name -> cartomix.engine.StageTiming
+	32, // 3: cartomix.engine.GetTrackRequest.id:type_name -> cartomix.common.TrackId
+	32, // 4: cartomix.engine.SetPlanRequest.track_ids:type_name -> cartomix.common.TrackId
+	0,  // 5: cartomix.engine.SetPlanRequest.mode:type_name -> cartomix.engine.SetMode
+	32, // 6: cartomix.engine.SetPlanRequest.must_play:type_name -> cartomix.common.TrackId
+	32, // 7: cartomix.engine.SetPlanRequest.ban:type_name -> cartomix.common.TrackId
+	32, // 8: cartomix.engine.SetPlanResponse.order:type_name -> cartomix.common.TrackId
+	33, // 9: cartomix.engine.SetPlanResponse.explanations:type_name -> cartomix.common.EdgeExplanation
+	32, // 10: cartomix.engine.ExportRequest.track_ids:type_name -> cartomix.common.TrackId
+	32, // 11: cartomix.engine.SimilarTracksRequest.track_id:type_name -> cartomix.common.TrackId
+	13, // 12: cartomix.engine.SimilarTracksRequest.constraints:type_name -> cartomix.engine.SimilarityConstraints
+	32, // 13: cartomix.engine.SimilarTracksResponse.query_track:type_name -> cartomix.common.TrackId
+	34, // 14: cartomix.engine.SimilarTracksResponse.similar:type_name -> cartomix.common.SimilarTrack
+	35, // 15: cartomix.engine.ListLabelsResponse.labels:type_name -> cartomix.common.TrainingLabel
+	36, // 16: cartomix.engine.ListJobsResponse.jobs:type_name -> cartomix.common.TrainingJob
+	37, // 17: cartomix.engine.TrainingProgressUpdate.status:type_name -> cartomix.common.TrainingStatus
+	5,  // 18: cartomix.engine.TrainingProgressUpdate.stage_timings:type_name -> cartomix.engine.StageTiming
+	38, // 19: cartomix.engine.ListModelsResponse.versions:type_name -> cartomix.common.ModelVersion
+	31, // 20: cartomix.engine.HealthResponse.services:type_name -> cartomix.engine.HealthResponse.ServicesEntry
+	1,  // 21: cartomix.engine.EngineAPI.ScanLibrary:input_type -> cartomix.engine.ScanRequest
+	3,  // 22: cartomix.engine.EngineAPI.AnalyzeTracks:input_type -> cartomix.engine.AnalyzeRequest
+	6,  // 23: cartomix.engine.EngineAPI.ListTracks:input_type -> cartomix.engine.ListTracksRequest
+	7,  // 24: cartomix.engine.EngineAPI.GetTrack:input_type -> cartomix.engine.GetTrackRequest
+	8,  // 25: cartomix.engine.EngineAPI.ProposeSet:input_type -> cartomix.engine.SetPlanRequest
+	10, // 26: cartomix.engine.EngineAPI.ExportSet:input_type -> cartomix.engine.ExportRequest
+	12, // 27: cartomix.engine.EngineAPI.GetSimilarTracks:input_type -> cartomix.engine.SimilarTracksRequest
+	39, // 28: cartomix.engine.EngineAPI.GetMLSettings:input_type -> google.protobuf.Empty
+	40, // 29: cartomix.engine.EngineAPI.UpdateMLSettings:input_type -> cartomix.common.MLSettings
+	15, // 30: cartomix.engine.EngineAPI.ListTrainingLabels:input_type -> cartomix.engine.ListLabelsRequest
+	17, // 31: cartomix.engine.EngineAPI.AddTrainingLabel:input_type -> cartomix.engine.AddLabelRequest
+	19, // 32: cartomix.engine.EngineAPI.DeleteTrainingLabel:input_type -> cartomix.engine.DeleteLabelRequest
+	39, // 33: cartomix.engine.EngineAPI.GetTrainingLabelStats:input_type -> google.protobuf.Empty
+	20, // 34: cartomix.engine.EngineAPI.StartTraining:input_type -> cartomix.engine.StartTrainingRequest
+	22, // 35: cartomix.engine.EngineAPI.GetTrainingJob:input_type -> cartomix.engine.GetJobRequest
+	23, // 36: cartomix.engine.EngineAPI.ListTrainingJobs:input_type -> cartomix.engine.ListJobsRequest
+	22, // 37: cartomix.engine.EngineAPI.StreamTrainingProgress:input_type -> cartomix.engine.GetJobRequest
+	26, // 38: cartomix.engine.EngineAPI.ListModelVersions:input_type -> cartomix.engine.ListModelsRequest
+	28, // 39: cartomix.engine.EngineAPI.ActivateModelVersion:input_type -> cartomix.engine.ActivateModelRequest
+	29, // 40: cartomix.engine.EngineAPI.DeleteModelVersion:input_type -> cartomix.engine.DeleteModelRequest
+	39, // 41: cartomix.engine.EngineAPI.HealthCheck:input_type -> google.protobuf.Empty
+	2,  // 42: cartomix.engine.EngineAPI.ScanLibrary:output_type -> cartomix.engine.ScanProgress
+	4,  // 43: cartomix.engine.EngineAPI.AnalyzeTracks:output_type -> cartomix.engine.AnalyzeProgress
+	41, // 44: cartomix.engine.EngineAPI.ListTracks:output_type -> cartomix.common.TrackSummary
+	42, // 45: cartomix.engine.EngineAPI.GetTrack:output_type -> cartomix.common.TrackAnalysis
+	9,  // 46: cartomix.engine.EngineAPI.ProposeSet:output_type -> cartomix.engine.SetPlanResponse
+	11, // 47: cartomix.engine.EngineAPI.ExportSet:output_type -> cartomix.engine.ExportResponse
+	14, // 48: cartomix.engine.EngineAPI.GetSimilarTracks:output_type -> cartomix.engine.SimilarTracksResponse
+	40, // 49: cartomix.engine.EngineAPI.GetMLSettings:output_type -> cartomix.common.MLSettings
+	40, // 50: cartomix.engine.EngineAPI.UpdateMLSettings:output_type -> cartomix.common.MLSettings
+	16, // 51: cartomix.engine.EngineAPI.ListTrainingLabels:output_type -> cartomix.engine.ListLabelsResponse
+	18, // 52: cartomix.engine.EngineAPI.AddTrainingLabel:output_type -> cartomix.engine.AddLabelResponse
+	39, // 53: cartomix.engine.EngineAPI.DeleteTrainingLabel:output_type -> google.protobuf.Empty
+	43, // 54: cartomix.engine.EngineAPI.GetTrainingLabelStats:output_type -> cartomix.common.TrainingLabelStats
+	21, // 55: cartomix.engine.EngineAPI.StartTraining:output_type -> cartomix.engine.StartTrainingResponse
+	36, // 56: cartomix.engine.EngineAPI.GetTrainingJob:output_type -> cartomix.common.TrainingJob
+	24, // 57: cartomix.engine.EngineAPI.ListTrainingJobs:output_type -> cartomix.engine.ListJobsResponse
+	25, // 58: cartomix.engine.EngineAPI.StreamTrainingProgress:output_type -> cartomix.engine.TrainingProgressUpdate
+	27, // 59: cartomix.engine.EngineAPI.ListModelVersions:output_type -> cartomix.engine.ListModelsResponse
+	38, // 60: cartomix.engine.EngineAPI.ActivateModelVersion:output_type -> cartomix.common.ModelVersion
+	39, // 61: cartomix.engine.EngineAPI.DeleteModelVersion:output_type -> google.protobuf.Empty
+	30, // 62: cartomix.engine.EngineAPI.HealthCheck:output_type -> cartomix.engine.HealthResponse
+	42, // [42:63] is the sub-list for method output_type
+	21, // [21:42] is the sub-list for method input_type
+	21, // [21:21] is the sub-list for extension type_name
+	21, // [21:21] is the sub-list for extension extendee
+	0,  // [0:21] is the sub-list for field type_name
 }
 
 func init() { file_engine_api_proto_init() }
@@ -901,7 +2463,7 @@ func file_engine_api_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_engine_api_proto_rawDesc), len(file_engine_api_proto_rawDesc)),
 			NumEnums:      1,
-			NumMessages:   10,
+			NumMessages:   31,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

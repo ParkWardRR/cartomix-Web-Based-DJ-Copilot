@@ -45,6 +45,9 @@ public struct TrackAnalysisResult: Sendable {
     // OpenL3 embedding (512-dim, for ML-powered similarity)
     public let openL3Embedding: OpenL3Embedding?
 
+    // Sound classification (Apple SoundAnalysis Layer 1)
+    public let soundClassification: SoundClassificationResult?
+
     public init(
         path: String,
         duration: Double,
@@ -69,7 +72,8 @@ public struct TrackAnalysisResult: Sendable {
         safeEndBeat: Int,
         waveformSummary: [Float],
         embedding: AudioEmbedding,
-        openL3Embedding: OpenL3Embedding? = nil
+        openL3Embedding: OpenL3Embedding? = nil,
+        soundClassification: SoundClassificationResult? = nil
     ) {
         self.path = path
         self.duration = duration
@@ -95,6 +99,7 @@ public struct TrackAnalysisResult: Sendable {
         self.waveformSummary = waveformSummary
         self.embedding = embedding
         self.openL3Embedding = openL3Embedding
+        self.soundClassification = soundClassification
     }
 
     /// Primary BPM (from first tempo node)
@@ -131,6 +136,7 @@ public enum AnalysisProgress: Sendable {
     case waveform
     case embedding
     case openL3Embedding
+    case soundClassification
     case complete
 }
 
@@ -145,20 +151,24 @@ public final class Analyzer: @unchecked Sendable {
     private let cueGenerator: CueGenerator
     private let embeddingGenerator: EmbeddingGenerator
     private let openL3Embedder: OpenL3Embedder
+    private let soundClassifier: SoundClassifier
 
     // Configuration
     private let targetSampleRate: Double
     private let waveformBins: Int
     private let enableOpenL3: Bool
+    private let enableSoundClassification: Bool
 
     public init(
         sampleRate: Double = 48000,
         waveformBins: Int = 200,
-        enableOpenL3: Bool = true
+        enableOpenL3: Bool = true,
+        enableSoundClassification: Bool = true
     ) {
         self.targetSampleRate = sampleRate
         self.waveformBins = waveformBins
         self.enableOpenL3 = enableOpenL3
+        self.enableSoundClassification = enableSoundClassification
 
         // Initialize components
         self.decoder = AudioDecoder(targetSampleRate: sampleRate, mono: true)
@@ -170,10 +180,14 @@ public final class Analyzer: @unchecked Sendable {
         self.cueGenerator = CueGenerator(maxCues: 8)
         self.embeddingGenerator = EmbeddingGenerator(sampleRate: sampleRate)
         self.openL3Embedder = OpenL3Embedder()
+        self.soundClassifier = SoundClassifier(sampleRate: sampleRate)
     }
 
     /// Check if OpenL3 model is available
     public var openL3Available: Bool { openL3Embedder.isAvailable }
+
+    /// Check if SoundAnalysis is available
+    public var soundClassificationAvailable: Bool { soundClassifier.isAvailable }
 
     /// Analyze a track file
     public func analyze(
@@ -242,6 +256,18 @@ public final class Analyzer: @unchecked Sendable {
             openL3Embedding = openL3Embedder.generate(samples)
         }
 
+        // 11. Sound classification (if enabled and available)
+        var soundClassification: SoundClassificationResult? = nil
+        if enableSoundClassification && soundClassifier.isAvailable {
+            progress?(.soundClassification)
+            do {
+                soundClassification = try await soundClassifier.classify(samples, duration: audio.duration)
+            } catch {
+                // Log but don't fail the analysis
+                print("Sound classification failed: \(error)")
+            }
+        }
+
         progress?(.complete)
 
         return TrackAnalysisResult(
@@ -268,7 +294,8 @@ public final class Analyzer: @unchecked Sendable {
             safeEndBeat: cueResult.safeEndBeat,
             waveformSummary: waveformSummary,
             embedding: embedding,
-            openL3Embedding: openL3Embedding
+            openL3Embedding: openL3Embedding,
+            soundClassification: soundClassification
         )
     }
 

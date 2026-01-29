@@ -65,11 +65,21 @@ func main() {
 	}
 	defer analysisBackend.Close()
 
-	// Create gRPC server with auth interceptors
+	// Create gRPC server with chained interceptors (logging, metrics, recovery, auth)
 	authCfg := auth.Config{Enabled: cfg.AuthEnabled}
 	grpcServer := grpc.NewServer(
-		grpc.UnaryInterceptor(auth.Interceptor(authCfg, logger)),
-		grpc.StreamInterceptor(auth.StreamInterceptor(authCfg, logger)),
+		grpc.ChainUnaryInterceptor(
+			server.RecoveryInterceptor(logger),
+			server.UnaryLoggingInterceptor(logger),
+			server.MetricsInterceptor(),
+			auth.Interceptor(authCfg, logger),
+		),
+		grpc.ChainStreamInterceptor(
+			server.StreamRecoveryInterceptor(logger),
+			server.StreamLoggingInterceptor(logger),
+			server.StreamMetricsInterceptor(),
+			auth.StreamInterceptor(authCfg, logger),
+		),
 	)
 
 	// Register engine API

@@ -26,6 +26,41 @@ service EngineAPI {
 
   // Export playlist + cues + analysis artifacts.
   rpc ExportSet(ExportRequest) returns (ExportResponse);
+
+  // ============================================================
+  // ML & Similarity Services
+  // ============================================================
+
+  // Find tracks similar to a given track with explainable scoring.
+  rpc GetSimilarTracks(SimilarTracksRequest) returns (SimilarTracksResponse);
+
+  // Get/update ML settings.
+  rpc GetMLSettings(google.protobuf.Empty) returns (cartomix.common.MLSettings);
+  rpc UpdateMLSettings(cartomix.common.MLSettings) returns (cartomix.common.MLSettings);
+
+  // ============================================================
+  // Training Services
+  // ============================================================
+
+  // Training label CRUD
+  rpc ListTrainingLabels(ListLabelsRequest) returns (ListLabelsResponse);
+  rpc AddTrainingLabel(AddLabelRequest) returns (AddLabelResponse);
+  rpc DeleteTrainingLabel(DeleteLabelRequest) returns (google.protobuf.Empty);
+  rpc GetTrainingLabelStats(google.protobuf.Empty) returns (cartomix.common.TrainingLabelStats);
+
+  // Training job management
+  rpc StartTraining(StartTrainingRequest) returns (StartTrainingResponse);
+  rpc GetTrainingJob(GetJobRequest) returns (cartomix.common.TrainingJob);
+  rpc ListTrainingJobs(ListJobsRequest) returns (ListJobsResponse);
+  rpc StreamTrainingProgress(GetJobRequest) returns (stream TrainingProgressUpdate);
+
+  // Model version management
+  rpc ListModelVersions(ListModelsRequest) returns (ListModelsResponse);
+  rpc ActivateModelVersion(ActivateModelRequest) returns (cartomix.common.ModelVersion);
+  rpc DeleteModelVersion(DeleteModelRequest) returns (google.protobuf.Empty);
+
+  // Health check
+  rpc HealthCheck(google.protobuf.Empty) returns (HealthResponse);
 }
 
 message ScanRequest {
@@ -39,6 +74,16 @@ message ScanProgress {
   string error = 3;
   int64 processed = 4;
   int64 total = 5;
+
+  // Enhanced progress fields (v1.0)
+  string current_file = 6;              // Filename being processed (without path)
+  float percent = 7;                    // Overall progress 0-100
+  int64 elapsed_ms = 8;                 // Elapsed time in milliseconds
+  int64 eta_ms = 9;                     // Estimated time remaining in milliseconds
+  int64 new_tracks_found = 10;          // Count of new tracks discovered
+  int64 skipped_cached = 11;            // Count of tracks skipped (already in DB)
+  int64 bytes_processed = 12;           // Total bytes processed so far
+  int64 bytes_total = 13;               // Total bytes to process (if known)
 }
 
 message AnalyzeRequest {
@@ -51,10 +96,33 @@ message AnalyzeRequest {
 
 message AnalyzeProgress {
   cartomix.common.TrackId id = 1;
-  string stage = 2; // decode / beatgrid / key / sections / cues / done
+  string stage = 2; // decode / beatgrid / key / energy / loudness / embeddings / sections / cues / done
   string status = 3; // running / done / error
   string error = 4;
   float percent = 5;
+
+  // Enhanced progress fields (v1.0)
+  string current_file = 6;              // Filename being analyzed (without path)
+  int32 track_index = 7;                // Current track index (1-based)
+  int32 total_tracks = 8;               // Total tracks in this job
+  float overall_percent = 9;            // Overall job progress 0-100
+  int64 elapsed_ms = 10;                // Elapsed time in milliseconds
+  int64 eta_ms = 11;                    // Estimated time remaining in milliseconds
+
+  // Stage timing breakdown
+  repeated StageTiming stage_timings = 12;  // Completed stage timings
+  string stage_message = 13;            // Human-readable stage description
+
+  // Track metadata (for UI display)
+  string title = 14;                    // Track title (if known)
+  string artist = 15;                   // Track artist (if known)
+  float duration_seconds = 16;          // Track duration
+}
+
+message StageTiming {
+  string stage = 1;                     // Stage name
+  int64 duration_ms = 2;                // Time spent in this stage
+  bool completed = 3;                   // Whether stage completed successfully
 }
 
 message ListTracksRequest {
@@ -103,4 +171,142 @@ message ExportResponse {
   string analysis_json = 2;
   string cues_csv = 3;
   repeated string vendor_exports = 4; // paths per DJ ecosystem
+}
+
+// ============================================================
+// Similarity Messages
+// ============================================================
+
+message SimilarTracksRequest {
+  cartomix.common.TrackId track_id = 1;
+  int32 limit = 2;                    // Max results (default 10)
+  float min_score = 3;                // Minimum similarity score (0..1)
+  SimilarityConstraints constraints = 4;
+}
+
+message SimilarityConstraints {
+  double max_bpm_delta = 1;           // Max BPM difference
+  bool same_key_only = 2;             // Only same/compatible keys
+  int32 max_energy_delta = 3;         // Max energy level difference
+}
+
+message SimilarTracksResponse {
+  cartomix.common.TrackId query_track = 1;
+  repeated cartomix.common.SimilarTrack similar = 2;
+}
+
+// ============================================================
+// Training Label Messages
+// ============================================================
+
+message ListLabelsRequest {
+  int64 track_id = 1;                 // Optional filter by track
+  string label_value = 2;             // Optional filter by label type
+  int32 limit = 3;
+  int32 offset = 4;
+}
+
+message ListLabelsResponse {
+  repeated cartomix.common.TrainingLabel labels = 1;
+  int32 total = 2;
+}
+
+message AddLabelRequest {
+  int64 track_id = 1;
+  string label_value = 2;             // intro, build, drop, break, outro, verse, chorus
+  int32 start_beat = 3;
+  int32 end_beat = 4;
+  double start_time_seconds = 5;
+  double end_time_seconds = 6;
+  string source = 7;                  // user, auto_detected, imported
+}
+
+message AddLabelResponse {
+  int64 id = 1;
+  string message = 2;
+}
+
+message DeleteLabelRequest {
+  int64 id = 1;
+}
+
+// ============================================================
+// Training Job Messages
+// ============================================================
+
+message StartTrainingRequest {
+  int32 max_epochs = 1;               // Optional, default 10
+  float validation_split = 2;         // Optional, default 0.2
+}
+
+message StartTrainingResponse {
+  string job_id = 1;
+  string message = 2;
+}
+
+message GetJobRequest {
+  string job_id = 1;
+}
+
+message ListJobsRequest {
+  int32 limit = 1;
+}
+
+message ListJobsResponse {
+  repeated cartomix.common.TrainingJob jobs = 1;
+}
+
+message TrainingProgressUpdate {
+  string job_id = 1;
+  cartomix.common.TrainingStatus status = 2;
+  float progress = 3;
+  int32 current_epoch = 4;
+  int32 total_epochs = 5;
+  float current_loss = 6;
+  string message = 7;
+
+  // Enhanced progress fields (v1.0)
+  int64 elapsed_ms = 8;                 // Elapsed time in milliseconds
+  int64 eta_ms = 9;                     // Estimated time remaining in milliseconds
+  float validation_loss = 10;           // Validation loss (if available)
+  float validation_accuracy = 11;       // Validation accuracy (if available)
+  int32 samples_processed = 12;         // Training samples processed this epoch
+  int32 total_samples = 13;             // Total training samples
+
+  // Stage breakdown
+  string current_stage = 14;            // prepare_data / feature_extract / training / validation / export
+  repeated StageTiming stage_timings = 15;  // Completed stage timings
+}
+
+// ============================================================
+// Model Version Messages
+// ============================================================
+
+message ListModelsRequest {
+  string model_type = 1;              // e.g., "dj_section"
+}
+
+message ListModelsResponse {
+  repeated cartomix.common.ModelVersion versions = 1;
+}
+
+message ActivateModelRequest {
+  string model_type = 1;
+  int32 version = 2;
+}
+
+message DeleteModelRequest {
+  string model_type = 1;
+  int32 version = 2;
+}
+
+// ============================================================
+// Health Check
+// ============================================================
+
+message HealthResponse {
+  bool healthy = 1;
+  string version = 2;
+  int64 uptime_seconds = 3;
+  map<string, string> services = 4;   // service name -> status
 }

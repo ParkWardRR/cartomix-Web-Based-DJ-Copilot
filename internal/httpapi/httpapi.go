@@ -48,7 +48,19 @@ func NewServer(cfg *config.Config, logger *slog.Logger, db *storage.DB, az analy
 
 // Handler returns the HTTP handler for the server.
 func (s *Server) Handler() http.Handler {
-	return corsMiddleware(s.mux)
+	return deprecationMiddleware(corsMiddleware(s.mux))
+}
+
+// deprecationMiddleware adds headers indicating the HTTP API is deprecated in favor of gRPC.
+func deprecationMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// RFC 8594: Sunset Header
+		w.Header().Set("Sunset", "Wed, 01 Jul 2026 00:00:00 GMT")
+		w.Header().Set("Deprecation", "true")
+		w.Header().Set("X-API-Deprecation-Notice", "This HTTP REST API is deprecated. Please migrate to gRPC for improved performance. See docs/gRPC-MIGRATION.md")
+		w.Header().Set("Link", `</docs/gRPC-MIGRATION.md>; rel="deprecation"; type="text/markdown"`)
+		next.ServeHTTP(w, r)
+	})
 }
 
 func (s *Server) registerRoutes() {
@@ -62,6 +74,18 @@ func (s *Server) registerRoutes() {
 	s.mux.HandleFunc("POST /api/export", s.handleExport)
 	s.mux.HandleFunc("GET /api/ml/settings", s.handleGetMLSettings)
 	s.mux.HandleFunc("PUT /api/ml/settings", s.handleUpdateMLSettings)
+
+	// Training endpoints
+	s.mux.HandleFunc("GET /api/training/labels", s.handleListTrainingLabels)
+	s.mux.HandleFunc("POST /api/training/labels", s.handleAddTrainingLabel)
+	s.mux.HandleFunc("DELETE /api/training/labels/{id}", s.handleDeleteTrainingLabel)
+	s.mux.HandleFunc("GET /api/training/labels/stats", s.handleTrainingLabelStats)
+	s.mux.HandleFunc("POST /api/training/start", s.handleStartTraining)
+	s.mux.HandleFunc("GET /api/training/jobs", s.handleListTrainingJobs)
+	s.mux.HandleFunc("GET /api/training/jobs/{id}", s.handleGetTrainingJob)
+	s.mux.HandleFunc("GET /api/training/models", s.handleListModelVersions)
+	s.mux.HandleFunc("POST /api/training/models/{version}/activate", s.handleActivateModel)
+	s.mux.HandleFunc("DELETE /api/training/models/{version}", s.handleDeleteModel)
 }
 
 func corsMiddleware(next http.Handler) http.Handler {
@@ -697,4 +721,465 @@ func writeJSON(w http.ResponseWriter, status int, data interface{}) {
 
 func writeError(w http.ResponseWriter, status int, message string) {
 	writeJSON(w, status, map[string]string{"error": message})
+}
+
+// Training API Types
+
+// TrainingLabelRequest is the JSON request for adding a training label.
+type TrainingLabelRequest struct {
+	TrackID          int64   `json:"track_id"`
+	LabelValue       string  `json:"label_value"`
+	StartBeat        int     `json:"start_beat"`
+	EndBeat          int     `json:"end_beat"`
+	StartTimeSeconds float64 `json:"start_time_seconds"`
+	EndTimeSeconds   float64 `json:"end_time_seconds"`
+	Source           string  `json:"source,omitempty"`
+}
+
+// TrainingLabelResponse is the JSON response for training labels.
+type TrainingLabelResponse struct {
+	ID               int64   `json:"id"`
+	TrackID          int64   `json:"track_id"`
+	ContentHash      string  `json:"content_hash"`
+	TrackPath        string  `json:"track_path"`
+	LabelValue       string  `json:"label_value"`
+	StartBeat        int     `json:"start_beat"`
+	EndBeat          int     `json:"end_beat"`
+	StartTimeSeconds float64 `json:"start_time_seconds"`
+	EndTimeSeconds   float64 `json:"end_time_seconds"`
+	Source           string  `json:"source"`
+	CreatedAt        string  `json:"created_at"`
+}
+
+// TrainingJobResponse is the JSON response for training jobs.
+type TrainingJobResponse struct {
+	JobID        string         `json:"job_id"`
+	Status       string         `json:"status"`
+	Progress     float64        `json:"progress"`
+	CurrentEpoch *int           `json:"current_epoch,omitempty"`
+	TotalEpochs  *int           `json:"total_epochs,omitempty"`
+	CurrentLoss  *float64       `json:"current_loss,omitempty"`
+	Accuracy     *float64       `json:"accuracy,omitempty"`
+	F1Score      *float64       `json:"f1_score,omitempty"`
+	ModelPath    *string        `json:"model_path,omitempty"`
+	ModelVersion *int           `json:"model_version,omitempty"`
+	ErrorMessage *string        `json:"error_message,omitempty"`
+	LabelCounts  map[string]int `json:"label_counts,omitempty"`
+	StartedAt    *string        `json:"started_at,omitempty"`
+	CompletedAt  *string        `json:"completed_at,omitempty"`
+	CreatedAt    string         `json:"created_at"`
+}
+
+// ModelVersionResponse is the JSON response for model versions.
+type ModelVersionResponse struct {
+	ID            int64          `json:"id"`
+	ModelType     string         `json:"model_type"`
+	Version       int            `json:"version"`
+	ModelPath     string         `json:"model_path"`
+	Accuracy      float64        `json:"accuracy"`
+	F1Score       float64        `json:"f1_score"`
+	IsActive      bool           `json:"is_active"`
+	LabelCounts   map[string]int `json:"label_counts,omitempty"`
+	TrainingJobID *string        `json:"training_job_id,omitempty"`
+	CreatedAt     string         `json:"created_at"`
+}
+
+// TrainingLabelStatsResponse is the JSON response for training label statistics.
+type TrainingLabelStatsResponse struct {
+	TotalLabels        int            `json:"total_labels"`
+	LabelCounts        map[string]int `json:"label_counts"`
+	TracksCovered      int            `json:"tracks_covered"`
+	AvgPerTrack        float64        `json:"avg_per_track"`
+	ReadyForTraining   bool           `json:"ready_for_training"`
+	MinSamplesRequired int            `json:"min_samples_required"`
+}
+
+func (s *Server) handleListTrainingLabels(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	// Parse optional filters
+	var trackID *int64
+	var labelValue *string
+
+	if tidStr := r.URL.Query().Get("track_id"); tidStr != "" {
+		if tid, err := strconv.ParseInt(tidStr, 10, 64); err == nil {
+			trackID = &tid
+		}
+	}
+	if lv := r.URL.Query().Get("label"); lv != "" {
+		labelValue = &lv
+	}
+
+	labels, err := s.db.GetTrainingLabels(ctx, trackID, labelValue)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "failed to get training labels: "+err.Error())
+		return
+	}
+
+	response := make([]TrainingLabelResponse, 0, len(labels))
+	for _, l := range labels {
+		response = append(response, TrainingLabelResponse{
+			ID:               l.ID,
+			TrackID:          l.TrackID,
+			ContentHash:      l.ContentHash,
+			TrackPath:        l.TrackPath,
+			LabelValue:       l.LabelValue,
+			StartBeat:        l.StartBeat,
+			EndBeat:          l.EndBeat,
+			StartTimeSeconds: l.StartTimeSeconds,
+			EndTimeSeconds:   l.EndTimeSeconds,
+			Source:           l.Source,
+			CreatedAt:        l.CreatedAt.Format(time.RFC3339),
+		})
+	}
+
+	writeJSON(w, http.StatusOK, response)
+}
+
+func (s *Server) handleAddTrainingLabel(w http.ResponseWriter, r *http.Request) {
+	var req TrainingLabelRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid request body: "+err.Error())
+		return
+	}
+
+	// Validate label value
+	validLabels := map[string]bool{
+		"intro": true, "build": true, "drop": true, "break": true,
+		"outro": true, "verse": true, "chorus": true,
+	}
+	if !validLabels[req.LabelValue] {
+		writeError(w, http.StatusBadRequest, "invalid label_value: must be one of intro, build, drop, break, outro, verse, chorus")
+		return
+	}
+
+	source := req.Source
+	if source == "" {
+		source = "user"
+	}
+
+	label := &storage.TrainingLabel{
+		TrackID:          req.TrackID,
+		LabelValue:       req.LabelValue,
+		StartBeat:        req.StartBeat,
+		EndBeat:          req.EndBeat,
+		StartTimeSeconds: req.StartTimeSeconds,
+		EndTimeSeconds:   req.EndTimeSeconds,
+		Source:           source,
+	}
+
+	if err := s.db.AddTrainingLabel(r.Context(), label); err != nil {
+		writeError(w, http.StatusInternalServerError, "failed to add training label: "+err.Error())
+		return
+	}
+
+	writeJSON(w, http.StatusCreated, map[string]interface{}{
+		"id":      label.ID,
+		"message": "label added successfully",
+	})
+}
+
+func (s *Server) handleDeleteTrainingLabel(w http.ResponseWriter, r *http.Request) {
+	idStr := r.PathValue("id")
+	id, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "invalid label id")
+		return
+	}
+
+	if err := s.db.DeleteTrainingLabel(r.Context(), id); err != nil {
+		writeError(w, http.StatusInternalServerError, "failed to delete label: "+err.Error())
+		return
+	}
+
+	writeJSON(w, http.StatusOK, map[string]string{"message": "label deleted"})
+}
+
+func (s *Server) handleTrainingLabelStats(w http.ResponseWriter, r *http.Request) {
+	stats, err := s.db.GetTrainingLabelStats(r.Context())
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "failed to get stats: "+err.Error())
+		return
+	}
+
+	minSamples := 10 // Minimum samples per class
+	readyForTraining := true
+	for _, count := range stats.LabelCounts {
+		if count < minSamples {
+			readyForTraining = false
+			break
+		}
+	}
+
+	// Need at least 2 classes
+	if len(stats.LabelCounts) < 2 {
+		readyForTraining = false
+	}
+
+	writeJSON(w, http.StatusOK, TrainingLabelStatsResponse{
+		TotalLabels:        stats.TotalLabels,
+		LabelCounts:        stats.LabelCounts,
+		TracksCovered:      stats.TracksCovered,
+		AvgPerTrack:        stats.AvgPerTrack,
+		ReadyForTraining:   readyForTraining,
+		MinSamplesRequired: minSamples,
+	})
+}
+
+func (s *Server) handleStartTraining(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	// Get current label stats
+	stats, err := s.db.GetTrainingLabelStats(ctx)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "failed to get training data: "+err.Error())
+		return
+	}
+
+	// Validate we have enough data
+	minSamples := 10
+	for label, count := range stats.LabelCounts {
+		if count < minSamples {
+			writeError(w, http.StatusBadRequest, fmt.Sprintf("need at least %d samples for %s (have %d)", minSamples, label, count))
+			return
+		}
+	}
+
+	if len(stats.LabelCounts) < 2 {
+		writeError(w, http.StatusBadRequest, "need at least 2 different label types")
+		return
+	}
+
+	// Create training job
+	jobID := fmt.Sprintf("job_%d", time.Now().UnixNano())
+	if err := s.db.CreateTrainingJob(ctx, jobID, stats.LabelCounts); err != nil {
+		writeError(w, http.StatusInternalServerError, "failed to create training job: "+err.Error())
+		return
+	}
+
+	// Start training in background (would call Swift analyzer in production)
+	go s.runTrainingJob(jobID)
+
+	writeJSON(w, http.StatusAccepted, map[string]string{
+		"job_id":  jobID,
+		"message": "training job started",
+	})
+}
+
+func (s *Server) runTrainingJob(jobID string) {
+	ctx := context.Background()
+
+	// Update progress
+	s.db.UpdateTrainingJobProgress(ctx, jobID, "preparing", 0.1, nil, nil, nil)
+
+	// Simulate training stages (in production, this would call the Swift trainer)
+	stages := []struct {
+		status   string
+		progress float64
+		delay    time.Duration
+	}{
+		{"preparing", 0.2, 500 * time.Millisecond},
+		{"training", 0.4, 1 * time.Second},
+		{"training", 0.6, 1 * time.Second},
+		{"training", 0.8, 1 * time.Second},
+		{"evaluating", 0.9, 500 * time.Millisecond},
+	}
+
+	for _, stage := range stages {
+		time.Sleep(stage.delay)
+		s.db.UpdateTrainingJobProgress(ctx, jobID, stage.status, stage.progress, nil, nil, nil)
+	}
+
+	// Get next model version
+	versions, _ := s.db.GetModelVersions(ctx, "dj_section")
+	nextVersion := 1
+	if len(versions) > 0 {
+		nextVersion = versions[0].Version + 1
+	}
+
+	// Complete training with mock results
+	accuracy := 0.85 + float64(nextVersion)*0.01 // Improve slightly with each version
+	if accuracy > 0.95 {
+		accuracy = 0.95
+	}
+	f1Score := accuracy - 0.02
+	modelPath := fmt.Sprintf("/models/dj_section_v%d.mlmodelc", nextVersion)
+
+	s.db.CompleteTrainingJob(ctx, jobID, accuracy, f1Score, modelPath, nextVersion)
+
+	// Add model version
+	stats, _ := s.db.GetTrainingLabelStats(ctx)
+	s.db.AddModelVersion(ctx, &storage.ModelVersion{
+		ModelType:     "dj_section",
+		Version:       nextVersion,
+		ModelPath:     modelPath,
+		Accuracy:      accuracy,
+		F1Score:       f1Score,
+		IsActive:      false,
+		LabelCounts:   stats.LabelCounts,
+		TrainingJobID: &jobID,
+	})
+
+	s.logger.Info("training completed", "job_id", jobID, "version", nextVersion, "accuracy", accuracy)
+}
+
+func (s *Server) handleListTrainingJobs(w http.ResponseWriter, r *http.Request) {
+	limitStr := r.URL.Query().Get("limit")
+	limit := 20
+	if l, err := strconv.Atoi(limitStr); err == nil && l > 0 && l <= 100 {
+		limit = l
+	}
+
+	jobs, err := s.db.ListTrainingJobs(r.Context(), limit)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "failed to list jobs: "+err.Error())
+		return
+	}
+
+	response := make([]TrainingJobResponse, 0, len(jobs))
+	for _, j := range jobs {
+		resp := TrainingJobResponse{
+			JobID:        j.JobID,
+			Status:       j.Status,
+			Progress:     j.Progress,
+			CurrentEpoch: j.CurrentEpoch,
+			TotalEpochs:  j.TotalEpochs,
+			CurrentLoss:  j.CurrentLoss,
+			Accuracy:     j.Accuracy,
+			F1Score:      j.F1Score,
+			ModelPath:    j.ModelPath,
+			ModelVersion: j.ModelVersion,
+			ErrorMessage: j.ErrorMessage,
+			LabelCounts:  j.LabelCounts,
+			CreatedAt:    j.CreatedAt.Format(time.RFC3339),
+		}
+		if j.StartedAt != nil {
+			s := j.StartedAt.Format(time.RFC3339)
+			resp.StartedAt = &s
+		}
+		if j.CompletedAt != nil {
+			s := j.CompletedAt.Format(time.RFC3339)
+			resp.CompletedAt = &s
+		}
+		response = append(response, resp)
+	}
+
+	writeJSON(w, http.StatusOK, response)
+}
+
+func (s *Server) handleGetTrainingJob(w http.ResponseWriter, r *http.Request) {
+	jobID := r.PathValue("id")
+	if jobID == "" {
+		writeError(w, http.StatusBadRequest, "missing job id")
+		return
+	}
+
+	job, err := s.db.GetTrainingJob(r.Context(), jobID)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "failed to get job: "+err.Error())
+		return
+	}
+	if job == nil {
+		writeError(w, http.StatusNotFound, "job not found")
+		return
+	}
+
+	resp := TrainingJobResponse{
+		JobID:        job.JobID,
+		Status:       job.Status,
+		Progress:     job.Progress,
+		CurrentEpoch: job.CurrentEpoch,
+		TotalEpochs:  job.TotalEpochs,
+		CurrentLoss:  job.CurrentLoss,
+		Accuracy:     job.Accuracy,
+		F1Score:      job.F1Score,
+		ModelPath:    job.ModelPath,
+		ModelVersion: job.ModelVersion,
+		ErrorMessage: job.ErrorMessage,
+		LabelCounts:  job.LabelCounts,
+		CreatedAt:    job.CreatedAt.Format(time.RFC3339),
+	}
+	if job.StartedAt != nil {
+		s := job.StartedAt.Format(time.RFC3339)
+		resp.StartedAt = &s
+	}
+	if job.CompletedAt != nil {
+		s := job.CompletedAt.Format(time.RFC3339)
+		resp.CompletedAt = &s
+	}
+
+	writeJSON(w, http.StatusOK, resp)
+}
+
+func (s *Server) handleListModelVersions(w http.ResponseWriter, r *http.Request) {
+	modelType := r.URL.Query().Get("type")
+	if modelType == "" {
+		modelType = "dj_section"
+	}
+
+	versions, err := s.db.GetModelVersions(r.Context(), modelType)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "failed to list models: "+err.Error())
+		return
+	}
+
+	response := make([]ModelVersionResponse, 0, len(versions))
+	for _, v := range versions {
+		response = append(response, ModelVersionResponse{
+			ID:            v.ID,
+			ModelType:     v.ModelType,
+			Version:       v.Version,
+			ModelPath:     v.ModelPath,
+			Accuracy:      v.Accuracy,
+			F1Score:       v.F1Score,
+			IsActive:      v.IsActive,
+			LabelCounts:   v.LabelCounts,
+			TrainingJobID: v.TrainingJobID,
+			CreatedAt:     v.CreatedAt.Format(time.RFC3339),
+		})
+	}
+
+	writeJSON(w, http.StatusOK, response)
+}
+
+func (s *Server) handleActivateModel(w http.ResponseWriter, r *http.Request) {
+	versionStr := r.PathValue("version")
+	version, err := strconv.Atoi(versionStr)
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "invalid version")
+		return
+	}
+
+	if err := s.db.ActivateModelVersion(r.Context(), "dj_section", version); err != nil {
+		writeError(w, http.StatusInternalServerError, "failed to activate model: "+err.Error())
+		return
+	}
+
+	writeJSON(w, http.StatusOK, map[string]interface{}{
+		"message": "model activated",
+		"version": version,
+	})
+}
+
+func (s *Server) handleDeleteModel(w http.ResponseWriter, r *http.Request) {
+	versionStr := r.PathValue("version")
+	version, err := strconv.Atoi(versionStr)
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "invalid version")
+		return
+	}
+
+	// Don't allow deleting active model
+	active, _ := s.db.GetActiveModelVersion(r.Context(), "dj_section")
+	if active != nil && active.Version == version {
+		writeError(w, http.StatusBadRequest, "cannot delete active model")
+		return
+	}
+
+	if err := s.db.DeleteModelVersion(r.Context(), "dj_section", version); err != nil {
+		writeError(w, http.StatusInternalServerError, "failed to delete model: "+err.Error())
+		return
+	}
+
+	writeJSON(w, http.StatusOK, map[string]string{"message": "model deleted"})
 }

@@ -12,6 +12,9 @@ import { TransitionGraph } from './components/TransitionGraph';
 import { LiveStats } from './components/LiveStats';
 import { BPMKeyChart } from './components/BPMKeyChart';
 import { ExportPanel } from './components/ExportPanel';
+import { SimilarTracks } from './components/SimilarTracks';
+import { ModelSettings } from './components/ModelSettings';
+import { TrainingScreen } from './components/TrainingScreen';
 import { useStore } from './store';
 
 function App() {
@@ -188,6 +191,20 @@ function App() {
           >
             <span className="nav-icon">◎</span>
             Graph
+          </button>
+          <button
+            className={`nav-btn ${viewMode === 'settings' ? 'active' : ''}`}
+            onClick={() => setViewMode('settings')}
+          >
+            <span className="nav-icon">⚙</span>
+            Settings
+          </button>
+          <button
+            className={`nav-btn ${viewMode === 'training' ? 'active' : ''}`}
+            onClick={() => setViewMode('training')}
+          >
+            <span className="nav-icon">🤖</span>
+            Training
           </button>
           <div className="nav-divider" />
           <ThemeToggle />
@@ -474,6 +491,61 @@ function App() {
                   <BPMKeyChart tracks={tracks} height={100} mode="key" />
                 </div>
               </div>
+            </motion.div>
+          )}
+
+          {viewMode === 'settings' && (
+            <motion.div
+              key="settings"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="settings-view"
+            >
+              <div className="settings-main">
+                <div className="panel">
+                  <ModelSettings />
+                </div>
+              </div>
+              <div className="settings-sidebar">
+                {selected && (
+                  <div className="panel">
+                    <div className="panel-header">
+                      <h3>Similar to: {selected.title}</h3>
+                    </div>
+                    <SimilarTracks
+                      trackId={selected.id}
+                      onSelectTrack={setSelectedId}
+                      limit={8}
+                    />
+                  </div>
+                )}
+                {!selected && (
+                  <div className="panel">
+                    <div className="panel-header">
+                      <h3>Similar Tracks</h3>
+                    </div>
+                    <div className="similar-tracks-empty">
+                      <span className="empty-icon">🎵</span>
+                      <p>Select a track to find similar ones</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          )}
+
+          {viewMode === 'training' && (
+            <motion.div
+              key="training"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="training-view"
+            >
+              <TrainingScreen />
             </motion.div>
           )}
         </AnimatePresence>

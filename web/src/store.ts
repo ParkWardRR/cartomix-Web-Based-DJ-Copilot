@@ -3,7 +3,7 @@ import type { Track, SetPlan, SetEdge } from './types';
 import * as api from './api';
 import { demoTracks, demoSetPlan } from './mockData';
 
-type ViewMode = 'library' | 'setBuilder' | 'graph';
+type ViewMode = 'library' | 'setBuilder' | 'graph' | 'settings' | 'training';
 type SortMode = 'bpm-asc' | 'bpm-desc' | 'energy-desc';
 type SetMode = 'Warm-up' | 'Peak-time' | 'Open-format';
 
@@ -15,6 +15,30 @@ export interface ExportResult {
   cuesCSV: string;
   bundlePath: string;
   vendorExports: string[];
+}
+
+export interface MLSettings {
+  openl3Enabled: boolean;
+  soundAnalysisEnabled: boolean;
+  customModelEnabled: boolean;
+  minSimilarityThreshold: number;
+  showExplanations: boolean;
+}
+
+export interface SimilarTrack {
+  trackId: number;
+  contentHash: string;
+  title: string;
+  artist: string;
+  score: number;
+  explanation: string;
+  vibeMatch: number;
+  tempoMatch: number;
+  keyMatch: number;
+  energyMatch: number;
+  bpmDelta: number;
+  keyRelation: string;
+  energyDelta: number;
 }
 
 interface AppState {
@@ -44,6 +68,15 @@ interface AppState {
   isExporting: boolean;
   exportResult: ExportResult | null;
   exportError: string | null;
+
+  // ML Settings
+  mlSettings: MLSettings;
+  mlSettingsLoading: boolean;
+
+  // Similar Tracks
+  similarTracks: SimilarTrack[];
+  similarTracksLoading: boolean;
+  similarTracksError: string | null;
 
   // Computed
   filteredTracks: () => Track[];
@@ -79,6 +112,12 @@ interface AppState {
   checkApiHealth: () => Promise<void>;
   useMockData: () => void;
   clearExportResult: () => void;
+
+  // ML Actions
+  fetchMLSettings: () => Promise<void>;
+  updateMLSettings: (settings: Partial<MLSettings>) => Promise<void>;
+  fetchSimilarTracks: (trackId: string, limit?: number) => Promise<void>;
+  clearSimilarTracks: () => void;
 }
 
 // Generate waveform from energy level (used when API doesn't return waveform)
@@ -193,6 +232,21 @@ export const useStore = create<AppState>((set, get) => ({
   isExporting: false,
   exportResult: null,
   exportError: null,
+
+  // ML Settings
+  mlSettings: {
+    openl3Enabled: true,
+    soundAnalysisEnabled: false,
+    customModelEnabled: false,
+    minSimilarityThreshold: 0.5,
+    showExplanations: true,
+  },
+  mlSettingsLoading: false,
+
+  // Similar Tracks
+  similarTracks: [],
+  similarTracksLoading: false,
+  similarTracksError: null,
 
   // Computed getters
   filteredTracks: () => {
@@ -388,5 +442,85 @@ export const useStore = create<AppState>((set, get) => ({
   // Clear export result
   clearExportResult: () => {
     set({ exportResult: null, exportError: null });
+  },
+
+  // Fetch ML settings
+  fetchMLSettings: async () => {
+    set({ mlSettingsLoading: true });
+    try {
+      const response = await api.getMLSettings();
+      set({
+        mlSettings: {
+          openl3Enabled: response.openl3_enabled,
+          soundAnalysisEnabled: response.sound_analysis_enabled,
+          customModelEnabled: response.custom_model_enabled,
+          minSimilarityThreshold: response.min_similarity_threshold,
+          showExplanations: response.show_explanations,
+        },
+        mlSettingsLoading: false,
+      });
+    } catch (err) {
+      console.warn('Failed to fetch ML settings:', err);
+      set({ mlSettingsLoading: false });
+    }
+  },
+
+  // Update ML settings
+  updateMLSettings: async (settings: Partial<MLSettings>) => {
+    set({ mlSettingsLoading: true });
+    try {
+      const response = await api.updateMLSettings({
+        openl3_enabled: settings.openl3Enabled,
+        sound_analysis_enabled: settings.soundAnalysisEnabled,
+        custom_model_enabled: settings.customModelEnabled,
+        min_similarity_threshold: settings.minSimilarityThreshold,
+        show_explanations: settings.showExplanations,
+      });
+      set({
+        mlSettings: {
+          openl3Enabled: response.openl3_enabled,
+          soundAnalysisEnabled: response.sound_analysis_enabled,
+          customModelEnabled: response.custom_model_enabled,
+          minSimilarityThreshold: response.min_similarity_threshold,
+          showExplanations: response.show_explanations,
+        },
+        mlSettingsLoading: false,
+      });
+    } catch (err) {
+      console.warn('Failed to update ML settings:', err);
+      set({ mlSettingsLoading: false });
+    }
+  },
+
+  // Fetch similar tracks
+  fetchSimilarTracks: async (trackId: string, limit = 10) => {
+    set({ similarTracksLoading: true, similarTracksError: null });
+    try {
+      const response = await api.getSimilarTracks(trackId, limit);
+      const similar = response.similar.map((s) => ({
+        trackId: s.track_id,
+        contentHash: s.content_hash,
+        title: s.title,
+        artist: s.artist,
+        score: s.score,
+        explanation: s.explanation,
+        vibeMatch: s.vibe_match,
+        tempoMatch: s.tempo_match,
+        keyMatch: s.key_match,
+        energyMatch: s.energy_match,
+        bpmDelta: s.bpm_delta,
+        keyRelation: s.key_relation,
+        energyDelta: s.energy_delta,
+      }));
+      set({ similarTracks: similar, similarTracksLoading: false });
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : 'Failed to fetch similar tracks';
+      set({ similarTracksError: errorMsg, similarTracksLoading: false, similarTracks: [] });
+    }
+  },
+
+  // Clear similar tracks
+  clearSimilarTracks: () => {
+    set({ similarTracks: [], similarTracksError: null });
   },
 }));

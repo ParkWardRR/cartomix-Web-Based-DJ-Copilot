@@ -101,6 +101,140 @@ message Beatgrid {
 message Loudness {
   float integrated_lufs = 1;
   float true_peak_db = 2;
+  float momentary_lufs = 3;
+  float short_term_lufs = 4;
+  float loudness_range = 5;
+}
+
+// OpenL3 512-dimensional embedding for vibe matching
+message OpenL3Embedding {
+  repeated float vector = 1;  // 512-dim pooled embedding
+  int32 window_count = 2;     // Number of 1-second windows processed
+}
+
+// Sound classification result from Apple SoundAnalysis
+message SoundClassification {
+  string primary_context = 1;     // music / speech / noise / silence
+  float confidence = 2;           // 0..1
+  repeated SoundEvent events = 3;
+  repeated QAFlag qa_flags = 4;
+}
+
+message SoundEvent {
+  string label = 1;         // Apple's 300+ labels
+  string category = 2;      // DJ-mapped category
+  float confidence = 3;
+  double start_time = 4;
+  double end_time = 5;
+}
+
+message QAFlag {
+  string type = 1;      // needs_review, mixed_content, speech_detected, low_confidence
+  string reason = 2;
+  int32 severity = 3;   // 1-3
+  bool dismissed = 4;
+}
+
+// Similarity result with explanation
+message SimilarTrack {
+  TrackId id = 1;
+  string title = 2;
+  string artist = 3;
+  float score = 4;            // 0..1 combined score
+  string explanation = 5;     // Human-readable
+  float vibe_match = 6;       // OpenL3 cosine similarity %
+  float tempo_match = 7;
+  float key_match = 8;
+  float energy_match = 9;
+  float bpm_delta = 10;
+  string key_relation = 11;   // same, compatible, harmonic, clash
+}
+
+// Training label for custom model training
+message TrainingLabel {
+  int64 id = 1;
+  int64 track_id = 2;
+  string content_hash = 3;
+  string track_path = 4;
+  DJSectionLabel label_value = 5;
+  int32 start_beat = 6;
+  int32 end_beat = 7;
+  double start_time_seconds = 8;
+  double end_time_seconds = 9;
+  string source = 10;         // user, auto_detected, imported
+  int64 created_at = 11;      // Unix timestamp
+}
+
+// DJ Section labels for custom training
+enum DJSectionLabel {
+  DJ_SECTION_UNSPECIFIED = 0;
+  DJ_INTRO = 1;
+  DJ_BUILD = 2;
+  DJ_DROP = 3;
+  DJ_BREAK = 4;
+  DJ_OUTRO = 5;
+  DJ_VERSE = 6;
+  DJ_CHORUS = 7;
+}
+
+// Training job status
+message TrainingJob {
+  string job_id = 1;
+  TrainingStatus status = 2;
+  float progress = 3;           // 0..1
+  int32 current_epoch = 4;
+  int32 total_epochs = 5;
+  float current_loss = 6;
+  float accuracy = 7;
+  float f1_score = 8;
+  string model_path = 9;
+  int32 model_version = 10;
+  string error_message = 11;
+  map<string, int32> label_counts = 12;
+  int64 started_at = 13;
+  int64 completed_at = 14;
+}
+
+enum TrainingStatus {
+  TRAINING_STATUS_UNSPECIFIED = 0;
+  TRAINING_PENDING = 1;
+  TRAINING_PREPARING = 2;
+  TRAINING_RUNNING = 3;
+  TRAINING_EVALUATING = 4;
+  TRAINING_COMPLETED = 5;
+  TRAINING_FAILED = 6;
+}
+
+// Trained model version
+message ModelVersion {
+  int32 version = 1;
+  string model_type = 2;      // dj_section
+  string model_path = 3;
+  float accuracy = 4;
+  float f1_score = 5;
+  bool is_active = 6;
+  map<string, int32> label_counts = 7;
+  string training_job_id = 8;
+  int64 created_at = 9;
+}
+
+// Training label statistics
+message TrainingLabelStats {
+  int32 total_labels = 1;
+  map<string, int32> label_counts = 2;
+  int32 tracks_covered = 3;
+  float avg_per_track = 4;
+  bool ready_for_training = 5;
+  int32 min_samples_required = 6;
+}
+
+// ML settings
+message MLSettings {
+  bool sound_analysis_enabled = 1;
+  bool openl3_enabled = 2;
+  bool dj_section_model_enabled = 3;
+  bool show_explanations = 4;
+  float similarity_threshold = 5;
 }
 
 message TrackAnalysis {
@@ -114,8 +248,13 @@ message TrackAnalysis {
   repeated CuePoint cue_points = 8;
   repeated TransitionWindow transition_windows = 9;
   Loudness loudness = 10;
-  bytes embedding = 11; // float16/32 payload
+  bytes embedding = 11;                       // 128-dim MFCC payload
   int32 analysis_version = 12;
+  OpenL3Embedding openl3_embedding = 13;      // 512-dim vibe embedding
+  SoundClassification sound_classification = 14;
+  string sound_context = 15;                  // music / speech / noise
+  float sound_context_confidence = 16;
+  bool has_qa_flags = 17;
 }
 
 message TrackSummary {
@@ -133,9 +272,10 @@ message EdgeExplanation {
   TrackId from = 1;
   TrackId to = 2;
   float score = 3;
-  string reason = 4; // human-readable summary
+  string reason = 4;          // human-readable summary
   float tempo_delta = 5;
   int32 energy_delta = 6;
-  string key_relation = 7; // e.g., "same key", "+1 Camelot"
+  string key_relation = 7;    // e.g., "same key", "+1 Camelot"
   string window_overlap = 8;
+  float vibe_match = 9;       // OpenL3 cosine similarity %
 }

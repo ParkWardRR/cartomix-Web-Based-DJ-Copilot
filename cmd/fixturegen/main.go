@@ -20,6 +20,13 @@ func main() {
 	rampEnd := flag.Float64("ramp-end-bpm", 100, "tempo ramp end BPM")
 	includeHarmonic := flag.String("include-harmonic-keys", "8A", "comma-separated keys for harmonic fixtures")
 
+	// New fixture types
+	includePhrase := flag.Bool("include-phrase", true, "include phrase track with sections")
+	phraseBPM := flag.Float64("phrase-bpm", 128, "BPM for phrase track")
+	includeHarmonicSet := flag.Bool("include-harmonic-set", true, "include harmonic set of tracks")
+	harmonicSetKeys := flag.String("harmonic-set-keys", "8A,9A,7A,8B", "comma-separated keys for harmonic set")
+	includeClubNoise := flag.Bool("include-club-noise", true, "include club ambient noise fixtures")
+
 	flag.Parse()
 
 	var ladder []float64
@@ -37,17 +44,31 @@ func main() {
 	keys := strings.Split(*includeHarmonic, ",")
 	includeChord := len(keys) > 0 && keys[0] != ""
 
+	// Parse harmonic set keys
+	var harmonicKeys []string
+	for _, k := range strings.Split(*harmonicSetKeys, ",") {
+		k = strings.TrimSpace(k)
+		if k != "" {
+			harmonicKeys = append(harmonicKeys, k)
+		}
+	}
+
 	cfg := fixtures.Config{
-		OutputDir:    *outDir,
-		SampleRate:   48000,
-		Seed:         int64(*seed),
-		BPMLadder:    ladder,
-		SwingRatio:   0.6,
-		IncludeSwing: *includeSwing,
-		IncludeRamp:  *includeTempoRamp,
-		RampStartBPM: *rampStart,
-		RampEndBPM:   *rampEnd,
-		IncludeChord: includeChord,
+		OutputDir:          *outDir,
+		SampleRate:         48000,
+		Seed:               int64(*seed),
+		BPMLadder:          ladder,
+		SwingRatio:         0.6,
+		IncludeSwing:       *includeSwing,
+		IncludeRamp:        *includeTempoRamp,
+		RampStartBPM:       *rampStart,
+		RampEndBPM:         *rampEnd,
+		IncludeChord:       includeChord,
+		IncludePhrase:      *includePhrase,
+		PhraseBPM:          *phraseBPM,
+		IncludeHarmonicSet: *includeHarmonicSet,
+		HarmonicSetKeys:    harmonicKeys,
+		IncludeClubNoise:   *includeClubNoise,
 	}
 	if includeChord {
 		cfg.ChordKey = strings.TrimSpace(keys[0])

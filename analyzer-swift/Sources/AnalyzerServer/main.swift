@@ -37,6 +37,13 @@ struct Analyze: AsyncParsableCommand {
     func run() async throws {
         let logger = Logger(label: "analyzer")
 
+        // Check for Metal/ANE hardware requirement
+        do {
+            try HardwareCheck.requireMetal()
+        } catch let error as HardwareError {
+            throw AnalyzerCLIError.hardwareNotSupported(error.description)
+        }
+
         // Validate file exists
         guard FileManager.default.fileExists(atPath: path) else {
             throw AnalyzerCLIError.fileNotFound(path)
@@ -70,6 +77,8 @@ struct Analyze: AsyncParsableCommand {
                     FileHandle.standardError.write("Generating audio embedding...\n".data(using: .utf8)!)
                 case .openL3Embedding:
                     FileHandle.standardError.write("Generating OpenL3 embedding (512-dim)...\n".data(using: .utf8)!)
+                case .soundClassification:
+                    FileHandle.standardError.write("Running sound classification (Apple ML)...\n".data(using: .utf8)!)
                 case .complete:
                     FileHandle.standardError.write("Complete!\n".data(using: .utf8)!)
                 }
@@ -120,6 +129,13 @@ struct Analyze: AsyncParsableCommand {
             summary += "\nOpenL3: \(openL3.vector.count)-dim vector (\(openL3.windowCount) windows)"
         }
 
+        if let soundClass = result.soundClassification {
+            summary += "\nSound Context: \(soundClass.primaryContext) (\(String(format: "%.0f%%", soundClass.confidence * 100)) confidence)"
+            if !soundClass.qaFlags.isEmpty {
+                summary += "\nQA Flags: \(soundClass.qaFlags.map { $0.type.rawValue }.joined(separator: ", "))"
+            }
+        }
+
         return summary
     }
 }
@@ -144,16 +160,52 @@ struct Serve: AsyncParsableCommand {
 
     func run() async throws {
         let logger = Logger(label: "analyzer-server")
+
+        // Check for Metal/ANE hardware requirement
+        do {
+            try HardwareCheck.requireMetal()
+        } catch let error as HardwareError {
+            throw AnalyzerCLIError.hardwareNotSupported(error.description)
+        }
+
         logger.info("Starting analyzer server on port \(port) (\(proto))")
 
-        // Simple HTTP server using Foundation
-        if proto == .http {
+        // Start the appropriate server
+        switch proto {
+        case .http:
             try await startHTTPServer(port: port, logger: logger)
-        } else {
-            // gRPC server would go here once stubs are generated
-            logger.error("gRPC server not yet implemented - use --proto http")
-            throw AnalyzerCLIError.notImplemented("gRPC server")
+        case .grpc:
+            try await startGRPCServer(port: port, logger: logger)
         }
+    }
+
+    private func startGRPCServer(port: Int, logger: Logger) async throws {
+        logger.info("Starting gRPC server on port \(port)")
+        logger.info("Service: cartomix.analyzer.AnalyzerWorker")
+        logger.info("RPC: AnalyzeTrack - Analyze a track file")
+
+        let server = AnalyzerGRPCServer(port: port, logger: logger)
+
+        // Handle graceful shutdown
+        let sigintSource = DispatchSource.makeSignalSource(signal: SIGINT, queue: .main)
+        let sigtermSource = DispatchSource.makeSignalSource(signal: SIGTERM, queue: .main)
+
+        signal(SIGINT, SIG_IGN)
+        signal(SIGTERM, SIG_IGN)
+
+        let shutdownHandler = {
+            logger.info("Received shutdown signal")
+            Task {
+                try await server.stop()
+            }
+        }
+
+        sigintSource.setEventHandler(handler: shutdownHandler)
+        sigtermSource.setEventHandler(handler: shutdownHandler)
+        sigintSource.resume()
+        sigtermSource.resume()
+
+        try await server.start()
     }
 
     private func startHTTPServer(port: Int, logger: Logger) async throws {
@@ -314,7 +366,38 @@ struct Healthcheck: ParsableCommand {
     )
 
     func run() throws {
-        print(#"{"status":"ok","version":"0.1.0","accelerate":true}"#)
+        let capabilities = HardwareCheck.getCapabilities()
+
+        let status: String
+        if capabilities.metalAvailable {
+            status = "ok"
+        } else {
+            status = "error"
+        }
+
+        let json: [String: Any] = [
+            "status": status,
+            "version": "0.1.0",
+            "hardware": [
+                "metal": capabilities.metalAvailable,
+                "device": capabilities.deviceName ?? "none",
+                "unified_memory": capabilities.hasUnifiedMemory,
+                "ane": capabilities.aneAvailable,
+                "compute_units": capabilities.recommendedComputeUnits.rawValue
+            ]
+        ]
+
+        if let jsonData = try? JSONSerialization.data(withJSONObject: json, options: [.sortedKeys]),
+           let jsonString = String(data: jsonData, encoding: .utf8) {
+            print(jsonString)
+        } else {
+            print(#"{"status":"error","version":"0.1.0"}"#)
+        }
+
+        // Exit with error code if Metal not available
+        if !capabilities.metalAvailable {
+            throw AnalyzerCLIError.hardwareNotSupported(HardwareError.metalNotSupported.description)
+        }
     }
 }
 
@@ -333,6 +416,7 @@ struct AnalysisJSON: Codable {
     let waveformSummary: [Float]
     let embedding: EmbeddingJSON
     let openL3Embedding: OpenL3EmbeddingJSON?
+    let soundClassification: SoundClassificationJSON?
 
     init(from result: TrackAnalysisResult) {
         self.path = result.path
@@ -347,6 +431,7 @@ struct AnalysisJSON: Codable {
         self.waveformSummary = result.waveformSummary
         self.embedding = EmbeddingJSON(from: result.embedding)
         self.openL3Embedding = result.openL3Embedding.map { OpenL3EmbeddingJSON(from: $0) }
+        self.soundClassification = result.soundClassification.map { SoundClassificationJSON(from: $0) }
     }
 }
 
@@ -460,12 +545,55 @@ struct OpenL3WindowJSON: Codable {
     }
 }
 
+struct SoundClassificationJSON: Codable {
+    let primaryContext: String
+    let confidence: Double
+    let events: [SoundEventJSON]
+    let qaFlags: [QAFlagJSON]
+
+    init(from result: SoundClassificationResult) {
+        self.primaryContext = result.primaryContext
+        self.confidence = result.confidence
+        self.events = result.events.map { SoundEventJSON(from: $0) }
+        self.qaFlags = result.qaFlags.map { QAFlagJSON(from: $0) }
+    }
+}
+
+struct SoundEventJSON: Codable {
+    let label: String
+    let category: String
+    let confidence: Float
+    let startTime: Double
+    let endTime: Double
+
+    init(from event: SoundEvent) {
+        self.label = event.label
+        self.category = event.category
+        self.confidence = event.confidence
+        self.startTime = event.startTime
+        self.endTime = event.endTime
+    }
+}
+
+struct QAFlagJSON: Codable {
+    let type: String
+    let reason: String
+    let severity: Int
+
+    init(from flag: QAFlag) {
+        self.type = flag.type.rawValue
+        self.reason = flag.reason
+        self.severity = flag.severity
+    }
+}
+
 // MARK: - Errors
 
 enum AnalyzerCLIError: Error, CustomStringConvertible {
     case fileNotFound(String)
     case socketError(String)
     case notImplemented(String)
+    case hardwareNotSupported(String)
 
     var description: String {
         switch self {
@@ -475,6 +603,8 @@ enum AnalyzerCLIError: Error, CustomStringConvertible {
             return "Socket error: \(msg)"
         case .notImplemented(let feature):
             return "Not implemented: \(feature)"
+        case .hardwareNotSupported(let msg):
+            return "Hardware not supported:\n\(msg)"
         }
     }
 }
