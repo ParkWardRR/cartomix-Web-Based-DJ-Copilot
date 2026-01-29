@@ -81,7 +81,7 @@ A local-first copilot for DJ set prep. It ingests your library, detects structur
 - `make fixturegen` now emits deterministic WAVs (BPM ladder, swing click, tempo ramp, harmonic pad) plus `manifest.json` under `testdata/audio` for golden comparisons.
 
 ## Exports bundle
-- `ExportSet` now produces a ready-to-share tar.gz bundle containing playlist, analysis JSON, cues CSV, **and a SHA256 manifest** for quick verification.
+- `ExportSet` now produces a ready-to-share tar.gz bundle containing playlist, analysis JSON, cues CSV, **and a SHA256 manifest** for quick verification. Validate locally with `go run ./cmd/exportverify --manifest <checksums.txt>`.
 
 ## Architecture
 ```mermaid

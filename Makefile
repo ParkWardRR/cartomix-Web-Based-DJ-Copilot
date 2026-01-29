@@ -49,6 +49,9 @@ proto:
 fixturegen:
 	go run ./cmd/fixturegen --out ./testdata/audio
 
+verify-export:
+	go run ./cmd/exportverify --manifest testdata/audio/set-checksums.txt --dir testdata/audio || echo "Provide your manifest path"
+
 # Development servers
 run: run-engine
 

@@ -3,7 +3,6 @@ package exporter
 import (
 	"archive/tar"
 	"compress/gzip"
-	"crypto/sha256"
 	"encoding/csv"
 	"encoding/json"
 	"fmt"
@@ -187,11 +186,5 @@ func writeBundle(bundlePath string, files ...string) error {
 	return nil
 }
 
-func fileSHA256(path string) (string, error) {
-	f, err := os.ReadFile(path)
-	if err != nil {
-		return "", err
-	}
-	hash := sha256.Sum256(f)
-	return fmt.Sprintf("%x", hash[:]), nil
-}
+// fileSHA256 is kept unexported for internal writer use.
+func fileSHA256(path string) (string, error) { return FileSHA256(path) }
