@@ -48,6 +48,8 @@ type AnalysisRecord struct {
 	TransitionWindowsJSON string
 	TempoMapJSON          string
 	Embedding             []byte
+	OpenL3Embedding       []byte // 512-dim OpenL3 embedding
+	OpenL3WindowCount     int32  // Number of temporal windows
 	CreatedAt             time.Time
 	UpdatedAt             time.Time
 }
@@ -123,8 +125,8 @@ func (d *DB) UpsertAnalysis(rec *AnalysisRecord) error {
 			key_value, key_format, key_confidence,
 			energy_global, integrated_lufs, true_peak_db,
 			beatgrid_json, sections_json, cue_points_json, energy_segments_json, transition_windows_json, tempo_map_json,
-			embedding, updated_at
-		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+			embedding, openl3_embedding, openl3_window_count, updated_at
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
 		ON CONFLICT(track_id, version) DO UPDATE SET
 			status = excluded.status,
 			error = excluded.error,
@@ -145,13 +147,15 @@ func (d *DB) UpsertAnalysis(rec *AnalysisRecord) error {
 			transition_windows_json = excluded.transition_windows_json,
 			tempo_map_json = excluded.tempo_map_json,
 			embedding = excluded.embedding,
+			openl3_embedding = excluded.openl3_embedding,
+			openl3_window_count = excluded.openl3_window_count,
 			updated_at = CURRENT_TIMESTAMP
 	`, rec.TrackID, rec.Version, rec.Status, rec.Error,
 		rec.DurationSeconds, rec.BPM, rec.BPMConfidence, rec.IsDynamicTempo,
 		rec.KeyValue, rec.KeyFormat, rec.KeyConfidence,
 		rec.EnergyGlobal, rec.IntegratedLufs, rec.TruePeakDb,
 		rec.BeatgridJSON, rec.SectionsJSON, rec.CuePointsJSON, rec.EnergySegmentsJSON, rec.TransitionWindowsJSON, rec.TempoMapJSON,
-		rec.Embedding)
+		rec.Embedding, rec.OpenL3Embedding, rec.OpenL3WindowCount)
 
 	return err
 }
@@ -175,7 +179,7 @@ func (d *DB) LatestAnalysisRecord(trackID int64) (*AnalysisRecord, error) {
 		SELECT id, track_id, version, status, error, duration_seconds, bpm, bpm_confidence, is_dynamic_tempo,
 		       key_value, key_format, key_confidence, energy_global, integrated_lufs, true_peak_db,
 		       beatgrid_json, sections_json, cue_points_json, energy_segments_json, transition_windows_json, tempo_map_json,
-		       embedding, created_at, updated_at
+		       embedding, COALESCE(openl3_embedding, X''), COALESCE(openl3_window_count, 0), created_at, updated_at
 		FROM analyses
 		WHERE track_id = ?
 		ORDER BY version DESC
@@ -189,7 +193,7 @@ func (d *DB) LatestAnalysisRecord(trackID int64) (*AnalysisRecord, error) {
 		&rec.ID, &rec.TrackID, &rec.Version, &status, &rec.Error, &rec.DurationSeconds, &rec.BPM, &rec.BPMConfidence, &rec.IsDynamicTempo,
 		&rec.KeyValue, &rec.KeyFormat, &rec.KeyConfidence, &rec.EnergyGlobal, &rec.IntegratedLufs, &rec.TruePeakDb,
 		&rec.BeatgridJSON, &rec.SectionsJSON, &rec.CuePointsJSON, &rec.EnergySegmentsJSON, &rec.TransitionWindowsJSON, &rec.TempoMapJSON,
-		&rec.Embedding, &createdAt, &updatedAt,
+		&rec.Embedding, &rec.OpenL3Embedding, &rec.OpenL3WindowCount, &createdAt, &updatedAt,
 	); err != nil {
 		return nil, err
 	}
@@ -402,7 +406,7 @@ func (d *DB) latestByStatus(trackID int64, status AnalysisStatus) (*AnalysisReco
 		SELECT id, track_id, version, status, error, duration_seconds, bpm, bpm_confidence, is_dynamic_tempo,
 		       key_value, key_format, key_confidence, energy_global, integrated_lufs, true_peak_db,
 		       beatgrid_json, sections_json, cue_points_json, energy_segments_json, transition_windows_json, tempo_map_json,
-		       embedding, created_at, updated_at
+		       embedding, COALESCE(openl3_embedding, X''), COALESCE(openl3_window_count, 0), created_at, updated_at
 		FROM analyses
 		WHERE track_id = ? AND status = ?
 		ORDER BY version DESC
@@ -416,7 +420,7 @@ func (d *DB) latestByStatus(trackID int64, status AnalysisStatus) (*AnalysisReco
 		&rec.ID, &rec.TrackID, &rec.Version, &statusStr, &rec.Error, &rec.DurationSeconds, &rec.BPM, &rec.BPMConfidence, &rec.IsDynamicTempo,
 		&rec.KeyValue, &rec.KeyFormat, &rec.KeyConfidence, &rec.EnergyGlobal, &rec.IntegratedLufs, &rec.TruePeakDb,
 		&rec.BeatgridJSON, &rec.SectionsJSON, &rec.CuePointsJSON, &rec.EnergySegmentsJSON, &rec.TransitionWindowsJSON, &rec.TempoMapJSON,
-		&rec.Embedding, &createdAt, &updatedAt,
+		&rec.Embedding, &rec.OpenL3Embedding, &rec.OpenL3WindowCount, &createdAt, &updatedAt,
 	); err != nil {
 		return nil, err
 	}

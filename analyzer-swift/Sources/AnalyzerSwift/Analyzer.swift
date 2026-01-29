@@ -23,6 +23,9 @@ public struct TrackAnalysisResult: Sendable {
     public let rms: Float
     public let peak: Float
 
+    // Loudness (EBU R128)
+    public let loudness: LoudnessResult
+
     // Sections
     public let sections: [Section]
     public let sectionConfidence: Double
@@ -35,6 +38,12 @@ public struct TrackAnalysisResult: Sendable {
 
     // Waveform summary (for visualization)
     public let waveformSummary: [Float]
+
+    // Audio embedding (for similarity/vibe matching)
+    public let embedding: AudioEmbedding
+
+    // OpenL3 embedding (512-dim, for ML-powered similarity)
+    public let openL3Embedding: OpenL3Embedding?
 
     public init(
         path: String,
@@ -51,13 +60,16 @@ public struct TrackAnalysisResult: Sendable {
         highEnergy: Float,
         rms: Float,
         peak: Float,
+        loudness: LoudnessResult,
         sections: [Section],
         sectionConfidence: Double,
         transitionWindows: [(start: Double, end: Double)],
         cues: [CuePoint],
         safeStartBeat: Int,
         safeEndBeat: Int,
-        waveformSummary: [Float]
+        waveformSummary: [Float],
+        embedding: AudioEmbedding,
+        openL3Embedding: OpenL3Embedding? = nil
     ) {
         self.path = path
         self.duration = duration
@@ -73,6 +85,7 @@ public struct TrackAnalysisResult: Sendable {
         self.highEnergy = highEnergy
         self.rms = rms
         self.peak = peak
+        self.loudness = loudness
         self.sections = sections
         self.sectionConfidence = sectionConfidence
         self.transitionWindows = transitionWindows
@@ -80,6 +93,8 @@ public struct TrackAnalysisResult: Sendable {
         self.safeStartBeat = safeStartBeat
         self.safeEndBeat = safeEndBeat
         self.waveformSummary = waveformSummary
+        self.embedding = embedding
+        self.openL3Embedding = openL3Embedding
     }
 
     /// Primary BPM (from first tempo node)
@@ -110,9 +125,12 @@ public enum AnalysisProgress: Sendable {
     case beatgrid(progress: Double)
     case key
     case energy
+    case loudness
     case sections
     case cues
     case waveform
+    case embedding
+    case openL3Embedding
     case complete
 }
 
@@ -122,28 +140,40 @@ public final class Analyzer: @unchecked Sendable {
     private let beatgridDetector: BeatgridDetector
     private let keyDetector: KeyDetector
     private let energyAnalyzer: EnergyAnalyzer
+    private let loudnessAnalyzer: LoudnessAnalyzer
     private let sectionDetector: SectionDetector
     private let cueGenerator: CueGenerator
+    private let embeddingGenerator: EmbeddingGenerator
+    private let openL3Embedder: OpenL3Embedder
 
     // Configuration
     private let targetSampleRate: Double
     private let waveformBins: Int
+    private let enableOpenL3: Bool
 
     public init(
         sampleRate: Double = 48000,
-        waveformBins: Int = 200
+        waveformBins: Int = 200,
+        enableOpenL3: Bool = true
     ) {
         self.targetSampleRate = sampleRate
         self.waveformBins = waveformBins
+        self.enableOpenL3 = enableOpenL3
 
         // Initialize components
         self.decoder = AudioDecoder(targetSampleRate: sampleRate, mono: true)
         self.beatgridDetector = BeatgridDetector(sampleRate: sampleRate)
         self.keyDetector = KeyDetector(sampleRate: sampleRate)
         self.energyAnalyzer = EnergyAnalyzer(sampleRate: sampleRate)
+        self.loudnessAnalyzer = LoudnessAnalyzer(sampleRate: sampleRate)
         self.sectionDetector = SectionDetector(sampleRate: sampleRate)
         self.cueGenerator = CueGenerator(maxCues: 8)
+        self.embeddingGenerator = EmbeddingGenerator(sampleRate: sampleRate)
+        self.openL3Embedder = OpenL3Embedder()
     }
+
+    /// Check if OpenL3 model is available
+    public var openL3Available: Bool { openL3Embedder.isAvailable }
 
     /// Analyze a track file
     public func analyze(
@@ -178,7 +208,11 @@ public final class Analyzer: @unchecked Sendable {
         progress?(.energy)
         let energyResult = energyAnalyzer.analyze(samples)
 
-        // 5. Detect sections
+        // 5. Analyze loudness (EBU R128)
+        progress?(.loudness)
+        let loudnessResult = loudnessAnalyzer.analyze(samples)
+
+        // 6. Detect sections
         progress?(.sections)
         let sectionResult = sectionDetector.detect(
             samples,
@@ -186,16 +220,27 @@ public final class Analyzer: @unchecked Sendable {
             tempo: beatgridResult.tempoMap.first?.bpm ?? 120
         )
 
-        // 6. Generate cues
+        // 7. Generate cues
         progress?(.cues)
         let cueResult = cueGenerator.generate(
             sections: sectionResult.sections,
             beats: beatgridResult.beats
         )
 
-        // 7. Generate waveform summary
+        // 8. Generate waveform summary
         progress?(.waveform)
         let waveformSummary = generateWaveformSummary(samples)
+
+        // 9. Generate audio embedding for similarity matching
+        progress?(.embedding)
+        let embedding = embeddingGenerator.generate(samples)
+
+        // 10. Generate OpenL3 embedding (if enabled)
+        var openL3Embedding: OpenL3Embedding? = nil
+        if enableOpenL3 {
+            progress?(.openL3Embedding)
+            openL3Embedding = openL3Embedder.generate(samples)
+        }
 
         progress?(.complete)
 
@@ -214,13 +259,16 @@ public final class Analyzer: @unchecked Sendable {
             highEnergy: energyResult.highEnergy,
             rms: energyResult.rms,
             peak: energyResult.peak,
+            loudness: loudnessResult,
             sections: sectionResult.sections,
             sectionConfidence: sectionResult.confidence,
             transitionWindows: sectionResult.transitionWindows,
             cues: cueResult.cues,
             safeStartBeat: cueResult.safeStartBeat,
             safeEndBeat: cueResult.safeEndBeat,
-            waveformSummary: waveformSummary
+            waveformSummary: waveformSummary,
+            embedding: embedding,
+            openL3Embedding: openL3Embedding
         )
     }
 

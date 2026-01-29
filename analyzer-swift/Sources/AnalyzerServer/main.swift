@@ -58,12 +58,18 @@ struct Analyze: AsyncParsableCommand {
                     FileHandle.standardError.write("Detecting key...\n".data(using: .utf8)!)
                 case .energy:
                     FileHandle.standardError.write("Analyzing energy...\n".data(using: .utf8)!)
+                case .loudness:
+                    FileHandle.standardError.write("Analyzing loudness (EBU R128)...\n".data(using: .utf8)!)
                 case .sections:
                     FileHandle.standardError.write("Detecting sections...\n".data(using: .utf8)!)
                 case .cues:
                     FileHandle.standardError.write("Generating cues...\n".data(using: .utf8)!)
                 case .waveform:
                     FileHandle.standardError.write("Generating waveform...\n".data(using: .utf8)!)
+                case .embedding:
+                    FileHandle.standardError.write("Generating audio embedding...\n".data(using: .utf8)!)
+                case .openL3Embedding:
+                    FileHandle.standardError.write("Generating OpenL3 embedding (512-dim)...\n".data(using: .utf8)!)
                 case .complete:
                     FileHandle.standardError.write("Complete!\n".data(using: .utf8)!)
                 }
@@ -98,15 +104,23 @@ struct Analyze: AsyncParsableCommand {
     }
 
     private func encodeSummary(_ result: TrackAnalysisResult) -> String {
-        """
+        var summary = """
         Track: \(result.path)
         Duration: \(String(format: "%.1f", result.duration))s
         BPM: \(String(format: "%.1f", result.bpm)) (confidence: \(String(format: "%.0f%%", result.beatgridConfidence * 100)))
         Key: \(result.key.name) / \(result.camelotKey) (confidence: \(String(format: "%.0f%%", result.key.confidence * 100)))
         Energy: \(result.globalEnergy)/10
+        Loudness: \(String(format: "%.1f", result.loudness.integratedLoudness)) LUFS (range: \(String(format: "%.1f", result.loudness.loudnessRange)) LU, peak: \(String(format: "%.1f", result.loudness.truePeak)) dBTP)
         Sections: \(result.sections.count)
         Cues: \(result.cues.count)
+        Embedding: \(result.embedding.vector.count)-dim vector (centroid: \(String(format: "%.0f", result.embedding.spectralCentroid)) Hz)
         """
+
+        if let openL3 = result.openL3Embedding {
+            summary += "\nOpenL3: \(openL3.vector.count)-dim vector (\(openL3.windowCount) windows)"
+        }
+
+        return summary
     }
 }
 
@@ -313,9 +327,12 @@ struct AnalysisJSON: Codable {
     let beatgridConfidence: Double
     let key: KeyJSON
     let energy: Int
+    let loudness: LoudnessJSON
     let sections: [SectionJSON]
     let cues: [CueJSON]
     let waveformSummary: [Float]
+    let embedding: EmbeddingJSON
+    let openL3Embedding: OpenL3EmbeddingJSON?
 
     init(from result: TrackAnalysisResult) {
         self.path = result.path
@@ -324,9 +341,12 @@ struct AnalysisJSON: Codable {
         self.beatgridConfidence = result.beatgridConfidence
         self.key = KeyJSON(from: result.key)
         self.energy = result.globalEnergy
+        self.loudness = LoudnessJSON(from: result.loudness)
         self.sections = result.sections.map { SectionJSON(from: $0) }
         self.cues = result.cues.map { CueJSON(from: $0) }
         self.waveformSummary = result.waveformSummary
+        self.embedding = EmbeddingJSON(from: result.embedding)
+        self.openL3Embedding = result.openL3Embedding.map { OpenL3EmbeddingJSON(from: $0) }
     }
 }
 
@@ -375,6 +395,68 @@ struct CueJSON: Codable {
         self.time = cue.time
         self.label = cue.label
         self.color = cue.color.rawValue
+    }
+}
+
+struct LoudnessJSON: Codable {
+    let integratedLUFS: Float
+    let loudnessRange: Float
+    let shortTermMax: Float
+    let momentaryMax: Float
+    let truePeak: Float
+    let samplePeak: Float
+
+    init(from loudness: LoudnessResult) {
+        self.integratedLUFS = loudness.integratedLoudness
+        self.loudnessRange = loudness.loudnessRange
+        self.shortTermMax = loudness.shortTermMax
+        self.momentaryMax = loudness.momentaryMax
+        self.truePeak = loudness.truePeak
+        self.samplePeak = loudness.samplePeak
+    }
+}
+
+struct EmbeddingJSON: Codable {
+    let vector: [Float]
+    let spectralCentroid: Float
+    let spectralRolloff: Float
+    let zeroCrossingRate: Float
+    let spectralFlatness: Float
+    let tempoStability: Float
+    let harmonicRatio: Float
+
+    init(from embedding: AudioEmbedding) {
+        self.vector = embedding.vector
+        self.spectralCentroid = embedding.spectralCentroid
+        self.spectralRolloff = embedding.spectralRolloff
+        self.zeroCrossingRate = embedding.zeroCrossingRate
+        self.spectralFlatness = embedding.spectralFlatness
+        self.tempoStability = embedding.tempoStability
+        self.harmonicRatio = embedding.harmonicRatio
+    }
+}
+
+struct OpenL3EmbeddingJSON: Codable {
+    let vector: [Float]
+    let windowCount: Int
+    let windows: [OpenL3WindowJSON]?
+
+    init(from embedding: OpenL3Embedding) {
+        self.vector = embedding.vector
+        self.windowCount = embedding.windowCount
+        // Only include first 10 windows to keep JSON size reasonable
+        self.windows = embedding.windows.prefix(10).map { OpenL3WindowJSON(from: $0) }
+    }
+}
+
+struct OpenL3WindowJSON: Codable {
+    let timestamp: Double
+    let duration: Double
+    // Omit vector to save space - use track-level vector for similarity
+
+    init(from window: OpenL3WindowEmbedding) {
+        self.timestamp = window.timestamp
+        self.duration = window.duration
     }
 }
 

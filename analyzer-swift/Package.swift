@@ -33,6 +33,9 @@ let package = Package(
             name: "AnalyzerSwift",
             dependencies: [
                 .product(name: "SwiftProtobuf", package: "swift-protobuf"),
+            ],
+            resources: [
+                .copy("Resources/OpenL3Music.mlpackage")
             ]),
         .testTarget(
             name: "AnalyzerSwiftTests",
