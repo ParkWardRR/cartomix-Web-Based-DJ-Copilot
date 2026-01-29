@@ -56,3 +56,4 @@ testdata/audio/*.wav
 # Environment
 .env
 .env.local
+engine
