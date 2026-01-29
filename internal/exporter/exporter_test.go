@@ -31,7 +31,7 @@ func TestWriteGenericCreatesArtifacts(t *testing.T) {
 		t.Fatalf("write generic failed: %v", err)
 	}
 
-	for _, path := range []string{res.PlaylistPath, res.AnalysisJSONPath, res.CuesCSVPath} {
+	for _, path := range []string{res.PlaylistPath, res.AnalysisJSONPath, res.CuesCSVPath, res.ChecksumsPath} {
 		if _, err := os.Stat(path); err != nil {
 			t.Fatalf("expected file %s: %v", path, err)
 		}
@@ -63,5 +63,10 @@ func TestWriteGenericCreatesArtifacts(t *testing.T) {
 
 	if filepath.Ext(res.PlaylistPath) != ".m3u8" {
 		t.Fatalf("expected m3u8 playlist, got %s", res.PlaylistPath)
+	}
+
+	sumBytes, _ := os.ReadFile(res.ChecksumsPath)
+	if len(sumBytes) == 0 {
+		t.Fatalf("checksums file empty")
 	}
 }

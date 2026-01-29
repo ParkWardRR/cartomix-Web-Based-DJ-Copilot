@@ -3,6 +3,7 @@ package exporter
 import (
 	"archive/tar"
 	"compress/gzip"
+	"crypto/sha256"
 	"encoding/csv"
 	"encoding/json"
 	"fmt"
@@ -26,6 +27,7 @@ type Result struct {
 	CuesCSVPath      string
 	VendorExports    []string
 	BundlePath       string
+	ChecksumsPath    string
 }
 
 // WriteGeneric writes M3U8, analysis JSON, and cues CSV exports.
@@ -48,6 +50,7 @@ func WriteGeneric(outputDir, playlistName string, tracks []TrackExport) (*Result
 		CuesCSVPath:      filepath.Join(outputDir, playlistName+"-cues.csv"),
 		VendorExports:    []string{},
 		BundlePath:       filepath.Join(outputDir, playlistName+"-bundle.tar.gz"),
+		ChecksumsPath:    filepath.Join(outputDir, playlistName+"-checksums.txt"),
 	}
 
 	if err := writeM3U(result.PlaylistPath, tracks); err != nil {
@@ -60,7 +63,11 @@ func WriteGeneric(outputDir, playlistName string, tracks []TrackExport) (*Result
 		return nil, err
 	}
 
-	if err := writeBundle(result.BundlePath, result.PlaylistPath, result.AnalysisJSONPath, result.CuesCSVPath); err != nil {
+	if err := writeChecksums(result.ChecksumsPath, result.PlaylistPath, result.AnalysisJSONPath, result.CuesCSVPath); err != nil {
+		return nil, err
+	}
+
+	if err := writeBundle(result.BundlePath, result.PlaylistPath, result.AnalysisJSONPath, result.CuesCSVPath, result.ChecksumsPath); err != nil {
 		return nil, err
 	}
 
@@ -125,6 +132,19 @@ func writeCuesCSV(path string, tracks []TrackExport) error {
 	return writer.Error()
 }
 
+// writeChecksums writes a SHA256 manifest for the exported artifacts.
+func writeChecksums(path string, files ...string) error {
+	var b strings.Builder
+	for _, fp := range files {
+		sum, err := fileSHA256(fp)
+		if err != nil {
+			return err
+		}
+		b.WriteString(fmt.Sprintf("%s  %s\n", sum, filepath.Base(fp)))
+	}
+	return os.WriteFile(path, []byte(b.String()), 0o644)
+}
+
 // writeBundle creates a tar.gz containing the primary artifacts for quick sharing.
 func writeBundle(bundlePath string, files ...string) error {
 	f, err := os.Create(bundlePath)
@@ -165,4 +185,13 @@ func writeBundle(bundlePath string, files ...string) error {
 	}
 
 	return nil
+}
+
+func fileSHA256(path string) (string, error) {
+	f, err := os.ReadFile(path)
+	if err != nil {
+		return "", err
+	}
+	hash := sha256.Sum256(f)
+	return fmt.Sprintf("%x", hash[:]), nil
 }
