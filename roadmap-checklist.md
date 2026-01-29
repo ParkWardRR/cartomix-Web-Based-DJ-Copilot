@@ -15,17 +15,28 @@
 
 ## Analysis pipeline
 
-- [ ] Decode stage (ffmpeg fallback) to fixed SR PCM; loudness (EBU R128) + true peak.
-- [ ] Beatgrid: static + dynamic tempo map, confidence score; monotonicity guarantees.
-- [ ] Section detection (intro/break/build/drop/outro) + transition windows.
-- [ ] Key detection + Camelot mapping; energy global + sectional curve.
-- [ ] Cue generator (max 8, beat-aligned, safety bounds).
+- [x] Decode stage (AVFoundation) to fixed SR PCM; sample rate conversion.
+- [x] Beatgrid: static tempo map, confidence score; monotonicity guarantees via onset detection + autocorrelation.
+- [x] Section detection (intro/verse/build/drop/breakdown/outro) + transition windows.
+- [x] Key detection (Krumhansl-Schmuckler chroma profiles) + Camelot/Open Key mapping; energy global + sectional curve.
+- [x] Cue generator (max 8, beat-aligned, priority-based with safety bounds).
 - [ ] Embeddings/similarity vector for "vibe" continuity (stub model first).
+- [ ] Loudness (EBU R128) + true peak.
 
 ## Swift accel worker
 
-- [ ] Implement Accelerate STFT + onset features; Core ML inference path; Metal/MPS optional.
-- [ ] gRPC server inside analyzer-swift; error/timeout handling; process-supervision hooks.
+- [x] Implement Accelerate STFT + onset features (FFTProcessor with vDSP).
+- [x] AudioDecoder using AVFoundation with sample rate conversion.
+- [x] BeatgridDetector with spectral flux onset detection and autocorrelation tempo estimation.
+- [x] KeyDetector with chroma features and Krumhansl-Schmuckler key profiles.
+- [x] EnergyAnalyzer with band analysis (low/mid/high) and energy curve.
+- [x] SectionDetector with energy-based segmentation.
+- [x] CueGenerator with priority-based cue selection and beat alignment.
+- [x] Main Analyzer orchestrator with progress callbacks.
+- [x] CLI executable (analyzer-swift) with analyze/serve/healthcheck commands.
+- [x] HTTP server for analyzer API (JSON-based).
+- [ ] Core ML inference path; Metal/MPS optional.
+- [ ] gRPC server with proto stubs; error/timeout handling; process-supervision hooks.
 - [ ] Fallback CPU path verified on non-Metal hosts.
 
 ## Set planning
@@ -39,7 +50,7 @@
 - [x] Generic: M3U8, analysis JSON, cues CSV with beat/time indices.
 - [x] Checksum manifest (SHA256) + tar.gz bundle for verified handoff.
 - [x] Vendor: Rekordbox, Serato, Traktor writers; round-trip sanity with sample libraries.
-- [ ] Export CLI/API options and UI download links.
+- [x] Export CLI/API options and UI download links.
 
 ## Web UI (TS/React)
 
@@ -63,7 +74,7 @@
 - [ ] Flesh fixturegen to render WAVs per spec (phrase track, harmonic set, club noise) + golden JSON.
 - [x] Unit tests: beatgrid math, scoring, DB migrations (Go side); Swift XCTest pending for DSP kernels.
 - [x] Property tests: monotonic beats, cue bounds, export/import round-trip.
-- [ ] Integration: golden comparisons on fixture corpus.
+- [x] Integration: golden comparisons on fixture corpus.
 - [x] E2E: Playwright-Go flows (import→analyze→cues→set→rehearse→export) across Chromium/WebKit; theme toggle tests.
 - [ ] CI: run go/swift/unit/property + E2E (WebKit on macOS runner).
 
@@ -105,8 +116,25 @@
 - Dark mode default
 
 ### Next (Beta)
-- Swift analyzer with Accelerate DSP
 - Core ML integration for ANE inference
-- Beatgrid and key detection algorithms
+- gRPC server integration for Swift analyzer
 - Web Audio playback integration
-- Connect React UI to HTTP API
+- Embeddings/similarity vector for vibe continuity
+
+### Recently Completed (Post-Alpha)
+- Connected React UI to HTTP API with Zustand state management
+- Vite dev proxy for API requests
+- Graceful fallback to demo mode when API unavailable
+- Export panel in Set Builder UI with Rekordbox/Serato/Traktor format selection
+- Full vendor export integration (UI + API)
+
+### Swift Analyzer (v0.2.0-beta - In Progress)
+- Accelerate-based FFT processor with STFT, spectral flux, chroma features
+- AVFoundation audio decoder with sample rate conversion
+- Beatgrid detector using onset detection and autocorrelation
+- Key detector with Krumhansl-Schmuckler profiles and Camelot mapping
+- Energy analyzer with band analysis (low/mid/high frequencies)
+- Section detector (intro/verse/build/drop/breakdown/outro)
+- Cue generator with priority-based selection and beat alignment
+- CLI tool (analyzer-swift analyze/serve/healthcheck)
+- HTTP API server for analyzer integration
