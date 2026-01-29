@@ -238,16 +238,34 @@ func run(cfg Config) error {
 		}
 		time.Sleep(1000 * time.Millisecond)
 
-		// Record the animation sequence
-		// Click play and let it animate
+		// Start playback for spectrum analyzer + waveform
 		playBtn := page.Locator(".transport-btn.play")
 		if err := playBtn.Click(); err != nil {
 			log.Printf("Play click: %v", err)
 		}
 
-		// Let it record for the configured duration
-		log.Printf("Recording for %d seconds...", cfg.Duration)
-		time.Sleep(time.Duration(cfg.Duration) * time.Second)
+		log.Println("Recording impactful demo sequence...")
+
+		// Scene 1: Library view with active visualizations (3s)
+		time.Sleep(3 * time.Second)
+
+		// Scene 2: Set Builder with energy arc (3s)
+		if err := page.Click("text=Set Builder"); err != nil {
+			log.Printf("Set Builder click: %v", err)
+		}
+		time.Sleep(3 * time.Second)
+
+		// Scene 3: Graph view with transition network (3s)
+		if err := page.Click("text=Graph"); err != nil {
+			log.Printf("Graph click: %v", err)
+		}
+		time.Sleep(3 * time.Second)
+
+		// Scene 4: Back to Library for finale (2s)
+		if err := page.Click("text=Library"); err != nil {
+			log.Printf("Library click: %v", err)
+		}
+		time.Sleep(2 * time.Second)
 
 		// Stop recording by closing the page
 		page.Close()
