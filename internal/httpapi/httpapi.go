@@ -18,6 +18,7 @@ import (
 	"github.com/cartomix/cancun/internal/exporter"
 	"github.com/cartomix/cancun/internal/planner"
 	"github.com/cartomix/cancun/internal/scanner"
+	"github.com/cartomix/cancun/internal/similarity"
 	"github.com/cartomix/cancun/internal/storage"
 )
 
@@ -54,10 +55,13 @@ func (s *Server) registerRoutes() {
 	s.mux.HandleFunc("GET /api/health", s.handleHealth)
 	s.mux.HandleFunc("GET /api/tracks", s.handleListTracks)
 	s.mux.HandleFunc("GET /api/tracks/{id}", s.handleGetTrack)
+	s.mux.HandleFunc("GET /api/tracks/{id}/similar", s.handleSimilarTracks)
 	s.mux.HandleFunc("POST /api/scan", s.handleScan)
 	s.mux.HandleFunc("POST /api/analyze", s.handleAnalyze)
 	s.mux.HandleFunc("POST /api/set/propose", s.handleProposeSet)
 	s.mux.HandleFunc("POST /api/export", s.handleExport)
+	s.mux.HandleFunc("GET /api/ml/settings", s.handleGetMLSettings)
+	s.mux.HandleFunc("PUT /api/ml/settings", s.handleUpdateMLSettings)
 }
 
 func corsMiddleware(next http.Handler) http.Handler {
@@ -522,6 +526,167 @@ func (s *Server) handleExport(w http.ResponseWriter, r *http.Request) {
 		BundlePath:    result.BundlePath,
 		VendorExports: vendorExports,
 	})
+}
+
+// SimilarTracksResponse is the JSON response for similar tracks.
+type SimilarTracksResponse struct {
+	Query   TrackSummaryResponse        `json:"query"`
+	Similar []similarity.SimilarityResult `json:"similar"`
+}
+
+func (s *Server) handleSimilarTracks(w http.ResponseWriter, r *http.Request) {
+	idParam := r.PathValue("id")
+	if idParam == "" {
+		writeError(w, http.StatusBadRequest, "track id is required")
+		return
+	}
+
+	// Parse limit from query string (default 10)
+	limitStr := r.URL.Query().Get("limit")
+	limit := 10
+	if limitStr != "" {
+		if l, err := strconv.Atoi(limitStr); err == nil && l > 0 && l <= 50 {
+			limit = l
+		}
+	}
+
+	// Resolve query track
+	track, err := s.db.ResolveTrack(&common.TrackId{ContentHash: idParam})
+	if err != nil {
+		writeError(w, http.StatusNotFound, "track not found")
+		return
+	}
+
+	// Get query track features
+	queryFeatures, err := s.db.GetTrackFeaturesForSimilarity(track.ID)
+	if err != nil {
+		writeError(w, http.StatusNotFound, "track analysis not found")
+		return
+	}
+
+	// Check if track has OpenL3 embedding
+	if len(queryFeatures.OpenL3Embedding) == 0 {
+		writeError(w, http.StatusPreconditionFailed, "track has no ML embedding - re-analyze with OpenL3 enabled")
+		return
+	}
+
+	// Get all candidate tracks (excluding query)
+	candidates, err := s.db.GetTrackFeaturesExcluding([]int64{track.ID})
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "failed to fetch candidates: "+err.Error())
+		return
+	}
+
+	if len(candidates) == 0 {
+		writeJSON(w, http.StatusOK, SimilarTracksResponse{
+			Query: TrackSummaryResponse{
+				ContentHash: track.ContentHash,
+				Path:        track.Path,
+				Title:       queryFeatures.Title,
+				Artist:      queryFeatures.Artist,
+				BPM:         queryFeatures.BPM,
+				Key:         queryFeatures.KeyValue,
+				Energy:      queryFeatures.Energy,
+			},
+			Similar: []similarity.SimilarityResult{},
+		})
+		return
+	}
+
+	// Find similar tracks
+	similar := similarity.FindSimilar(queryFeatures, candidates, limit)
+
+	// Cache results for future queries
+	for _, sim := range similar {
+		_ = s.db.CacheSimilarity(
+			track.ID, sim.TrackID,
+			sim.VibeMatch/100, sim.Score,
+			sim.TempoMatch/100, sim.KeyMatch/100, sim.EnergyMatch/100,
+			sim.Explanation,
+		)
+	}
+
+	writeJSON(w, http.StatusOK, SimilarTracksResponse{
+		Query: TrackSummaryResponse{
+			ContentHash: track.ContentHash,
+			Path:        track.Path,
+			Title:       queryFeatures.Title,
+			Artist:      queryFeatures.Artist,
+			BPM:         queryFeatures.BPM,
+			Key:         queryFeatures.KeyValue,
+			Energy:      queryFeatures.Energy,
+		},
+		Similar: similar,
+	})
+}
+
+// MLSettingsResponse is the JSON response for ML settings.
+type MLSettingsResponse struct {
+	OpenL3Enabled         bool    `json:"openl3_enabled"`
+	SoundAnalysisEnabled  bool    `json:"sound_analysis_enabled"`
+	CustomModelEnabled    bool    `json:"custom_model_enabled"`
+	MinSimilarityThreshold float64 `json:"min_similarity_threshold"`
+	ShowExplanations      bool    `json:"show_explanations"`
+}
+
+func (s *Server) handleGetMLSettings(w http.ResponseWriter, _ *http.Request) {
+	settings, err := s.db.GetMLSettings()
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "failed to get settings: "+err.Error())
+		return
+	}
+
+	response := MLSettingsResponse{
+		OpenL3Enabled:         settings["openl3_enabled"] == "true",
+		SoundAnalysisEnabled:  settings["sound_analysis_enabled"] == "true",
+		CustomModelEnabled:    settings["custom_model_enabled"] == "true",
+		MinSimilarityThreshold: 0.5,
+		ShowExplanations:      settings["show_explanations"] != "false",
+	}
+
+	if threshold, ok := settings["min_similarity_threshold"]; ok {
+		if val, err := strconv.ParseFloat(threshold, 64); err == nil {
+			response.MinSimilarityThreshold = val
+		}
+	}
+
+	writeJSON(w, http.StatusOK, response)
+}
+
+// MLSettingsRequest is the JSON request for updating ML settings.
+type MLSettingsRequest struct {
+	OpenL3Enabled         *bool    `json:"openl3_enabled,omitempty"`
+	SoundAnalysisEnabled  *bool    `json:"sound_analysis_enabled,omitempty"`
+	CustomModelEnabled    *bool    `json:"custom_model_enabled,omitempty"`
+	MinSimilarityThreshold *float64 `json:"min_similarity_threshold,omitempty"`
+	ShowExplanations      *bool    `json:"show_explanations,omitempty"`
+}
+
+func (s *Server) handleUpdateMLSettings(w http.ResponseWriter, r *http.Request) {
+	var req MLSettingsRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid request body: "+err.Error())
+		return
+	}
+
+	if req.OpenL3Enabled != nil {
+		_ = s.db.SetMLSetting("openl3_enabled", fmt.Sprintf("%t", *req.OpenL3Enabled))
+	}
+	if req.SoundAnalysisEnabled != nil {
+		_ = s.db.SetMLSetting("sound_analysis_enabled", fmt.Sprintf("%t", *req.SoundAnalysisEnabled))
+	}
+	if req.CustomModelEnabled != nil {
+		_ = s.db.SetMLSetting("custom_model_enabled", fmt.Sprintf("%t", *req.CustomModelEnabled))
+	}
+	if req.MinSimilarityThreshold != nil {
+		_ = s.db.SetMLSetting("min_similarity_threshold", fmt.Sprintf("%.2f", *req.MinSimilarityThreshold))
+	}
+	if req.ShowExplanations != nil {
+		_ = s.db.SetMLSetting("show_explanations", fmt.Sprintf("%t", *req.ShowExplanations))
+	}
+
+	// Return updated settings
+	s.handleGetMLSettings(w, r)
 }
 
 func writeJSON(w http.ResponseWriter, status int, data interface{}) {
