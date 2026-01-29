@@ -1,6 +1,8 @@
 package exporter
 
 import (
+	"archive/tar"
+	"compress/gzip"
 	"encoding/csv"
 	"encoding/json"
 	"fmt"
@@ -23,6 +25,7 @@ type Result struct {
 	AnalysisJSONPath string
 	CuesCSVPath      string
 	VendorExports    []string
+	BundlePath       string
 }
 
 // WriteGeneric writes M3U8, analysis JSON, and cues CSV exports.
@@ -44,6 +47,7 @@ func WriteGeneric(outputDir, playlistName string, tracks []TrackExport) (*Result
 		AnalysisJSONPath: filepath.Join(outputDir, playlistName+"-analysis.json"),
 		CuesCSVPath:      filepath.Join(outputDir, playlistName+"-cues.csv"),
 		VendorExports:    []string{},
+		BundlePath:       filepath.Join(outputDir, playlistName+"-bundle.tar.gz"),
 	}
 
 	if err := writeM3U(result.PlaylistPath, tracks); err != nil {
@@ -53,6 +57,10 @@ func WriteGeneric(outputDir, playlistName string, tracks []TrackExport) (*Result
 		return nil, err
 	}
 	if err := writeCuesCSV(result.CuesCSVPath, tracks); err != nil {
+		return nil, err
+	}
+
+	if err := writeBundle(result.BundlePath, result.PlaylistPath, result.AnalysisJSONPath, result.CuesCSVPath); err != nil {
 		return nil, err
 	}
 
@@ -115,4 +123,46 @@ func writeCuesCSV(path string, tracks []TrackExport) error {
 
 	writer.Flush()
 	return writer.Error()
+}
+
+// writeBundle creates a tar.gz containing the primary artifacts for quick sharing.
+func writeBundle(bundlePath string, files ...string) error {
+	f, err := os.Create(bundlePath)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	gw := gzip.NewWriter(f)
+	defer gw.Close()
+
+	tw := tar.NewWriter(gw)
+	defer tw.Close()
+
+	for _, fp := range files {
+		info, err := os.Stat(fp)
+		if err != nil {
+			return err
+		}
+
+		hdr, err := tar.FileInfoHeader(info, "")
+		if err != nil {
+			return err
+		}
+		hdr.Name = filepath.Base(fp)
+
+		if err := tw.WriteHeader(hdr); err != nil {
+			return err
+		}
+
+		data, err := os.ReadFile(fp)
+		if err != nil {
+			return err
+		}
+		if _, err := tw.Write(data); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

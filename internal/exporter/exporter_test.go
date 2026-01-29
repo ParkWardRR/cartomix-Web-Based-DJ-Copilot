@@ -37,6 +37,10 @@ func TestWriteGenericCreatesArtifacts(t *testing.T) {
 		}
 	}
 
+	if _, err := os.Stat(res.BundlePath); err != nil {
+		t.Fatalf("bundle missing: %v", err)
+	}
+
 	playlistBytes, _ := os.ReadFile(res.PlaylistPath)
 	if len(playlistBytes) == 0 {
 		t.Fatalf("playlist should not be empty")

@@ -80,6 +80,9 @@ A local-first copilot for DJ set prep. It ingests your library, detects structur
 ## Test fixtures
 - `make fixturegen` now emits deterministic WAVs (BPM ladder, swing click, tempo ramp, harmonic pad) plus `manifest.json` under `testdata/audio` for golden comparisons.
 
+## Exports bundle
+- `ExportSet` now produces a ready-to-share tar.gz bundle containing playlist, analysis JSON, and cues CSV for quicker handoff/testing.
+
 ## Architecture
 ```mermaid
 flowchart TB
