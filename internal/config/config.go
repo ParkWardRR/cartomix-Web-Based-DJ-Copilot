@@ -8,6 +8,7 @@ import (
 type Config struct {
 	// Server settings
 	Port     int
+	HTTPPort int
 	DataDir  string
 	LogLevel string
 
@@ -22,6 +23,7 @@ func Parse() *Config {
 	cfg := &Config{}
 
 	flag.IntVar(&cfg.Port, "port", 50051, "gRPC server port")
+	flag.IntVar(&cfg.HTTPPort, "http-port", 8080, "HTTP REST API port")
 	flag.StringVar(&cfg.DataDir, "data-dir", defaultDataDir(), "data directory for SQLite and blobs")
 	flag.StringVar(&cfg.LogLevel, "log-level", "info", "log level (debug, info, warn, error)")
 	flag.StringVar(&cfg.AnalyzerAddr, "analyzer-addr", "localhost:50052", "analyzer worker gRPC address")

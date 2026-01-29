@@ -1,17 +1,21 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
 	"net"
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/cartomix/cancun/gen/go/engine"
 	"github.com/cartomix/cancun/internal/analyzer"
 	"github.com/cartomix/cancun/internal/auth"
 	"github.com/cartomix/cancun/internal/config"
+	"github.com/cartomix/cancun/internal/httpapi"
 	"github.com/cartomix/cancun/internal/server"
 	"github.com/cartomix/cancun/internal/storage"
 	"google.golang.org/grpc"
@@ -88,19 +92,45 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Handle graceful shutdown
+	// Handle graceful shutdown (setup here, HTTP server defined below)
 	sigCh := make(chan os.Signal, 1)
 	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
+
+	var httpLis *http.Server // Forward declaration for shutdown handler
 
 	go func() {
 		sig := <-sigCh
 		logger.Info("shutting down", "signal", sig)
 		healthServer.SetServingStatus("cartomix.engine.EngineAPI", grpc_health_v1.HealthCheckResponse_NOT_SERVING)
+
+		// Shutdown HTTP server
+		if httpLis != nil {
+			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel()
+			httpLis.Shutdown(ctx)
+		}
+
 		grpcServer.GracefulStop()
 	}()
 
-	logger.Info("starting engine server",
+	// Start HTTP server
+	httpServer := httpapi.NewServer(cfg, logger, db, analysisBackend)
+	httpAddr := fmt.Sprintf(":%d", cfg.HTTPPort)
+	httpLis = &http.Server{
+		Addr:    httpAddr,
+		Handler: httpServer.Handler(),
+	}
+
+	go func() {
+		logger.Info("starting HTTP server", "port", cfg.HTTPPort)
+		if err := httpLis.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			logger.Error("HTTP server error", "error", err)
+		}
+	}()
+
+	logger.Info("starting gRPC engine server",
 		"port", cfg.Port,
+		"http_port", cfg.HTTPPort,
 		"data_dir", cfg.DataDir,
 		"auth_enabled", cfg.AuthEnabled,
 	)
