@@ -176,51 +176,57 @@ Built with high-performance libraries for smooth 60fps rendering:
 
 ## Architecture
 
+Algiers uses a three-layer architecture optimized for Apple Silicon:
+
 ```mermaid
-flowchart TB
-    subgraph UI["Web UI (React 19 + D3.js + Framer Motion)"]
-      WF["Waveform Canvas"]
-      SP["Spectrum Analyzer"]
-      EA["Energy Arc"]
-      TG["Transition Graph"]
-      API["gRPC-web / HTTP bridge"]
+flowchart LR
+    subgraph UI["Frontend"]
+      direction TB
+      REACT["React 19 + TypeScript"]
+      VIZ["D3.js / Framer Motion"]
+      REACT --> VIZ
     end
 
-    subgraph ENGINE["Go Engine (1.22+)"]
-      SCHED["Ingest + Scoring Scheduler"]
-      SCAN["Library Scanner"]
-      PLAN["Set Planner (Weighted Graph)"]
-      EXPORT["Exporters (M3U/JSON/CSV/Tar)"]
+    subgraph ENGINE["Go Engine"]
+      direction TB
+      GRPC["gRPC Server"]
+      SCHED["Job Scheduler"]
+      PLAN["Set Planner"]
+      GRPC --> SCHED --> PLAN
     end
 
-    subgraph ANALYZER["Swift Analyzer (6.0)"]
-      DSP["Accelerate + Metal DSP"]
-      ML["Core ML on ANE"]
-      BEAT["Beatgrid Detection"]
-      KEY["Key + Energy Analysis"]
+    subgraph ANALYZER["Swift Analyzer"]
+      direction TB
+      DSP["Accelerate vDSP"]
+      METAL["Metal GPU"]
+      ANE["Core ML / ANE"]
     end
 
-    subgraph DATA["SQLite + Blob Store"]
-      DB["WAL-mode Database"]
-      BLOBS["Waveform Tiles + Embeddings"]
+    subgraph DATA["Storage"]
+      direction TB
+      DB["SQLite WAL"]
+      BLOBS["Blob Store"]
     end
 
-    UI --> API --> ENGINE
-    ENGINE --> ANALYZER
-    ENGINE --> DATA
+    UI <-->|"gRPC-web"| ENGINE
+    ENGINE <-->|"gRPC"| ANALYZER
+    ENGINE <--> DATA
     ANALYZER --> DATA
-
-    WF -.-> API
-    SP -.-> API
-    EA -.-> PLAN
-    TG -.-> PLAN
 ```
 
-**Stack:**
-- **Go Engine (1.22+)** — gRPC server, job scheduling, scoring, exports
-- **Swift Analyzer (6.0)** — DSP (vDSP/Metal) and ML (Core ML/ANE)
-- **React UI (19)** — TypeScript, Vite, D3.js, Framer Motion
-- **SQLite (WAL)** — Local storage with streaming writes
+**How it works:**
+
+1. **Frontend** — React UI sends commands (scan library, plan set, export) via gRPC-web
+2. **Go Engine** — Coordinates jobs, runs the weighted-graph set planner, handles exports
+3. **Swift Analyzer** — Performs DSP analysis using Apple frameworks (Accelerate, Metal, Core ML)
+4. **Storage** — SQLite for metadata, blob store for waveform tiles and embeddings
+
+| Layer | Tech | Role |
+|-------|------|------|
+| **Frontend** | React 19, TypeScript, Vite, D3.js, Framer Motion | Interactive UI with real-time visualizations |
+| **Engine** | Go 1.24, gRPC, Protobuf | API server, job scheduling, set planning, exports |
+| **Analyzer** | Swift 6, Accelerate, Metal, Core ML | Audio DSP and ML inference on ANE/GPU |
+| **Storage** | SQLite (WAL mode) | Track metadata, analysis results, waveform tiles |
 
 ## Screenshots
 
