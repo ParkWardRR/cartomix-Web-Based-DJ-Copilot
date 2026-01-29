@@ -514,6 +514,30 @@ Generates deterministic WAV files under `testdata/audio/`:
 - Harmonic pad (chord in known keys)
 - `manifest.json` for golden comparisons
 
+### Real Audio Test Corpus
+
+For testing with real music (not committed to git):
+
+```bash
+# Create test directory and copy tracks from your library
+mkdir -p testdata/real-audio
+
+# Analyze with Swift analyzer
+.build/release/analyzer-swift analyze testdata/real-audio/*.flac --progress
+
+# Or scan with Go engine
+go run ./cmd/engine scan testdata/real-audio/
+```
+
+A sample corpus is documented in `testdata/real-audio/MANIFEST.md` with tracks from:
+- **Daft Punk** - Dance (88.2kHz/24-bit)
+- **Khruangbin** - Dub (96kHz/24-bit)
+- **Masego** - Neo-soul (44.1kHz/16-bit)
+- **Michael Kiwanuka** - Soul (96kHz/24-bit)
+- **Bill Withers** - Classic Soul (44.1kHz/16-bit)
+
+Audio files are gitignored. Copy your own tracks to test.
+
 ### Export Verification
 
 ```bash
