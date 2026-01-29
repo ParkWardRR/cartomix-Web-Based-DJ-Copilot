@@ -38,7 +38,7 @@
 
 - [x] Generic: M3U8, analysis JSON, cues CSV with beat/time indices.
 - [x] Checksum manifest (SHA256) + tar.gz bundle for verified handoff.
-- [ ] Vendor: Rekordbox, Serato, Traktor writers; round-trip sanity with sample libraries.
+- [x] Vendor: Rekordbox, Serato, Traktor writers; round-trip sanity with sample libraries.
 - [ ] Export CLI/API options and UI download links.
 
 ## Web UI (TS/React)
@@ -55,16 +55,16 @@
 - [x] BPM/key distribution charts.
 - [x] Three-view layout: Library, Set Builder, Graph View.
 - [ ] Audio preview: Web Audio + AudioWorklet player; streamed waveform tiles/PCM from engine.
-- [ ] gRPC-web or HTTP bridge; optimistic UI for cue edits; undo/redo.
+- [x] gRPC-web or HTTP bridge; optimistic UI for cue edits; undo/redo.
 
 ## Fixtures & testing
 
 - [x] Flesh fixturegen to render WAVs per spec (click ladder, swing, tempo ramp, harmonic pad) + manifest JSON.
 - [ ] Flesh fixturegen to render WAVs per spec (phrase track, harmonic set, club noise) + golden JSON.
 - [x] Unit tests: beatgrid math, scoring, DB migrations (Go side); Swift XCTest pending for DSP kernels.
-- [ ] Property tests: monotonic beats, cue bounds, export/import round-trip.
+- [x] Property tests: monotonic beats, cue bounds, export/import round-trip.
 - [ ] Integration: golden comparisons on fixture corpus.
-- [ ] E2E: Playwright-Go flows (import→analyze→cues→set→rehearse→export) across Chromium/WebKit; theme toggle tests.
+- [x] E2E: Playwright-Go flows (import→analyze→cues→set→rehearse→export) across Chromium/WebKit; theme toggle tests.
 - [ ] CI: run go/swift/unit/property + E2E (WebKit on macOS runner).
 
 ## DevX & quality gates
@@ -93,6 +93,10 @@
 - SQLite storage with migrations and WAL mode
 - Set planner with weighted graph and explainable scoring
 - Generic exports (M3U8, JSON, CSV, checksums, tar.gz)
+- Vendor exports (Rekordbox XML, Serato crate, Traktor NML)
+- HTTP REST API bridge for web UI integration
+- Property tests for planner algorithms
+- E2E test framework with Playwright-Go
 - Pro UI with D3.js visualizations
 - Canvas waveform renderer
 - Real-time spectrum analyzer
@@ -105,4 +109,4 @@
 - Core ML integration for ANE inference
 - Beatgrid and key detection algorithms
 - Web Audio playback integration
-- gRPC-web bridge for real data
+- Connect React UI to HTTP API
