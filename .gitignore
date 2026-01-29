@@ -1,0 +1,58 @@
+# Build outputs
+.build/
+*.o
+*.a
+*.dylib
+
+# Go
+bin/
+*.exe
+
+# Swift
+.swiftpm/
+Package.resolved
+DerivedData/
+*.xcodeproj/xcuserdata/
+*.xcworkspace/xcuserdata/
+
+# Node/Web
+node_modules/
+web/dist/
+web/.vite/
+*.tsbuildinfo
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Test outputs
+coverage/
+*.test
+*.out
+
+# Real audio test files (not committed - copy your own)
+testdata/real-audio/*.flac
+testdata/real-audio/*.mp3
+testdata/real-audio/*.wav
+testdata/real-audio/*.m4a
+testdata/real-audio/*.aac
+testdata/real-audio/*.aiff
+
+# Generated test audio (keep manifest, ignore audio)
+testdata/audio/*.wav
+
+# Database
+*.db
+*.db-shm
+*.db-wal
+
+# Logs
+*.log
+
+# Environment
+.env
+.env.local
