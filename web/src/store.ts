@@ -211,12 +211,26 @@ function explanationToEdge(expl: api.TransitionExplanation): SetEdge {
   };
 }
 
+// Build trackMap from tracks array
+function buildTrackMap(tracks: Track[]): Record<string, Track> {
+  const map: Record<string, Track> = {};
+  for (const t of tracks) {
+    map[t.id] = t;
+  }
+  return map;
+}
+
+// Initialize with demo data at module load time
+const initialTracks = demoTracks.slice();  // Copy the array
+const initialTrackMap = buildTrackMap(initialTracks);
+const initialSetPlan = JSON.parse(JSON.stringify(demoSetPlan)) as typeof demoSetPlan;
+
 export const useStore = create<AppState>((set, get) => ({
-  // Initial state
-  tracks: [],
-  trackMap: {},
-  currentSetPlan: null,
-  selectedId: null,
+  // Initial state - demo data loaded at module init time
+  tracks: initialTracks,
+  trackMap: initialTrackMap,
+  currentSetPlan: initialSetPlan,
+  selectedId: initialTracks[0]?.id || null,
   viewMode: 'library',
   query: '',
   onlyReview: false,
@@ -226,9 +240,9 @@ export const useStore = create<AppState>((set, get) => ({
   playheadPosition: 0.3,
   isPlaying: false,
   chartMode: 'bpm',
-  isLoading: true,
+  isLoading: false,  // Demo data loaded instantly
   error: null,
-  apiAvailable: false,
+  apiAvailable: false,  // Will update when API detected
   isExporting: false,
   exportResult: null,
   exportError: null,
@@ -347,6 +361,19 @@ export const useStore = create<AppState>((set, get) => ({
 
   // Fetch all tracks from API
   fetchTracks: async () => {
+    const currentTracks = get().tracks;
+
+    // Skip API fetch if we already have demo data - just do health check
+    if (currentTracks.length > 0) {
+      try {
+        await api.listTracks({ limit: 1 });
+        set({ apiAvailable: true });
+      } catch {
+        set({ apiAvailable: false });
+      }
+      return;
+    }
+
     set({ isLoading: true, error: null });
     try {
       const response = await api.listTracks({ limit: 500 });

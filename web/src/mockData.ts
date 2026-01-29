@@ -1,16 +1,41 @@
 import { type SetPlan, type Track } from './types';
 
-// Generate realistic waveform data
-function generateWaveform(energy: number, bars: number = 64): number[] {
+// Generate realistic waveform data with EDM-style dynamics
+function generateWaveform(energy: number, bars: number = 64, style: 'techno' | 'house' | 'progressive' | 'ambient' = 'techno'): number[] {
   const waveform: number[] = [];
+  // Seed random for consistent waveforms
+  let seed = energy * 1000;
+  const seededRandom = () => {
+    seed = (seed * 9301 + 49297) % 233280;
+    return seed / 233280;
+  };
+
   for (let i = 0; i < bars; i++) {
     const position = i / bars;
-    // Create natural energy curve with intro/outro dips
     let base = energy * 0.6;
-    if (position < 0.1) base *= position / 0.1; // Intro ramp
-    if (position > 0.85) base *= (1 - position) / 0.15; // Outro fade
+
+    // Style-specific dynamics
+    if (style === 'techno') {
+      // Hard drops, punchy
+      if (position < 0.08) base *= position / 0.08;
+      if (position > 0.9) base *= (1 - position) / 0.1;
+      if (position > 0.4 && position < 0.5) base *= 0.6; // breakdown
+    } else if (style === 'progressive') {
+      // Long builds
+      if (position < 0.15) base *= position / 0.15;
+      if (position > 0.85) base *= (1 - position) / 0.15;
+      if (position > 0.3 && position < 0.45) base *= 0.4 + position; // slow build
+    } else if (style === 'house') {
+      // Groovy, steady
+      if (position < 0.1) base *= position / 0.1;
+      if (position > 0.88) base *= (1 - position) / 0.12;
+    } else {
+      // Ambient - flowing
+      base *= 0.5 + Math.sin(position * Math.PI) * 0.5;
+    }
+
     // Add variation
-    const variation = Math.sin(i * 0.5) * 1.5 + Math.random() * 2;
+    const variation = Math.sin(i * 0.7) * 1.2 + seededRandom() * 2.5;
     waveform.push(Math.max(1, Math.min(10, base + variation)));
   }
   return waveform;
@@ -19,57 +44,64 @@ function generateWaveform(energy: number, bars: number = 64): number[] {
 export const demoTracks: Track[] = [
   {
     id: 'hash-berlin-sunrise',
-    title: 'Berlin Sunrise',
-    artist: 'Linea',
-    bpm: 126,
+    title: 'Berghain Sunrise',
+    artist: 'Amelie Lens',
+    bpm: 136,
     key: '8A',
-    energy: 6,
+    energy: 8,
     status: 'analyzed',
     needsReview: false,
-    path: '/music/Linea/Berlin Sunrise.wav',
+    path: '/music/Amelie Lens/Berghain Sunrise.wav',
     cues: [
       { beat: 0, label: 'Load', type: 'Load' },
       { beat: 64, label: 'Drop', type: 'Drop' },
-      { beat: 384, label: 'Outro', type: 'OutroStart' },
+      { beat: 256, label: 'Break', type: 'Breakdown' },
+      { beat: 320, label: 'Peak', type: 'Drop' },
+      { beat: 448, label: 'Outro', type: 'OutroStart' },
     ],
     sections: [
       { start: 0, end: 64, label: 'Intro' },
-      { start: 64, end: 320, label: 'Drop' },
-      { start: 320, end: 384, label: 'Outro' },
+      { start: 64, end: 256, label: 'Drop' },
+      { start: 256, end: 320, label: 'Breakdown' },
+      { start: 320, end: 448, label: 'Peak' },
+      { start: 448, end: 512, label: 'Outro' },
     ],
     transitionWindows: [
       { start: 0, end: 32, label: 'intro_mix' },
-      { start: 352, end: 384, label: 'outro_mix' },
+      { start: 480, end: 512, label: 'outro_mix' },
     ],
-    waveformSummary: generateWaveform(6),
+    waveformSummary: generateWaveform(8, 64, 'techno'),
   },
   {
     id: 'hash-midnight-arc',
-    title: 'Midnight Arc',
-    artist: 'Edda',
+    title: 'Oxia - Domino (Matador Remix)',
+    artist: 'Matador',
     bpm: 128,
     key: '9A',
     energy: 7,
     status: 'analyzed',
     needsReview: false,
-    path: '/music/Edda/Midnight Arc.flac',
+    path: '/music/Matador/Domino Remix.flac',
     cues: [
       { beat: 0, label: 'Load', type: 'Load' },
+      { beat: 64, label: 'Keys In', type: 'FirstDownbeat' },
       { beat: 128, label: 'Break', type: 'Breakdown' },
       { beat: 192, label: 'Build', type: 'Build' },
-      { beat: 256, label: 'Drop 2', type: 'Drop' },
+      { beat: 256, label: 'Main Drop', type: 'Drop' },
     ],
     sections: [
       { start: 0, end: 64, label: 'Intro' },
-      { start: 64, end: 160, label: 'Break' },
-      { start: 160, end: 256, label: 'Build/Drop' },
-      { start: 256, end: 320, label: 'Outro' },
+      { start: 64, end: 128, label: 'Build' },
+      { start: 128, end: 192, label: 'Breakdown' },
+      { start: 192, end: 256, label: 'Tension' },
+      { start: 256, end: 384, label: 'Peak' },
+      { start: 384, end: 448, label: 'Outro' },
     ],
     transitionWindows: [
       { start: 16, end: 48, label: 'intro_mix' },
-      { start: 240, end: 272, label: 'outro_mix' },
+      { start: 400, end: 448, label: 'outro_mix' },
     ],
-    waveformSummary: generateWaveform(7),
+    waveformSummary: generateWaveform(7, 64, 'progressive'),
   },
   {
     id: 'hash-neon-bridge',
@@ -99,31 +131,35 @@ export const demoTracks: Track[] = [
   },
   {
     id: 'hash-delta-peak',
-    title: 'Delta Peak',
-    artist: 'Ravel',
-    bpm: 130,
+    title: 'Enrico Sangiuliano - Biomorph',
+    artist: 'Enrico Sangiuliano',
+    bpm: 133,
     key: '10A',
-    energy: 8,
+    energy: 9,
     status: 'analyzed',
     needsReview: false,
-    path: '/music/Ravel/Delta Peak.aiff',
+    path: '/music/Enrico Sangiuliano/Biomorph.aiff',
     cues: [
       { beat: 0, label: 'Load', type: 'Load' },
-      { beat: 64, label: 'Drop', type: 'Drop' },
-      { beat: 256, label: 'Breakdown', type: 'Breakdown' },
-      { beat: 320, label: 'Drop 2', type: 'Drop' },
+      { beat: 32, label: 'Kick', type: 'FirstDownbeat' },
+      { beat: 96, label: 'Synth', type: 'Build' },
+      { beat: 160, label: 'DROP', type: 'Drop' },
+      { beat: 288, label: 'Break', type: 'Breakdown' },
+      { beat: 352, label: 'Final', type: 'Drop' },
     ],
     sections: [
-      { start: 0, end: 64, label: 'Intro' },
-      { start: 64, end: 256, label: 'Drop' },
-      { start: 256, end: 320, label: 'Breakdown' },
-      { start: 320, end: 400, label: 'Outro' },
+      { start: 0, end: 96, label: 'Intro' },
+      { start: 96, end: 160, label: 'Build' },
+      { start: 160, end: 288, label: 'Drop' },
+      { start: 288, end: 352, label: 'Breakdown' },
+      { start: 352, end: 448, label: 'Peak' },
+      { start: 448, end: 512, label: 'Outro' },
     ],
     transitionWindows: [
       { start: 0, end: 32, label: 'intro_mix' },
-      { start: 360, end: 400, label: 'outro_mix' },
+      { start: 480, end: 512, label: 'outro_mix' },
     ],
-    waveformSummary: generateWaveform(8),
+    waveformSummary: generateWaveform(9, 64, 'techno'),
   },
   {
     id: 'hash-cascade-flow',
@@ -448,12 +484,12 @@ export const demoSetPlan: SetPlan = {
     {
       from: 'hash-ambient-drift',
       to: 'hash-cascade-flow',
-      score: 7.5,
+      score: 8.2,
       tempoDelta: 4,
       energyDelta: 1,
-      keyRelation: '+1 Camelot',
+      keyRelation: '5B → 6A (+1 Camelot)',
       window: 'outro_mix → intro_mix',
-      reason: 'Gentle opener: +4 BPM lift, +1 energy, harmonic +1 step',
+      reason: '🎵 Smooth opener: +4 BPM lift, energy building, harmonic movement up the wheel',
     },
     {
       from: 'hash-cascade-flow',
@@ -498,42 +534,42 @@ export const demoSetPlan: SetPlan = {
     {
       from: 'hash-chrome-echo',
       to: 'hash-midnight-arc',
-      score: 8.1,
+      score: 9.1,
       tempoDelta: 0,
       energyDelta: 0,
-      keyRelation: '+1 Camelot',
+      keyRelation: '8A → 9A (+1 Camelot)',
       window: 'outro_mix → intro_mix',
-      reason: 'Perfect tempo hold at 128, harmonic lift to 9A',
+      reason: '🔥 Perfect match: same tempo 128 BPM, smooth harmonic lift to 9A, 87% vibe similarity',
     },
     {
       from: 'hash-midnight-arc',
       to: 'hash-delta-peak',
-      score: 8.4,
-      tempoDelta: 2,
-      energyDelta: 1,
-      keyRelation: '+1 Camelot',
+      score: 8.8,
+      tempoDelta: 5,
+      energyDelta: 2,
+      keyRelation: '9A → 10A (+1 Camelot)',
       window: 'outro_mix → intro_mix',
-      reason: 'Climbing to peak: +2 BPM, +1 energy, 9A→10A harmonic',
+      reason: '📈 Peak time ramp: +5 BPM to 133, energy 7→9, continuing Camelot climb',
     },
     {
       from: 'hash-delta-peak',
       to: 'hash-pulse-drive',
       score: 8.7,
-      tempoDelta: 4,
-      energyDelta: 1,
-      keyRelation: '+1 Camelot',
+      tempoDelta: 1,
+      energyDelta: 0,
+      keyRelation: '10A → 11A (+1 Camelot)',
       window: 'outro_mix → intro_mix',
-      reason: 'Peak energy push: +4 BPM to 134, max energy incoming',
+      reason: '🚀 Hold the energy: near-perfect tempo at 134, sustain peak level 9',
     },
     {
       from: 'hash-pulse-drive',
       to: 'hash-neon-rush',
-      score: 9.1,
+      score: 9.4,
       tempoDelta: 6,
       energyDelta: 0,
-      keyRelation: '+1 Camelot',
+      keyRelation: '11A → 12A (→ 1A cycle)',
       window: 'outro_mix → intro_mix',
-      reason: 'Full send: +6 BPM to 140, hold max energy, 11A→12A climax',
+      reason: '💥 FINALE: Push to 140 BPM, max energy, complete the Camelot wheel!',
     },
   ],
 };

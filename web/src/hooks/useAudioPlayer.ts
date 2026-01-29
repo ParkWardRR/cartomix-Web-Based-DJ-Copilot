@@ -1,4 +1,4 @@
-import { useRef, useState, useCallback, useEffect } from 'react';
+import React, { useRef, useState, useCallback, useEffect } from 'react';
 
 export interface AudioPlayerState {
   isPlaying: boolean;
@@ -368,9 +368,9 @@ export function useAudioPlayer(): [AudioPlayerState, AudioPlayerControls] {
     return null;
   }, []);
 
-  return [
-    state,
-    {
+  // Memoize the controls object to prevent infinite re-render loops
+  const controls: AudioPlayerControls = React.useMemo(
+    () => ({
       play,
       pause,
       stop,
@@ -380,6 +380,9 @@ export function useAudioPlayer(): [AudioPlayerState, AudioPlayerControls] {
       loadTrack,
       loadStreamingTrack,
       getAnalyserData,
-    },
-  ];
+    }),
+    [play, pause, stop, seek, seekToPosition, setPlaybackRate, loadTrack, loadStreamingTrack, getAnalyserData]
+  );
+
+  return [state, controls];
 }
