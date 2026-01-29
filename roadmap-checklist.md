@@ -118,8 +118,9 @@
 ### Next (Beta)
 - Core ML integration for ANE inference
 - gRPC server integration for Swift analyzer
-- Web Audio playback integration
+- Web Audio playback UI integration (hook complete, UI pending)
 - Embeddings/similarity vector for vibe continuity
+- CI pipeline for macOS (go/swift/unit/property + E2E)
 
 ### Recently Completed (Post-Alpha)
 - Connected React UI to HTTP API with Zustand state management
@@ -127,8 +128,10 @@
 - Graceful fallback to demo mode when API unavailable
 - Export panel in Set Builder UI with Rekordbox/Serato/Traktor format selection
 - Full vendor export integration (UI + API)
+- Golden comparison tests for all vendor export formats
+- Web Audio useAudioPlayer hook with Web Audio API
 
-### Swift Analyzer (v0.2.0-beta - In Progress)
+### Swift Analyzer (v0.2.0-beta - Completed)
 - Accelerate-based FFT processor with STFT, spectral flux, chroma features
 - AVFoundation audio decoder with sample rate conversion
 - Beatgrid detector using onset detection and autocorrelation
@@ -138,3 +141,10 @@
 - Cue generator with priority-based selection and beat alignment
 - CLI tool (analyzer-swift analyze/serve/healthcheck)
 - HTTP API server for analyzer integration
+
+### Testing & Quality (v0.2.0-beta)
+- Golden comparison tests for Rekordbox XML export
+- Golden comparison tests for Serato crate export
+- Golden comparison tests for Traktor NML export
+- Export round-trip validation with checksums
+- Web Audio useAudioPlayer hook for browser playback
