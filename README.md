@@ -172,7 +172,9 @@ Built with high-performance libraries for smooth 60fps rendering:
 - Cues CSV with beat/time indices
 - SHA256 checksum manifest
 - Ready-to-share tar.gz bundles
-- *Coming soon:* Rekordbox, Serato, Traktor formats
+- **Rekordbox XML** - Full DJ_PLAYLISTS schema with cues, tempo markers, and key
+- **Serato crate** - Binary .crate format with supplementary cues CSV
+- **Traktor NML** - Complete NML v19 export with CUE_V2 markers
 
 ## Architecture
 
@@ -187,12 +189,13 @@ flowchart LR
       REACT --> VIZ
     end
 
-    subgraph ENGINE["Go Engine"]
+    subgraph ENGINE["Go Engine (1.24+)"]
       direction TB
       GRPC["gRPC Server"]
       SCHED["Job Scheduler"]
       PLAN["Set Planner"]
-      GRPC --> SCHED --> PLAN
+      EXPORT["Exporters"]
+      GRPC --> SCHED --> PLAN --> EXPORT
     end
 
     subgraph ANALYZER["Swift Analyzer"]
@@ -216,7 +219,7 @@ flowchart LR
 
 **How it works:**
 
-1. **Frontend** — React UI sends commands (scan library, plan set, export) via gRPC-web
+1. **Frontend** — React UI sends commands (scan library, plan set, export) via gRPC-web / HTTP API
 2. **Go Engine** — Coordinates jobs, runs the weighted-graph set planner, handles exports
 3. **Swift Analyzer** — Performs DSP analysis using Apple frameworks (Accelerate, Metal, Core ML)
 4. **Storage** — SQLite for metadata, blob store for waveform tiles and embeddings
@@ -227,6 +230,218 @@ flowchart LR
 | **Engine** | Go 1.24, gRPC, Protobuf | API server, job scheduling, set planning, exports |
 | **Analyzer** | Swift 6, Accelerate, Metal, Core ML | Audio DSP and ML inference on ANE/GPU |
 | **Storage** | SQLite (WAL mode) | Track metadata, analysis results, waveform tiles |
+
+## Detailed Architecture
+
+### Swift Analyzer Pipeline
+
+The Swift analyzer (`analyzer-swift`) is the core audio analysis engine, built with Apple's Accelerate framework for high-performance DSP on Apple Silicon.
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                        Swift Analyzer Pipeline                           │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                          │
+│  ┌──────────────┐    ┌──────────────┐    ┌──────────────┐               │
+│  │ AudioDecoder │───▶│ FFTProcessor │───▶│   Analysis   │               │
+│  │ (AVFoundation)│    │ (Accelerate) │    │   Modules    │               │
+│  └──────────────┘    └──────────────┘    └──────────────┘               │
+│         │                   │                    │                       │
+│         ▼                   ▼                    ▼                       │
+│   ┌──────────┐       ┌──────────┐        ┌─────────────┐                │
+│   │ 48kHz SR │       │  STFT    │        │ BeatgridDet │                │
+│   │ Mono PCM │       │ Spectral │        │ KeyDetector │                │
+│   │ Float32  │       │  Flux    │        │ EnergyAnalz │                │
+│   └──────────┘       │ Chroma   │        │ SectionDet  │                │
+│                      └──────────┘        │ CueGenerator│                │
+│                                          └─────────────┘                │
+│                                                 │                        │
+│                                                 ▼                        │
+│                                    ┌────────────────────┐               │
+│                                    │ TrackAnalysisResult │               │
+│                                    │  - beats, tempoMap  │               │
+│                                    │  - key (Camelot)    │               │
+│                                    │  - energy, sections │               │
+│                                    │  - cues, waveform   │               │
+│                                    └────────────────────┘               │
+│                                                                          │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+#### DSP Components
+
+| Component | Framework | Description |
+|-----------|-----------|-------------|
+| **AudioDecoder** | AVFoundation | Decodes WAV/MP3/AAC/FLAC to 48kHz mono PCM |
+| **FFTProcessor** | Accelerate vDSP | FFT with Hann windowing, STFT, spectral flux, chroma features |
+| **BeatgridDetector** | Accelerate | Onset detection via spectral flux + autocorrelation tempo estimation |
+| **KeyDetector** | Accelerate | Krumhansl-Schmuckler key profiles with chroma correlation |
+| **EnergyAnalyzer** | Accelerate | RMS/peak analysis, band energy (low/mid/high), energy curve |
+| **SectionDetector** | — | Energy segmentation for intro/verse/build/drop/breakdown/outro |
+| **CueGenerator** | — | Priority-based cue selection with beat alignment (max 8 cues) |
+
+#### Key Detection Algorithm
+
+```
+1. Extract chroma features from STFT (12 pitch classes)
+2. Average chroma vectors across all frames
+3. Correlate with Krumhansl-Schmuckler major/minor profiles
+4. For each pitch class (0-11):
+   - Rotate major profile by pitch class
+   - Rotate minor profile by pitch class
+   - Compute Pearson correlation
+5. Select key with highest correlation
+6. Output: pitchClass, isMinor, confidence
+7. Convert to Camelot (e.g., "8A") and Open Key (e.g., "1m") notation
+```
+
+#### Beatgrid Detection Algorithm
+
+```
+1. Compute STFT spectrogram (2048-point FFT, 512-sample hop)
+2. Calculate spectral flux (half-wave rectified difference)
+3. Autocorrelation-based tempo estimation:
+   - Compute autocorrelation of onset strength signal
+   - Find peak in 60-180 BPM range
+4. Peak picking with adaptive threshold:
+   - Mean + 0.5 * standard deviation
+   - Minimum distance constraint (half beat interval)
+5. Grid alignment from first strong onset
+6. Output: beat markers with time, index, downbeat flag
+```
+
+### Go Engine Architecture
+
+The Go engine handles coordination, storage, and exports.
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                          Go Engine (1.24+)                               │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                          │
+│  ┌─────────────────┐    ┌─────────────────┐    ┌──────────────────┐    │
+│  │   HTTP API      │    │   gRPC Server   │    │  Library Scanner │    │
+│  │ /api/tracks     │    │ EngineService   │    │ (recursive, hash) │    │
+│  │ /api/export     │    │ AnalyzerWorker  │    └──────────────────┘    │
+│  │ /api/propose-set│    │                 │                             │
+│  └─────────────────┘    └─────────────────┘                             │
+│           │                     │                                        │
+│           ▼                     ▼                                        │
+│  ┌─────────────────────────────────────────────────────────────────┐   │
+│  │                       Set Planner                                │   │
+│  │  - Weighted graph with edge scoring                             │   │
+│  │  - Key compatibility (Camelot wheel distance)                    │   │
+│  │  - Tempo delta penalty                                           │   │
+│  │  - Energy flow scoring (climb/drop preferences)                  │   │
+│  │  - Transition window overlap detection                           │   │
+│  │  - Set modes: Warm-up, Peak-time, Open-format                   │   │
+│  └─────────────────────────────────────────────────────────────────┘   │
+│                                    │                                     │
+│                                    ▼                                     │
+│  ┌─────────────────────────────────────────────────────────────────┐   │
+│  │                        Exporters                                 │   │
+│  │  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐           │   │
+│  │  │ Generic  │ │ Rekordbox│ │  Serato  │ │ Traktor  │           │   │
+│  │  │ M3U/JSON │ │   XML    │ │  .crate  │ │   NML    │           │   │
+│  │  │ CSV/Tar  │ │DJ_PLAYLIST│ │ vrsn fmt │ │  v19     │           │   │
+│  │  └──────────┘ └──────────┘ └──────────┘ └──────────┘           │   │
+│  └─────────────────────────────────────────────────────────────────┘   │
+│                                                                          │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+### Web UI Architecture
+
+React 19 + TypeScript with Zustand state management.
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                      Web UI (React 19 + TypeScript)                      │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                          │
+│  ┌─────────────────────────────────────────────────────────────────┐   │
+│  │                    Zustand Store (store.ts)                      │   │
+│  │  - tracks, trackMap, filteredTracks                             │   │
+│  │  - selectedId, viewMode, chartMode                              │   │
+│  │  - currentSetPlan with edges                                    │   │
+│  │  - API actions: fetchTracks, proposeSet, exportSet             │   │
+│  └─────────────────────────────────────────────────────────────────┘   │
+│                                    │                                     │
+│           ┌────────────────────────┼────────────────────────┐           │
+│           ▼                        ▼                        ▼           │
+│  ┌────────────────┐     ┌────────────────┐     ┌────────────────┐      │
+│  │  Library View  │     │  Set Builder   │     │   Graph View   │      │
+│  │  - LibraryGrid │     │  - SetBuilder  │     │ - TransitionGr │      │
+│  │  - TrackDetail │     │  - EnergyArc   │     │ - D3 force sim │      │
+│  │  - BPMKeyChart │     │  - ExportPanel │     │ - zoom/pan     │      │
+│  └────────────────┘     └────────────────┘     └────────────────┘      │
+│                                                                          │
+│  ┌─────────────────────────────────────────────────────────────────┐   │
+│  │                    Visualization Components                      │   │
+│  │  ┌──────────────┐ ┌──────────────┐ ┌──────────────┐             │   │
+│  │  │WaveformCanvas│ │SpectrumAnalz│ │  EnergyArc   │             │   │
+│  │  │ Canvas 2D    │ │ Canvas 2D   │ │ SVG + Framer │             │   │
+│  │  │ sections     │ │ mirror/bars │ │ bezier curve │             │   │
+│  │  │ cues, beats  │ │ 60fps RAF   │ │ spring anim  │             │   │
+│  │  └──────────────┘ └──────────────┘ └──────────────┘             │   │
+│  └─────────────────────────────────────────────────────────────────┘   │
+│                                                                          │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+### Data Flow
+
+```
+┌──────────┐     ┌──────────┐     ┌──────────┐     ┌──────────┐
+│  Audio   │────▶│  Swift   │────▶│   Go     │────▶│   Web    │
+│  Files   │     │ Analyzer │     │  Engine  │     │   UI     │
+└──────────┘     └──────────┘     └──────────┘     └──────────┘
+     │                │                 │                │
+     │                │                 │                │
+     ▼                ▼                 ▼                ▼
+┌──────────┐     ┌──────────┐     ┌──────────┐     ┌──────────┐
+│WAV/MP3/  │     │TrackAnalz│     │ SQLite   │     │ Zustand  │
+│AAC/FLAC  │     │Result    │     │ + Blobs  │     │  Store   │
+└──────────┘     └──────────┘     └──────────┘     └──────────┘
+
+1. Library Scanner finds audio files, computes SHA256 content hash
+2. Swift Analyzer decodes audio, runs DSP pipeline
+3. Analysis results stored in SQLite with WAL mode
+4. Web UI fetches via HTTP API, stores in Zustand
+5. User builds set, UI calls proposeSet API
+6. Planner returns ordered tracks with edge explanations
+7. Export generates Rekordbox/Serato/Traktor files
+```
+
+### Protocol Buffers
+
+Shared contracts between Go engine and Swift analyzer:
+
+```protobuf
+// proto/common/types.proto
+message TrackAnalysis {
+  TrackId id = 1;
+  double duration_seconds = 2;
+  Beatgrid beatgrid = 3;
+  MusicalKey key = 4;
+  int32 energy_global = 5;
+  repeated Section sections = 7;
+  repeated CuePoint cue_points = 8;
+  repeated TransitionWindow transition_windows = 9;
+}
+
+message MusicalKey {
+  string value = 1;      // "8A" (Camelot)
+  KeyFormat format = 2;  // CAMELOT or OPEN_KEY
+  float confidence = 3;
+}
+
+message Beatgrid {
+  repeated BeatMarker beats = 1;
+  repeated TempoMapNode tempo_map = 2;
+  float confidence = 3;
+}
+```
 
 ## Screenshots
 
@@ -381,7 +596,7 @@ Screenshots at 1280x720 @2x (retina). GIF at 640px width, 12fps.
 
 ## Roadmap
 
-### Alpha (Current)
+### Alpha (Complete)
 - [x] gRPC engine with health checks
 - [x] Library scanner with content hashing
 - [x] SQLite storage with migrations
@@ -390,19 +605,26 @@ Screenshots at 1280x720 @2x (retina). GIF at 640px width, 12fps.
 - [x] Pro UI with visualizations
 - [x] Dark mode default
 
-### Beta (Next)
-- [ ] Swift analyzer with Accelerate DSP
+### Beta (Current)
+- [x] Swift analyzer with Accelerate DSP
+- [x] Beatgrid detection (onset + autocorrelation)
+- [x] Key detection with Camelot/Open Key mapping
+- [x] Energy analysis with band breakdown
+- [x] Section detection (intro/verse/build/drop/breakdown/outro)
+- [x] Cue generation (priority-based, beat-aligned)
+- [x] HTTP REST API bridge for web UI
+- [x] Zustand state management with API integration
+- [x] Export panel in Set Builder UI
+- [x] Web Audio playback hook
 - [ ] Core ML integration for ANE inference
-- [ ] Beatgrid detection algorithm
-- [ ] Key detection with Camelot mapping
-- [ ] Web Audio playback integration
-- [ ] gRPC-web bridge for real data
+- [ ] gRPC integration for Swift analyzer
+- [ ] Embeddings/similarity for vibe continuity
 
 ### v1.0
-- [ ] Rekordbox XML export
-- [ ] Serato crate export
-- [ ] Traktor NML export
-- [ ] Playwright-Go E2E tests
+- [x] Rekordbox XML export
+- [x] Serato crate export
+- [x] Traktor NML export
+- [x] Playwright-Go E2E tests
 - [ ] Alpha acceptance: 100 tracks → 30-track set → export
 
 ## Contributing
@@ -413,6 +635,32 @@ PRs welcome! Keep commits scoped and include:
 - Test coverage for new features
 
 ## Changelog
+
+### v0.2.0-beta (2026-01-29)
+- **Swift Analyzer with Accelerate DSP** (full implementation)
+  - AudioDecoder using AVFoundation with sample rate conversion
+  - FFTProcessor with vDSP: STFT, spectral flux, chroma features
+  - BeatgridDetector: onset detection + autocorrelation tempo estimation
+  - KeyDetector: Krumhansl-Schmuckler profiles with Camelot/Open Key output
+  - EnergyAnalyzer: RMS/peak, band energy (low/mid/high), energy curve
+  - SectionDetector: energy-based segmentation (intro/verse/build/drop/breakdown/outro)
+  - CueGenerator: priority-based selection with beat alignment (max 8 cues)
+  - Main Analyzer orchestrator with async progress callbacks
+  - CLI tool (`analyzer-swift analyze/serve/healthcheck`)
+  - HTTP API server for analyzer integration
+- Web Audio playback hook (useAudioPlayer) with play/pause/seek
+- Golden comparison tests for all export formats
+- Detailed architecture documentation in README
+
+### v0.1.1-alpha (2026-01-29)
+- HTTP REST API bridge for web UI integration
+- Zustand state management with API fallback to demo mode
+- Export panel in Set Builder with vendor format selection
+- Rekordbox XML export (DJ_PLAYLISTS schema)
+- Serato crate export (.crate binary format)
+- Traktor NML export (v19 schema with CUE_V2)
+- Playwright-Go E2E test framework
+- Property tests for planner algorithms
 
 ### v0.1.0-alpha (2026-01-29)
 - Initial alpha release

@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ThemeToggle } from './components/ThemeToggle';
 import { LibraryGrid } from './components/LibraryGrid';
@@ -11,99 +11,114 @@ import { EnergyArc } from './components/EnergyArc';
 import { TransitionGraph } from './components/TransitionGraph';
 import { LiveStats } from './components/LiveStats';
 import { BPMKeyChart } from './components/BPMKeyChart';
-import { demoSetPlan, demoTracks } from './mockData';
-import type { Track } from './types';
-
-type ViewMode = 'library' | 'setBuilder' | 'graph';
+import { ExportPanel } from './components/ExportPanel';
+import { useStore } from './store';
 
 function App() {
-  const [query, setQuery] = useState('');
-  const [onlyReview, setOnlyReview] = useState(false);
-  const [onlyAnalyzed, setOnlyAnalyzed] = useState(false);
-  const [highEnergyOnly, setHighEnergyOnly] = useState(false);
-  const [sortMode, setSortMode] = useState<'bpm-asc' | 'bpm-desc' | 'energy-desc'>('energy-desc');
-  const [selectedId, setSelectedId] = useState(demoTracks[0]?.id);
-  const [viewMode, setViewMode] = useState<ViewMode>('library');
+  // Get state and actions from store
+  const {
+    tracks,
+    trackMap,
+    currentSetPlan,
+    filteredTracks,
+    selectedTrack,
+    selectedId,
+    viewMode,
+    query,
+    onlyReview,
+    onlyAnalyzed,
+    highEnergyOnly,
+    sortMode,
+    chartMode,
+    isLoading,
+    error,
+    apiAvailable,
+    stats,
+    setViewMode,
+    setQuery,
+    setOnlyReview,
+    setOnlyAnalyzed,
+    setHighEnergyOnly,
+    setSortMode,
+    setSelectedId,
+    setChartMode,
+    fetchTracks,
+    checkApiHealth,
+    proposeSet,
+    fetchTrackDetail,
+  } = useStore();
+
+  // Local UI state for playback simulation
   const [playheadPosition, setPlayheadPosition] = useState(0.3);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [chartMode, setChartMode] = useState<'bpm' | 'key'>('bpm');
 
-  const filtered = useMemo(() => {
-    const base = demoTracks.filter((track) => {
-      const matchesQuery =
-        track.title.toLowerCase().includes(query.toLowerCase()) ||
-        track.artist.toLowerCase().includes(query.toLowerCase()) ||
-        track.key.toLowerCase().includes(query.toLowerCase());
-      const matchesReview = !onlyReview || track.needsReview;
-      const matchesAnalyzed = !onlyAnalyzed || track.status === 'analyzed';
-      const matchesEnergy = !highEnergyOnly || track.energy >= 7;
-      return matchesQuery && matchesReview && matchesAnalyzed && matchesEnergy;
-    });
-    return base.sort((a, b) => {
-      switch (sortMode) {
-        case 'bpm-asc':
-          return a.bpm - b.bpm;
-        case 'bpm-desc':
-          return b.bpm - a.bpm;
-        case 'energy-desc':
-        default:
-          return b.energy - a.energy || b.bpm - a.bpm;
-      }
-    });
-  }, [query, onlyReview, onlyAnalyzed, highEnergyOnly, sortMode]);
+  // Computed values
+  const filtered = filteredTracks();
+  const selected = selectedTrack();
+  const currentStats = stats();
 
-  const trackMap = useMemo(
-    () =>
-      demoTracks.reduce<Record<string, Track>>((acc, t) => {
-        acc[t.id] = t;
-        return acc;
-      }, {}),
-    []
-  );
-
-  const selected = trackMap[selectedId ?? ''] ?? filtered[0];
+  // Get set plan (from store or generate demo)
+  const setPlan = currentSetPlan || {
+    mode: 'Peak-time' as const,
+    order: filtered.slice(0, 10).map((t) => t.id),
+    edges: [],
+  };
 
   const currentSetIndex = useMemo(() => {
-    return demoSetPlan.order.findIndex((id) => id === selectedId);
-  }, [selectedId]);
+    return setPlan.order.findIndex((id) => id === selectedId);
+  }, [selectedId, setPlan.order]);
 
   const currentEdge = useMemo(() => {
     if (currentSetIndex > 0) {
-      return demoSetPlan.edges[currentSetIndex - 1];
+      return setPlan.edges[currentSetIndex - 1];
     }
-    return demoSetPlan.edges[0];
-  }, [currentSetIndex]);
+    return setPlan.edges[0];
+  }, [currentSetIndex, setPlan.edges]);
 
   const fromTrack = trackMap[currentEdge?.from ?? ''];
   const toTrack = trackMap[currentEdge?.to ?? ''];
 
   const setEnergyValues = useMemo(() => {
-    return demoSetPlan.order.map((id) => trackMap[id]?.energy ?? 5);
-  }, [trackMap]);
+    return setPlan.order.map((id) => trackMap[id]?.energy ?? 5);
+  }, [trackMap, setPlan.order]);
 
   const setTrackLabels = useMemo(() => {
-    return demoSetPlan.order.map((id) => trackMap[id]?.title ?? id);
-  }, [trackMap]);
+    return setPlan.order.map((id) => trackMap[id]?.title ?? id);
+  }, [trackMap, setPlan.order]);
 
-  const stats = useMemo(() => {
-    const analyzed = demoTracks.filter((t) => t.status === 'analyzed').length;
-    const pending = demoTracks.filter((t) => t.status === 'pending').length;
-    const avgBpm = demoTracks.reduce((acc, t) => acc + t.bpm, 0) / Math.max(demoTracks.length, 1);
-    const avgEnergy = demoTracks.reduce((acc, t) => acc + t.energy, 0) / Math.max(demoTracks.length, 1);
-    const keys = new Set(demoTracks.map((t) => t.key));
-    const avgEdge =
-      demoSetPlan.edges.reduce((acc, e) => acc + e.score, 0) / Math.max(demoSetPlan.edges.length, 1);
-    return {
-      analyzed,
-      pending,
-      failed: 0,
-      avgBpm: Math.round(avgBpm * 10) / 10,
-      avgEnergy: Math.round(avgEnergy * 10) / 10,
-      keyCount: keys.size,
-      avgEdgeScore: Math.round(avgEdge * 10) / 10,
-      totalTracks: demoTracks.length,
+  // Initialize: check API and load tracks
+  useEffect(() => {
+    const init = async () => {
+      await checkApiHealth();
+      try {
+        await fetchTracks();
+      } catch {
+        // Falls back to mock data automatically
+      }
     };
-  }, []);
+    init();
+  }, [checkApiHealth, fetchTracks]);
+
+  // Fetch full track detail when selection changes
+  useEffect(() => {
+    if (selectedId && apiAvailable) {
+      fetchTrackDetail(selectedId);
+    }
+  }, [selectedId, apiAvailable, fetchTrackDetail]);
+
+  // Auto-propose set when entering set builder with tracks
+  const handleSetBuilderEnter = useCallback(async () => {
+    setViewMode('setBuilder');
+    if (apiAvailable && tracks.length >= 2 && !currentSetPlan) {
+      const analyzedTracks = tracks.filter((t) => t.status === 'analyzed');
+      if (analyzedTracks.length >= 2) {
+        await proposeSet(
+          analyzedTracks.slice(0, 15).map((t) => t.id),
+          'Peak-time'
+        );
+      }
+    }
+  }, [setViewMode, apiAvailable, tracks, currentSetPlan, proposeSet]);
 
   // Auto-play simulation for GIF capture
   useEffect(() => {
@@ -128,6 +143,19 @@ function App() {
     }
   };
 
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="app">
+        <div className="loading-screen">
+          <div className="loading-spinner" />
+          <p>Loading tracks...</p>
+          {error && <p className="error-text">{error}</p>}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="app">
       <header className="app-header">
@@ -137,6 +165,7 @@ function App() {
             Algiers
           </div>
           <span className="version-badge">alpha</span>
+          {!apiAvailable && <span className="demo-badge">demo</span>}
         </div>
         <nav className="header-nav">
           <button
@@ -148,7 +177,7 @@ function App() {
           </button>
           <button
             className={`nav-btn ${viewMode === 'setBuilder' ? 'active' : ''}`}
-            onClick={() => setViewMode('setBuilder')}
+            onClick={handleSetBuilderEnter}
           >
             <span className="nav-icon">≡</span>
             Set Builder
@@ -178,7 +207,7 @@ function App() {
             >
               {/* Top Bar - Stats + Charts */}
               <div className="top-bar">
-                <LiveStats stats={stats} compact />
+                <LiveStats stats={currentStats} compact />
                 <div className="charts-row">
                   <div className="chart-box">
                     <div className="chart-tabs">
@@ -195,7 +224,7 @@ function App() {
                         Keys
                       </button>
                     </div>
-                    <BPMKeyChart tracks={demoTracks} height={100} mode={chartMode} />
+                    <BPMKeyChart tracks={tracks} height={100} mode={chartMode} />
                   </div>
                   <div className="chart-box">
                     <div className="chart-label">Spectrum</div>
@@ -301,9 +330,9 @@ function App() {
                 <div className="panel set-panel">
                   <div className="panel-header">
                     <h3>Set Order</h3>
-                    <span className="pill pill-primary">{demoSetPlan.mode}</span>
+                    <span className="pill pill-primary">{setPlan.mode}</span>
                   </div>
-                  <SetBuilder plan={demoSetPlan} tracks={trackMap} compact />
+                  <SetBuilder plan={setPlan} tracks={trackMap} compact />
                   <div className="energy-section">
                     <div className="section-label">Energy Flow</div>
                     <EnergyArc
@@ -333,11 +362,11 @@ function App() {
                   <div className="panel-header">
                     <h3>Set Builder</h3>
                     <div className="pill-row">
-                      <span className="pill pill-primary">{demoSetPlan.mode}</span>
-                      <span className="pill pill-analyzed">{demoSetPlan.order.length} tracks</span>
+                      <span className="pill pill-primary">{setPlan.mode}</span>
+                      <span className="pill pill-analyzed">{setPlan.order.length} tracks</span>
                     </div>
                   </div>
-                  <SetBuilder plan={demoSetPlan} tracks={trackMap} />
+                  <SetBuilder plan={setPlan} tracks={trackMap} />
                 </div>
               </div>
               <div className="set-sidebar">
@@ -384,6 +413,9 @@ function App() {
                     </div>
                   </div>
                 )}
+                <div className="panel">
+                  <ExportPanel trackIds={setPlan.order} playlistName={`${setPlan.mode.toLowerCase().replace(' ', '-')}-set`} />
+                </div>
               </div>
             </motion.div>
           )}
@@ -405,9 +437,9 @@ function App() {
                   </div>
                   <TransitionGraph
                     tracks={trackMap}
-                    edges={demoSetPlan.edges}
+                    edges={setPlan.edges}
                     height={480}
-                    selectedTrackId={selectedId}
+                    selectedTrackId={selectedId ?? undefined}
                     onSelectTrack={setSelectedId}
                   />
                 </div>
@@ -439,7 +471,7 @@ function App() {
                   />
                 </div>
                 <div className="panel">
-                  <BPMKeyChart tracks={demoTracks} height={100} mode="key" />
+                  <BPMKeyChart tracks={tracks} height={100} mode="key" />
                 </div>
               </div>
             </motion.div>
@@ -449,7 +481,10 @@ function App() {
 
       <footer className="app-footer">
         <span>Algiers · DJ Set Prep Copilot</span>
-        <span className="muted">v0.1.0-alpha · Apple Silicon M1–M5</span>
+        <span className="muted">
+          v0.1.0-alpha · Apple Silicon M1–M5
+          {apiAvailable ? ' · API connected' : ' · demo mode'}
+        </span>
       </footer>
     </div>
   );

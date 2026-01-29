@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<NML VERSION="19">
+  <HEAD COMPANY="Algiers" PROGRAM="Algiers DJ Prep"></HEAD>
+  <MUSICFOLDERS>
+    <FOLDER PATH="/:Music/:Artist1/:"></FOLDER>
+    <FOLDER PATH="/:Music/:Artist2/:"></FOLDER>
+  </MUSICFOLDERS>
+  <COLLECTION ENTRIES="2">
+    <ENTRY TITLE="Track One">
+      <LOCATION DIR="/:Music/:Artist1/:" FILE="Track One.mp3"></LOCATION>
+      <ALBUM></ALBUM>
+      <INFO KEY="8A" PLAYTIME="180" PLAYTIME_FLOAT="180" IMPORT_DATE="2026/01/29"></INFO>
+      <TEMPO BPM="128" BPM_QUALITY="0.8799999952316284"></TEMPO>
+      <LOUDNESS></LOUDNESS>
+      <MUSICAL_KEY VALUE="21"></MUSICAL_KEY>
+      <CUE_V2 NAME="CUE_LOAD" DISPL_ORDER="0" TYPE="0" START="0" HOTCUE="0"></CUE_V2>
+      <CUE_V2 NAME="CUE_DROP" DISPL_ORDER="1" TYPE="0" START="15000" HOTCUE="1"></CUE_V2>
+      <CUE_V2 NAME="CUE_OUTRO_START" DISPL_ORDER="2" TYPE="0" START="165000" HOTCUE="2"></CUE_V2>
+    </ENTRY>
+    <ENTRY TITLE="Track Two">
+      <LOCATION DIR="/:Music/:Artist2/:" FILE="Track Two.wav"></LOCATION>
+      <ALBUM></ALBUM>
+      <INFO KEY="9A" PLAYTIME="210" PLAYTIME_FLOAT="210" IMPORT_DATE="2026/01/29"></INFO>
+      <TEMPO BPM="130" BPM_QUALITY="0.9100000262260437"></TEMPO>
+      <LOUDNESS></LOUDNESS>
+      <MUSICAL_KEY VALUE="16"></MUSICAL_KEY>
+      <CUE_V2 NAME="CUE_INTRO_START" DISPL_ORDER="0" TYPE="0" START="0" HOTCUE="0"></CUE_V2>
+      <CUE_V2 NAME="CUE_BUILD" DISPL_ORDER="1" TYPE="0" START="30000" HOTCUE="1"></CUE_V2>
+      <CUE_V2 NAME="CUE_DROP" DISPL_ORDER="2" TYPE="0" START="60000" HOTCUE="2"></CUE_V2>
+    </ENTRY>
+  </COLLECTION>
+  <SETS></SETS>
+  <PLAYLISTS>
+    <NODE TYPE="FOLDER" NAME="$ROOT">
+      <SUBNODES>
+        <NODE TYPE="PLAYLIST" NAME="golden-set">
+          <SUBNODES></SUBNODES>
+          <PLAYLIST ENTRIES="2" TYPE="LIST">
+            <ENTRY>
+              <PRIMARYKEY TYPE="TRACK" KEY="/:file://localhost/:Music/:Artist1/:Track One.mp3"></PRIMARYKEY>
+            </ENTRY>
+            <ENTRY>
+              <PRIMARYKEY TYPE="TRACK" KEY="/:file://localhost/:Music/:Artist2/:Track Two.wav"></PRIMARYKEY>
+            </ENTRY>
+          </PLAYLIST>
+        </NODE>
+      </SUBNODES>
+    </NODE>
+  </PLAYLISTS>
+</NML>

@@ -158,13 +158,19 @@ func WriteRekordbox(outputDir, playlistName string, tracks []TrackExport) (strin
 		// Convert file path to file:// URL format for Rekordbox
 		location := pathToFileURL(t.Path)
 
+		// Calculate average BPM safely
+		avgBpm := 120.0
+		if grid := analysis.GetBeatgrid(); grid != nil && len(grid.GetTempoMap()) > 0 {
+			avgBpm = grid.GetTempoMap()[0].GetBpm()
+		}
+
 		rbTracks = append(rbTracks, RekordboxTrack{
 			TrackID:       trackID,
 			Name:          filepath.Base(strings.TrimSuffix(t.Path, filepath.Ext(t.Path))),
 			Artist:        analysis.GetId().GetPath(), // Placeholder - should come from tags
 			TotalTime:     totalTime,
 			DateAdded:     time.Now().Format("2006-01-02"),
-			AverageBpm:    fmt.Sprintf("%.2f", analysis.GetBeatgrid().GetTempoMap()[0].GetBpm()),
+			AverageBpm:    fmt.Sprintf("%.2f", avgBpm),
 			Tonality:      tonality,
 			Location:      location,
 			PositionMarks: positionMarks,
