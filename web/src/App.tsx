@@ -12,10 +12,11 @@ function App() {
   const [onlyReview, setOnlyReview] = useState(false);
   const [onlyAnalyzed, setOnlyAnalyzed] = useState(false);
   const [highEnergyOnly, setHighEnergyOnly] = useState(false);
+  const [sortMode, setSortMode] = useState<'bpm-asc' | 'bpm-desc' | 'energy-desc'>('energy-desc');
   const [selectedId, setSelectedId] = useState(demoTracks[0]?.id);
 
   const filtered = useMemo(() => {
-    return demoTracks.filter((track) => {
+    const base = demoTracks.filter((track) => {
       const matchesQuery =
         track.title.toLowerCase().includes(query.toLowerCase()) ||
         track.artist.toLowerCase().includes(query.toLowerCase()) ||
@@ -25,7 +26,18 @@ function App() {
       const matchesEnergy = !highEnergyOnly || track.energy >= 7;
       return matchesQuery && matchesReview && matchesAnalyzed && matchesEnergy;
     });
-  }, [query, onlyReview, onlyAnalyzed, highEnergyOnly]);
+    return base.sort((a, b) => {
+      switch (sortMode) {
+        case 'bpm-asc':
+          return a.bpm - b.bpm;
+        case 'bpm-desc':
+          return b.bpm - a.bpm;
+        case 'energy-desc':
+        default:
+          return b.energy - a.energy || b.bpm - a.bpm;
+      }
+    });
+  }, [query, onlyReview, onlyAnalyzed, highEnergyOnly, sortMode]);
 
   const trackMap = useMemo(
     () =>
@@ -47,7 +59,10 @@ function App() {
     const avgBpm =
       demoTracks.reduce((acc, t) => acc + t.bpm, 0) / Math.max(demoTracks.length, 1);
     const keys = new Set(demoTracks.map((t) => t.key));
-    return { analyzed, pending, avgBpm: Math.round(avgBpm * 10) / 10, keys: keys.size };
+    const avgEdge =
+      demoSetPlan.edges.reduce((acc, e) => acc + e.score, 0) /
+      Math.max(demoSetPlan.edges.length, 1);
+    return { analyzed, pending, avgBpm: Math.round(avgBpm * 10) / 10, keys: keys.size, avgEdge: Math.round(avgEdge * 10) / 10 };
   }, []);
 
   return (
@@ -89,6 +104,10 @@ function App() {
                 <div className="stat-label">Keys</div>
                 <div className="stat-value">{stats.keys}</div>
               </div>
+              <div className="stat">
+                <div className="stat-label">Avg Edge Score</div>
+                <div className="stat-value">{stats.avgEdge}</div>
+              </div>
             </div>
           </div>
         </section>
@@ -126,6 +145,22 @@ function App() {
                     onChange={(e) => setHighEnergyOnly(e.target.checked)}
                   />
                   Energy 7+
+                </label>
+              </div>
+              <div className="controls-row">
+                <label className="checkbox">
+                  <span>Sort:</span>
+                  <select
+                    className="select"
+                    value={sortMode}
+                    onChange={(e) =>
+                      setSortMode(e.target.value as 'bpm-asc' | 'bpm-desc' | 'energy-desc')
+                    }
+                  >
+                    <option value="energy-desc">Energy ↓</option>
+                    <option value="bpm-asc">BPM ↑</option>
+                    <option value="bpm-desc">BPM ↓</option>
+                  </select>
                 </label>
               </div>
               <div className="muted">{filtered.length} tracks shown</div>

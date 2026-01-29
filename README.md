@@ -68,6 +68,7 @@ A local-first copilot for DJ set prep. It ingests your library, detects structur
 - Transition rehearsal: dual‑deck preview, beat‑synced scrubbing, AB loop per candidate.
 - Set ordering via weighted graph plus textual rationale for every pick.
 - Pro-first dark mode by default, with library filters (review-only, analyzed-only, high-energy) and quick stats for BPM/keys/analysis state.
+- Library sorting (energy, BPM), dashboard stats (avg edge score, analyzed/pending), and checksum-verified export bundles for confident handoff.
 
 ## Screenshots (Jan 29, 2026 - refreshed, dark mode default)
 <div align="center">
