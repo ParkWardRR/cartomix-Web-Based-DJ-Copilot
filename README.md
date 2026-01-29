@@ -127,7 +127,7 @@ A local-first copilot for DJ set prep. It ingests your library, detects structur
 
 ## Apple Silicon Deep Dive
 
-Algiers is built from the ground up to leverage every compute engine in Apple Silicon. This isn't just "runs on M1" — it's **architected for M1-M5** with zero fallback to generic x86 code paths.
+Algiers is built from the ground up to leverage every compute engine in Apple Silicon. This isn't just "runs on M1" — it's **architected for M1-M4** with zero fallback to generic x86 code paths.
 
 ### The Apple Silicon Advantage
 
@@ -135,7 +135,7 @@ Apple Silicon chips integrate multiple specialized compute engines on a single c
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                         Apple Silicon (M1-M5)                                │
+│                         Apple Silicon (M1-M4)                                │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                              │
 │  ┌──────────────┐   ┌──────────────┐   ┌──────────────┐   ┌──────────────┐ │
@@ -810,8 +810,8 @@ open http://localhost:5173
 
 #### Prerequisites
 
-- **macOS 13+** (Ventura or later)
-- **Apple Silicon** (M1/M2/M3/M4/M5)
+- **macOS 14+** (Sonoma or later) — Required for Metal 3 and Core ML features
+- **Apple Silicon** (M1/M2/M3/M4) — Required for Neural Engine and Metal GPU
 - **Go 1.24+** — `brew install go`
 - **Node.js 22+** — `brew install node`
 - **Swift 6+** — Comes with Xcode Command Line Tools

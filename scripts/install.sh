@@ -38,8 +38,8 @@ show_banner() {
            |___/
 EOF
     echo -e "${NC}"
-    echo -e "${BOLD}DJ Set Prep Copilot — Apple Silicon Native${NC}"
-    echo -e "Version 0.5.1-beta | 100% Local | ANE + Metal Accelerated"
+    echo -e "${BOLD}DJ Set Prep Copilot — Apple Silicon Only${NC}"
+    echo -e "Version 0.5.2-beta | M1-M4 Required | Neural Engine + Metal GPU"
     echo ""
 }
 
@@ -52,23 +52,25 @@ check_macos() {
     log_success "macOS detected"
 }
 
-# Check Apple Silicon
+# Check Apple Silicon (REQUIRED)
 check_apple_silicon() {
     local arch=$(uname -m)
     if [[ "$arch" != "arm64" ]]; then
-        log_warn "Apple Silicon (M1/M2/M3/M4/M5) recommended for best performance"
-        log_warn "Running on $arch — some features may be slower"
-    else
-        log_success "Apple Silicon detected ($arch)"
+        log_error "Apple Silicon (M1/M2/M3/M4) is REQUIRED"
+        log_error "Algiers uses Metal GPU and Neural Engine acceleration"
+        log_error "Intel Macs are not supported"
+        exit 1
     fi
+    log_success "Apple Silicon detected ($arch)"
 }
 
 # Check macOS version
 check_macos_version() {
     local version=$(sw_vers -productVersion)
     local major=$(echo "$version" | cut -d. -f1)
-    if [[ "$major" -lt 13 ]]; then
-        log_error "macOS 13 (Ventura) or later required. You have: $version"
+    if [[ "$major" -lt 14 ]]; then
+        log_error "macOS 14 (Sonoma) or later required. You have: $version"
+        log_error "Earlier versions lack required Metal and Core ML features"
         exit 1
     fi
     log_success "macOS $version"

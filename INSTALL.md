@@ -29,12 +29,21 @@ open http://localhost:5173
 
 ## System Requirements
 
-| Requirement | Minimum | Recommended |
-|-------------|---------|-------------|
-| **macOS** | 13 (Ventura) | 14+ (Sonoma) |
-| **Chip** | Any Mac | Apple Silicon (M1-M5) |
-| **RAM** | 8 GB | 16 GB |
-| **Storage** | 2 GB | 5 GB (for audio files) |
+> **Apple Silicon Required** — Algiers uses Metal GPU and Neural Engine acceleration. Intel Macs are not supported.
+
+| Requirement | Required |
+|-------------|----------|
+| **macOS** | 14+ (Sonoma) |
+| **Chip** | Apple Silicon (M1, M2, M3, M4) |
+| **RAM** | 16 GB |
+| **Storage** | 5 GB (for audio files + models) |
+
+### Why Apple Silicon Only?
+
+Algiers leverages Apple's unified memory architecture for zero-copy data flow between CPU, GPU (Metal), and Neural Engine (ANE). This enables:
+- **15x faster ML inference** on Neural Engine vs CPU
+- **Real-time audio analysis** with Metal compute shaders
+- **Efficient memory usage** with unified memory (no GPU memory copies)
 
 ### Software Dependencies
 
