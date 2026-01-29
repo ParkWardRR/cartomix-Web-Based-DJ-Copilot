@@ -1,0 +1,43 @@
+syntax = "proto3";
+
+package cartomix.analyzer;
+
+option go_package = "github.com/cartomix/cancun/proto/analyzer;analyzer";
+
+import "google/protobuf/duration.proto";
+import "proto/common/types.proto";
+
+service AnalyzerWorker {
+  // Analyze a single track. The engine handles scheduling and retries.
+  rpc AnalyzeTrack(AnalyzeJob) returns (AnalyzeResult);
+}
+
+message DecodeParams {
+  int32 target_sample_rate = 1; // e.g., 48000
+  bool mono = 2;
+}
+
+message BeatgridParams {
+  bool dynamic_allowed = 1;
+  double tempo_floor = 2; // e.g., 60
+  double tempo_ceil = 3;  // e.g., 180
+}
+
+message CueParams {
+  int32 max_cues = 1;
+  bool snap_to_downbeat = 2;
+}
+
+message AnalyzeJob {
+  cartomix.common.TrackId id = 1;
+  string path = 2;
+  DecodeParams decode = 3;
+  BeatgridParams beatgrid = 4;
+  CueParams cues = 5;
+  int32 analysis_version = 6;
+}
+
+message AnalyzeResult {
+  cartomix.common.TrackAnalysis analysis = 1;
+  bytes waveform_tiles = 2; // optional packed multiresolution tiles
+}
