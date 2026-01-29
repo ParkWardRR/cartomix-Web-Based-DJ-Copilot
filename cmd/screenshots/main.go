@@ -292,11 +292,12 @@ func convertToWebP(videoPath, webpPath string, width int, slowdown float64) erro
 	// Two-step conversion: video -> temp GIF -> WebP
 	// This works even without ffmpeg libwebp support
 
-	// Step 1: Convert video to temporary GIF
+	// Step 1: Convert video to temporary GIF with high quality settings
 	tempGIF := webpPath + ".tmp.gif"
 	defer os.Remove(tempGIF)
 
-	vf := fmt.Sprintf("setpts=%.2f*PTS,fps=12,scale=%d:-1:flags=lanczos,split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse", slowdown, width)
+	// 24fps for smooth animation, high-quality palette generation
+	vf := fmt.Sprintf("setpts=%.2f*PTS,fps=24,scale=%d:-1:flags=lanczos,split[s0][s1];[s0]palettegen=max_colors=256:stats_mode=diff[p];[s1][p]paletteuse=dither=floyd_steinberg", slowdown, width)
 	cmd := exec.Command("ffmpeg",
 		"-y",
 		"-i", videoPath,
@@ -310,8 +311,8 @@ func convertToWebP(videoPath, webpPath string, width int, slowdown float64) erro
 		return fmt.Errorf("ffmpeg to GIF: %w", err)
 	}
 
-	// Step 2: Convert GIF to WebP using gif2webp
-	cmd = exec.Command("gif2webp", "-q", "80", tempGIF, "-o", webpPath)
+	// Step 2: Convert GIF to WebP with high quality
+	cmd = exec.Command("gif2webp", "-q", "90", "-m", "6", tempGIF, "-o", webpPath)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
