@@ -251,6 +251,9 @@ Open http://localhost:5173 to see the UI.
 | `make build` | Build engine + analyzer binaries |
 | `cd web && npm run dev` | Start Vite dev server |
 | `cd web && npm run build` | Production build |
+| `make screenshots-install` | Install Playwright browsers |
+| `make screenshots` | Capture UI screenshots (headless) |
+| `make screenshots-headed` | Capture UI screenshots (visible browser) |
 
 ### Test Fixtures
 
@@ -273,6 +276,33 @@ go run ./cmd/exportverify --manifest <path>/checksums.txt
 
 Validates SHA256 checksums for exported bundles.
 
+### Screenshot Capture
+
+Automated screenshot capture using Playwright-Go for README assets and visual regression testing.
+
+```bash
+# One-time: Install Playwright browsers
+make screenshots-install
+
+# Start the web UI (in a separate terminal)
+make run-web
+
+# Capture screenshots (headless mode)
+make screenshots
+
+# Or watch the browser (useful for debugging)
+make screenshots-headed
+```
+
+The screenshot tool captures 5 views:
+- `algiers-library-view.png` — Library grid with filters
+- `algiers-hero.png` — Active waveform with spectrum analyzer
+- `algiers-set-builder.png` — Set Builder with energy arc
+- `algiers-graph-view.png` — D3.js transition graph
+- `algiers-light-mode.png` — Light mode theme
+
+Screenshots are saved to `docs/assets/screens/` at 1920x1080 @2x (retina).
+
 ## Project Layout
 
 ```
@@ -280,7 +310,8 @@ Validates SHA256 checksums for exported bundles.
 ├── cmd/
 │   ├── engine/          # Go gRPC server entrypoint
 │   ├── exportverify/    # Checksum verification CLI
-│   └── fixturegen/      # Test audio generator
+│   ├── fixturegen/      # Test audio generator
+│   └── screenshots/     # Playwright-Go screenshot capture
 ├── analyzer-swift/      # Swift analyzer module (Metal + Core ML)
 │   ├── Package.swift
 │   └── Sources/
