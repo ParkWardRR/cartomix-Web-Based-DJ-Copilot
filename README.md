@@ -53,7 +53,7 @@
 
 ### See it in action
 
-![Algiers Demo](docs/assets/screens/algiers-demo.gif)
+![Algiers Demo](docs/assets/screens/algiers-demo.webp)
 
 **100% local. No cloud. ANE + Metal accelerated. Private by design.**
 
