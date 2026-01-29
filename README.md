@@ -6,40 +6,19 @@
 
 **Apple Silicon–native DJ prep tool: analyze, cue, transition, export — all local.**
 
+| | | | |
+|:---:|:---:|:---:|:---:|
+| **Status** | [![Phase](https://img.shields.io/badge/alpha-blueviolet?style=for-the-badge)](#alpha-features) | [![Version](https://img.shields.io/badge/v0.1.0-blue?style=for-the-badge)](#changelog) | [![Local-First](https://img.shields.io/badge/local--first-success?style=for-the-badge)](#what-this-is) |
+| **Platform** | [![Apple Silicon](https://img.shields.io/badge/M1--M5-000000?style=for-the-badge&logo=apple&logoColor=white)](#apple-silicon-only) | [![ANE](https://img.shields.io/badge/Neural%20Engine-FF9500?style=for-the-badge&logo=apple&logoColor=white)](#hardware-acceleration-m1-m5) | [![Metal](https://img.shields.io/badge/Metal%20GPU-147EFB?style=for-the-badge&logo=apple&logoColor=white)](#hardware-acceleration-m1-m5) |
+| **Backend** | [![Go](https://img.shields.io/badge/Go%201.24-00ADD8?style=for-the-badge&logo=go&logoColor=white)](#architecture) | [![Swift](https://img.shields.io/badge/Swift%206-F05138?style=for-the-badge&logo=swift&logoColor=white)](#architecture) | [![gRPC](https://img.shields.io/badge/gRPC-4285F4?style=for-the-badge&logo=google&logoColor=white)](#architecture) |
+| **Frontend** | [![React](https://img.shields.io/badge/React%2019-61DAFB?style=for-the-badge&logo=react&logoColor=black)](#architecture) | [![D3.js](https://img.shields.io/badge/D3.js%207-F9A03C?style=for-the-badge&logo=d3.js&logoColor=white)](#pro-visualizations) | [![Framer](https://img.shields.io/badge/Framer%20Motion-0055FF?style=for-the-badge&logo=framer&logoColor=white)](#pro-visualizations) |
+| **Quality** | [![Tests](https://img.shields.io/badge/Go%20%7C%20Playwright-FF69B4?style=for-the-badge)](#developer-loop) | [![Docs](https://img.shields.io/badge/PLAN.md-8E43E7?style=for-the-badge)](docs/PLAN.md) | [![License](https://img.shields.io/badge/Blue%20Oak-lightgray?style=for-the-badge)](LICENSE) |
+
+<br/>
+
+### See it in action
+
 ![Algiers Demo](docs/assets/screens/algiers-demo.gif)
-
-<!-- Status & Version -->
-[![Phase](https://img.shields.io/badge/phase-alpha-blueviolet?style=flat-square)](#alpha-features)
-[![Version](https://img.shields.io/badge/version-0.1.0--alpha-blue?style=flat-square)](#changelog)
-[![Status](https://img.shields.io/badge/status-local--first-success?style=flat-square)](#what-this-is)
-
-<!-- Apple Silicon Platform -->
-[![Platform](https://img.shields.io/badge/Apple%20Silicon-M1--M5-000000?style=flat-square&logo=apple)](#apple-silicon-only)
-[![Neural Engine](https://img.shields.io/badge/ANE-Core%20ML-FF9500?style=flat-square&logo=apple)](#hardware-acceleration-m1-m5)
-[![Metal](https://img.shields.io/badge/Metal-GPU%20DSP-147EFB?style=flat-square&logo=apple)](#hardware-acceleration-m1-m5)
-[![Accelerate](https://img.shields.io/badge/Accelerate-vDSP-34C759?style=flat-square&logo=apple)](#hardware-acceleration-m1-m5)
-
-<!-- Tech Stack: Backend -->
-[![Go](https://img.shields.io/badge/Go-1.24-00ADD8?style=flat-square&logo=go&logoColor=white)](#architecture)
-[![Swift](https://img.shields.io/badge/Swift-6.0-F05138?style=flat-square&logo=swift&logoColor=white)](#architecture)
-[![gRPC](https://img.shields.io/badge/gRPC-Protocol%20Buffers-4285F4?style=flat-square&logo=google&logoColor=white)](#architecture)
-[![SQLite](https://img.shields.io/badge/SQLite-WAL-003B57?style=flat-square&logo=sqlite&logoColor=white)](#architecture)
-
-<!-- Tech Stack: Frontend -->
-[![React](https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react&logoColor=black)](#architecture)
-[![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?style=flat-square&logo=typescript&logoColor=white)](#architecture)
-[![Vite](https://img.shields.io/badge/Vite-7-646CFF?style=flat-square&logo=vite&logoColor=white)](#architecture)
-[![D3.js](https://img.shields.io/badge/D3.js-7-F9A03C?style=flat-square&logo=d3.js&logoColor=white)](#pro-visualizations)
-[![Framer Motion](https://img.shields.io/badge/Framer-Motion%2011-0055FF?style=flat-square&logo=framer&logoColor=white)](#pro-visualizations)
-
-<!-- Quality & Docs -->
-[![Tests](https://img.shields.io/badge/tests-Go%20%7C%20Playwright-FF69B4?style=flat-square)](#developer-loop)
-[![Docs](https://img.shields.io/badge/docs-PLAN.md-8E43E7?style=flat-square)](docs/PLAN.md)
-[![Roadmap](https://img.shields.io/badge/roadmap-2026--01--29-2979FF?style=flat-square)](docs/ROADMAP.md)
-
-<!-- Community -->
-[![License](https://img.shields.io/badge/license-Blue%20Oak%201.0.0-lightgray?style=flat-square)](LICENSE)
-[![PRs](https://img.shields.io/badge/PRs-welcome-17A2B8?style=flat-square)](#contributing)
 
 **100% local. No cloud. ANE + Metal accelerated. Private by design.**
 
