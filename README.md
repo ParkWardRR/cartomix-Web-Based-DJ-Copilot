@@ -1,8 +1,13 @@
 <div align="center">
 
+> **⚠️ ARCHIVED PROTOTYPE**
+>
+> This project is being archived as a prototype. Development has moved to:
+> **[CartoMix - DJ Set Prep Copilot](https://github.com/ParkWardRR/CartoMix---DJ-Set-Prep-Copilot)**
+
 <img src="docs/assets/logo.svg" alt="Algiers - DJ Set Prep Copilot" width="100" />
 
-# Algiers — DJ Set Prep Copilot
+# Algiers — DJ Set Prep Copilot (Prototype)
 
 **Apple Silicon–native DJ prep tool: analyze, cue, transition, export — all local.**
 
