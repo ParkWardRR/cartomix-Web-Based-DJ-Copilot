@@ -24,7 +24,7 @@ YELLOW := \033[33m
 GREEN := \033[32m
 RESET := \033[0m
 
-.PHONY: all build build-engine build-analyzer build-web test test-go test-swift test-web test-e2e lint proto deps clean help install run run-stack run-engine run-analyzer run-web dev screenshots
+.PHONY: all build build-engine build-analyzer build-web build-macos build-macos-debug run-macos test test-go test-swift test-web test-e2e lint proto deps clean help install run run-stack run-engine run-analyzer run-web dev screenshots
 
 # ============================================================================
 # Main Targets
@@ -51,10 +51,19 @@ help:
 	@echo "$(YELLOW)Other:$(RESET)"
 	@grep -E '^## (lint|screenshots|clean|fixturegen)' $(MAKEFILE_LIST) | sed -E 's/^## /  make /' | sed -E 's/: /\t/' | column -t -s $$'\t'
 	@echo ""
+	@echo "$(YELLOW)macOS App:$(RESET)"
+	@echo "  make build-macos       # Build standalone macOS app"
+	@echo "  make build-macos-debug # Build in debug mode"
+	@echo "  make run-macos         # Build and launch the app"
+	@echo ""
 	@echo "$(GREEN)Quick Start:$(RESET)"
 	@echo "  make install      # First-time setup"
 	@echo "  make run-stack    # Start all services"
 	@echo "  open http://localhost:5173"
+	@echo ""
+	@echo "$(GREEN)macOS App:$(RESET)"
+	@echo "  make build-macos  # Build Algiers.app"
+	@echo "  make run-macos    # Build and launch"
 	@echo ""
 
 ## install: First-time setup (install all dependencies and build)
@@ -254,10 +263,33 @@ clean:
 	@echo "Cleaning build artifacts..."
 	@rm -rf $(WEB_DIR)/dist
 	@rm -rf $(SWIFT_DIR)/.build
+	@rm -rf build/
 	@rm -f $(ENGINE_BIN)
 	@rm -f coverage.out coverage.html
 	@go clean ./...
 	@echo "$(GREEN)✔ Clean complete$(RESET)"
+
+# ============================================================================
+# macOS App Targets
+# ============================================================================
+
+## build-macos: Build the standalone macOS app (Algiers.app)
+build-macos:
+	@echo "Building Algiers macOS app..."
+	@chmod +x scripts/build-macos.sh
+	@./scripts/build-macos.sh
+	@echo "$(GREEN)✔ macOS app built: build/Algiers.app$(RESET)"
+
+## build-macos-debug: Build macOS app in debug mode
+build-macos-debug:
+	@echo "Building Algiers macOS app (Debug)..."
+	@chmod +x scripts/build-macos.sh
+	@./scripts/build-macos.sh --debug
+
+## run-macos: Build and run the macOS app
+run-macos: build-macos
+	@echo "Launching Algiers.app..."
+	@open build/Algiers.app
 
 ## deps: Install all dependencies
 deps: deps-go deps-web

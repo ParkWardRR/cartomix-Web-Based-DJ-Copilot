@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -86,6 +88,37 @@ func (s *Server) registerRoutes() {
 	s.mux.HandleFunc("GET /api/training/models", s.handleListModelVersions)
 	s.mux.HandleFunc("POST /api/training/models/{version}/activate", s.handleActivateModel)
 	s.mux.HandleFunc("DELETE /api/training/models/{version}", s.handleDeleteModel)
+
+	// Static file serving (for standalone app mode)
+	if s.cfg.WebRoot != "" {
+		s.mux.HandleFunc("/", s.handleStaticFiles)
+	}
+}
+
+// handleStaticFiles serves static files from WebRoot with SPA fallback to index.html
+func (s *Server) handleStaticFiles(w http.ResponseWriter, r *http.Request) {
+	// Don't serve static files for API routes
+	if strings.HasPrefix(r.URL.Path, "/api/") {
+		http.NotFound(w, r)
+		return
+	}
+
+	path := filepath.Join(s.cfg.WebRoot, r.URL.Path)
+
+	// Check if file exists
+	if info, err := os.Stat(path); err == nil && !info.IsDir() {
+		http.ServeFile(w, r, path)
+		return
+	}
+
+	// SPA fallback: serve index.html for non-file routes
+	indexPath := filepath.Join(s.cfg.WebRoot, "index.html")
+	if _, err := os.Stat(indexPath); err == nil {
+		http.ServeFile(w, r, indexPath)
+		return
+	}
+
+	http.NotFound(w, r)
 }
 
 func corsMiddleware(next http.Handler) http.Handler {

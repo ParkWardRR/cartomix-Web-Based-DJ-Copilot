@@ -9,7 +9,7 @@ import AnalyzerSwift
 
 /// gRPC server for the analyzer worker service
 /// Implements the AnalyzerWorker proto service
-public final class AnalyzerGRPCServer {
+public final class AnalyzerGRPCServer: @unchecked Sendable {
     private let port: Int
     private let logger: Logger
     private let group: MultiThreadedEventLoopGroup
@@ -54,7 +54,7 @@ public final class AnalyzerGRPCServer {
 
 /// Provider implementation for the AnalyzerWorker service
 /// Maps gRPC calls to the Swift analyzer
-final class AnalyzerWorkerProvider: CallHandlerProvider {
+final class AnalyzerWorkerProvider: CallHandlerProvider, @unchecked Sendable {
     var serviceName: Substring { "cartomix.analyzer.AnalyzerWorker" }
 
     private let logger: Logger
@@ -103,10 +103,8 @@ final class AnalyzerWorkerProvider: CallHandlerProvider {
                     return
                 }
 
-                // Run analysis with progress logging
-                let result = try await analyzer.analyze(path: request.path) { [weak self] progress in
-                    self?.logger.debug("Analysis progress: \(progress)")
-                }
+                // Run analysis (without progress callback to avoid Sendable issues)
+                let result = try await analyzer.analyze(path: request.path, progress: nil)
 
                 // Convert to proto response
                 let response = AnalyzeResultResponse(from: result)
@@ -120,7 +118,7 @@ final class AnalyzerWorkerProvider: CallHandlerProvider {
 
             } catch {
                 logger.error("Analysis failed", metadata: ["error": "\(error)"])
-                promise.fail(GRPCStatus(code: .internal, message: error.localizedDescription))
+                promise.fail(GRPCStatus(code: .internalError, message: error.localizedDescription))
             }
         }
 
@@ -153,45 +151,38 @@ public struct AnalyzeJobRequest: Message, Sendable {
     public mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
         while let fieldNumber = try decoder.nextFieldNumber() {
             switch fieldNumber {
-            case 1: // TrackId (nested, extract content_hash)
-                var nested = try decoder.decodeNestedMessage()
-                while let nestedField = try nested.nextFieldNumber() {
-                    if nestedField == 1 {
-                        try nested.decodeSingularStringField(value: &contentHash)
-                    } else if nestedField == 2 {
-                        try nested.decodeSingularStringField(value: &path)
+            case 1: // TrackId (nested message)
+                var trackId: TrackIdMessage?
+                try decoder.decodeSingularMessageField(value: &trackId)
+                if let tid = trackId {
+                    self.contentHash = tid.contentHash
+                    if !tid.path.isEmpty {
+                        self.path = tid.path
                     }
                 }
             case 2:
                 try decoder.decodeSingularStringField(value: &path)
-            case 3: // DecodeParams
-                var nested = try decoder.decodeNestedMessage()
-                while let nestedField = try nested.nextFieldNumber() {
-                    if nestedField == 1 {
-                        try nested.decodeSingularInt32Field(value: &targetSampleRate)
-                    } else if nestedField == 2 {
-                        try nested.decodeSingularBoolField(value: &mono)
-                    }
+            case 3: // DecodeParams (nested message)
+                var decodeParams: DecodeParamsMessage?
+                try decoder.decodeSingularMessageField(value: &decodeParams)
+                if let dp = decodeParams {
+                    self.targetSampleRate = dp.sampleRate
+                    self.mono = dp.mono
                 }
-            case 4: // BeatgridParams
-                var nested = try decoder.decodeNestedMessage()
-                while let nestedField = try nested.nextFieldNumber() {
-                    if nestedField == 1 {
-                        try nested.decodeSingularBoolField(value: &dynamicTempo)
-                    } else if nestedField == 2 {
-                        try nested.decodeSingularDoubleField(value: &tempoFloor)
-                    } else if nestedField == 3 {
-                        try nested.decodeSingularDoubleField(value: &tempoCeil)
-                    }
+            case 4: // BeatgridParams (nested message)
+                var beatgridParams: BeatgridParamsMessage?
+                try decoder.decodeSingularMessageField(value: &beatgridParams)
+                if let bp = beatgridParams {
+                    self.dynamicTempo = bp.dynamic
+                    self.tempoFloor = bp.floor
+                    self.tempoCeil = bp.ceil
                 }
-            case 5: // CueParams
-                var nested = try decoder.decodeNestedMessage()
-                while let nestedField = try nested.nextFieldNumber() {
-                    if nestedField == 1 {
-                        try nested.decodeSingularInt32Field(value: &maxCues)
-                    } else if nestedField == 2 {
-                        try nested.decodeSingularBoolField(value: &snapToDownbeat)
-                    }
+            case 5: // CueParams (nested message)
+                var cueParams: CueParamsMessage?
+                try decoder.decodeSingularMessageField(value: &cueParams)
+                if let cp = cueParams {
+                    self.maxCues = cp.maxCues
+                    self.snapToDownbeat = cp.snap
                 }
             case 6:
                 try decoder.decodeSingularInt32Field(value: &analysisVersion)
@@ -222,72 +213,151 @@ public struct AnalyzeJobRequest: Message, Sendable {
                lhs.targetSampleRate == rhs.targetSampleRate &&
                lhs.mono == rhs.mono
     }
+
+    public func isEqualTo(message: any Message) -> Bool {
+        guard let other = message as? AnalyzeJobRequest else { return false }
+        return self == other
+    }
 }
 
 // Helper nested message types
 struct TrackIdMessage: Message, Sendable {
     static let protoMessageName = "cartomix.common.TrackId"
-    var contentHash: String
-    var path: String
+    var contentHash: String = ""
+    var path: String = ""
     var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {}
+    init() {}
+    init(contentHash: String, path: String) {
+        self.contentHash = contentHash
+        self.path = path
+    }
+
+    mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+        while let fieldNumber = try decoder.nextFieldNumber() {
+            switch fieldNumber {
+            case 1: try decoder.decodeSingularStringField(value: &contentHash)
+            case 2: try decoder.decodeSingularStringField(value: &path)
+            default: break
+            }
+        }
+    }
     func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-        try visitor.visitSingularStringField(value: contentHash, fieldNumber: 1)
-        try visitor.visitSingularStringField(value: path, fieldNumber: 2)
+        if !contentHash.isEmpty { try visitor.visitSingularStringField(value: contentHash, fieldNumber: 1) }
+        if !path.isEmpty { try visitor.visitSingularStringField(value: path, fieldNumber: 2) }
     }
     static func ==(lhs: TrackIdMessage, rhs: TrackIdMessage) -> Bool {
         lhs.contentHash == rhs.contentHash && lhs.path == rhs.path
+    }
+    func isEqualTo(message: any Message) -> Bool {
+        guard let other = message as? TrackIdMessage else { return false }
+        return self == other
     }
 }
 
 struct DecodeParamsMessage: Message, Sendable {
     static let protoMessageName = "cartomix.analyzer.DecodeParams"
-    var sampleRate: Int32
-    var mono: Bool
+    var sampleRate: Int32 = 48000
+    var mono: Bool = true
     var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {}
+    init() {}
+    init(sampleRate: Int32, mono: Bool) {
+        self.sampleRate = sampleRate
+        self.mono = mono
+    }
+
+    mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+        while let fieldNumber = try decoder.nextFieldNumber() {
+            switch fieldNumber {
+            case 1: try decoder.decodeSingularInt32Field(value: &sampleRate)
+            case 2: try decoder.decodeSingularBoolField(value: &mono)
+            default: break
+            }
+        }
+    }
     func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-        try visitor.visitSingularInt32Field(value: sampleRate, fieldNumber: 1)
-        try visitor.visitSingularBoolField(value: mono, fieldNumber: 2)
+        if sampleRate != 0 { try visitor.visitSingularInt32Field(value: sampleRate, fieldNumber: 1) }
+        if mono { try visitor.visitSingularBoolField(value: mono, fieldNumber: 2) }
     }
     static func ==(lhs: DecodeParamsMessage, rhs: DecodeParamsMessage) -> Bool {
         lhs.sampleRate == rhs.sampleRate && lhs.mono == rhs.mono
+    }
+    func isEqualTo(message: any Message) -> Bool {
+        guard let other = message as? DecodeParamsMessage else { return false }
+        return self == other
     }
 }
 
 struct BeatgridParamsMessage: Message, Sendable {
     static let protoMessageName = "cartomix.analyzer.BeatgridParams"
-    var dynamic: Bool
-    var floor: Double
-    var ceil: Double
+    var dynamic: Bool = false
+    var floor: Double = 60.0
+    var ceil: Double = 180.0
     var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {}
+    init() {}
+    init(dynamic: Bool, floor: Double, ceil: Double) {
+        self.dynamic = dynamic
+        self.floor = floor
+        self.ceil = ceil
+    }
+
+    mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+        while let fieldNumber = try decoder.nextFieldNumber() {
+            switch fieldNumber {
+            case 1: try decoder.decodeSingularBoolField(value: &dynamic)
+            case 2: try decoder.decodeSingularDoubleField(value: &floor)
+            case 3: try decoder.decodeSingularDoubleField(value: &ceil)
+            default: break
+            }
+        }
+    }
     func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-        try visitor.visitSingularBoolField(value: dynamic, fieldNumber: 1)
-        try visitor.visitSingularDoubleField(value: floor, fieldNumber: 2)
-        try visitor.visitSingularDoubleField(value: ceil, fieldNumber: 3)
+        if dynamic { try visitor.visitSingularBoolField(value: dynamic, fieldNumber: 1) }
+        if floor != 0 { try visitor.visitSingularDoubleField(value: floor, fieldNumber: 2) }
+        if ceil != 0 { try visitor.visitSingularDoubleField(value: ceil, fieldNumber: 3) }
     }
     static func ==(lhs: BeatgridParamsMessage, rhs: BeatgridParamsMessage) -> Bool {
         lhs.dynamic == rhs.dynamic && lhs.floor == rhs.floor && lhs.ceil == rhs.ceil
+    }
+    func isEqualTo(message: any Message) -> Bool {
+        guard let other = message as? BeatgridParamsMessage else { return false }
+        return self == other
     }
 }
 
 struct CueParamsMessage: Message, Sendable {
     static let protoMessageName = "cartomix.analyzer.CueParams"
-    var maxCues: Int32
-    var snap: Bool
+    var maxCues: Int32 = 8
+    var snap: Bool = true
     var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {}
+    init() {}
+    init(maxCues: Int32, snap: Bool) {
+        self.maxCues = maxCues
+        self.snap = snap
+    }
+
+    mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {
+        while let fieldNumber = try decoder.nextFieldNumber() {
+            switch fieldNumber {
+            case 1: try decoder.decodeSingularInt32Field(value: &maxCues)
+            case 2: try decoder.decodeSingularBoolField(value: &snap)
+            default: break
+            }
+        }
+    }
     func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
-        try visitor.visitSingularInt32Field(value: maxCues, fieldNumber: 1)
-        try visitor.visitSingularBoolField(value: snap, fieldNumber: 2)
+        if maxCues != 0 { try visitor.visitSingularInt32Field(value: maxCues, fieldNumber: 1) }
+        if snap { try visitor.visitSingularBoolField(value: snap, fieldNumber: 2) }
     }
     static func ==(lhs: CueParamsMessage, rhs: CueParamsMessage) -> Bool {
         lhs.maxCues == rhs.maxCues && lhs.snap == rhs.snap
+    }
+    func isEqualTo(message: any Message) -> Bool {
+        guard let other = message as? CueParamsMessage else { return false }
+        return self == other
     }
 }
 
@@ -296,14 +366,12 @@ struct CueParamsMessage: Message, Sendable {
 public struct AnalyzeResultResponse: Message, Sendable {
     public static let protoMessageName = "cartomix.analyzer.AnalyzeResult"
 
-    public var analysis: TrackAnalysisProto
+    public var analysis: TrackAnalysisProto = TrackAnalysisProto()
     public var waveformTiles: Data = Data()
 
     public var unknownFields = SwiftProtobuf.UnknownStorage()
 
-    public init() {
-        self.analysis = TrackAnalysisProto()
-    }
+    public init() {}
 
     public init(from result: TrackAnalysisResult) {
         self.analysis = TrackAnalysisProto(from: result)
@@ -318,7 +386,11 @@ public struct AnalyzeResultResponse: Message, Sendable {
         while let fieldNumber = try decoder.nextFieldNumber() {
             switch fieldNumber {
             case 1:
-                try decoder.decodeSingularMessageField(value: &analysis)
+                var optionalAnalysis: TrackAnalysisProto?
+                try decoder.decodeSingularMessageField(value: &optionalAnalysis)
+                if let a = optionalAnalysis {
+                    self.analysis = a
+                }
             case 2:
                 try decoder.decodeSingularBytesField(value: &waveformTiles)
             default:
@@ -336,6 +408,11 @@ public struct AnalyzeResultResponse: Message, Sendable {
 
     public static func ==(lhs: AnalyzeResultResponse, rhs: AnalyzeResultResponse) -> Bool {
         return lhs.analysis == rhs.analysis && lhs.waveformTiles == rhs.waveformTiles
+    }
+
+    public func isEqualTo(message: any Message) -> Bool {
+        guard let other = message as? AnalyzeResultResponse else { return false }
+        return self == other
     }
 }
 
@@ -448,14 +525,25 @@ public struct TrackAnalysisProto: Message, Sendable {
     public static func ==(lhs: TrackAnalysisProto, rhs: TrackAnalysisProto) -> Bool {
         lhs.contentHash == rhs.contentHash && lhs.path == rhs.path
     }
+
+    public func isEqualTo(message: any Message) -> Bool {
+        guard let other = message as? TrackAnalysisProto else { return false }
+        return self == other
+    }
 }
 
 // Additional helper proto types
 struct BeatgridProto: Message, Sendable {
     static let protoMessageName = "cartomix.common.Beatgrid"
-    var bpm: Double
-    var confidence: Float
+    var bpm: Double = 0
+    var confidence: Float = 0
     var unknownFields = SwiftProtobuf.UnknownStorage()
+
+    init() {}
+    init(bpm: Double, confidence: Float) {
+        self.bpm = bpm
+        self.confidence = confidence
+    }
 
     mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {}
     func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
@@ -466,13 +554,23 @@ struct BeatgridProto: Message, Sendable {
     static func ==(lhs: BeatgridProto, rhs: BeatgridProto) -> Bool {
         lhs.bpm == rhs.bpm && lhs.confidence == rhs.confidence
     }
+    func isEqualTo(message: any Message) -> Bool {
+        guard let other = message as? BeatgridProto else { return false }
+        return self == other
+    }
 }
 
 struct TempoNodeProto: Message, Sendable {
     static let protoMessageName = "cartomix.common.TempoMapNode"
-    var beatIndex: Int32
-    var bpm: Double
+    var beatIndex: Int32 = 0
+    var bpm: Double = 0
     var unknownFields = SwiftProtobuf.UnknownStorage()
+
+    init() {}
+    init(beatIndex: Int32, bpm: Double) {
+        self.beatIndex = beatIndex
+        self.bpm = bpm
+    }
 
     mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {}
     func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
@@ -482,13 +580,23 @@ struct TempoNodeProto: Message, Sendable {
     static func ==(lhs: TempoNodeProto, rhs: TempoNodeProto) -> Bool {
         lhs.beatIndex == rhs.beatIndex && lhs.bpm == rhs.bpm
     }
+    func isEqualTo(message: any Message) -> Bool {
+        guard let other = message as? TempoNodeProto else { return false }
+        return self == other
+    }
 }
 
 struct MusicalKeyProto: Message, Sendable {
     static let protoMessageName = "cartomix.common.MusicalKey"
-    var value: String
-    var confidence: Float
+    var value: String = ""
+    var confidence: Float = 0
     var unknownFields = SwiftProtobuf.UnknownStorage()
+
+    init() {}
+    init(value: String, confidence: Float) {
+        self.value = value
+        self.confidence = confidence
+    }
 
     mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {}
     func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
@@ -499,14 +607,25 @@ struct MusicalKeyProto: Message, Sendable {
     static func ==(lhs: MusicalKeyProto, rhs: MusicalKeyProto) -> Bool {
         lhs.value == rhs.value
     }
+    func isEqualTo(message: any Message) -> Bool {
+        guard let other = message as? MusicalKeyProto else { return false }
+        return self == other
+    }
 }
 
 struct LoudnessProto: Message, Sendable {
     static let protoMessageName = "cartomix.common.Loudness"
-    var integrated: Float
-    var truePeak: Float
-    var range: Float
+    var integrated: Float = 0
+    var truePeak: Float = 0
+    var range: Float = 0
     var unknownFields = SwiftProtobuf.UnknownStorage()
+
+    init() {}
+    init(integrated: Float, truePeak: Float, range: Float) {
+        self.integrated = integrated
+        self.truePeak = truePeak
+        self.range = range
+    }
 
     mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {}
     func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
@@ -517,13 +636,23 @@ struct LoudnessProto: Message, Sendable {
     static func ==(lhs: LoudnessProto, rhs: LoudnessProto) -> Bool {
         lhs.integrated == rhs.integrated
     }
+    func isEqualTo(message: any Message) -> Bool {
+        guard let other = message as? LoudnessProto else { return false }
+        return self == other
+    }
 }
 
 struct OpenL3EmbeddingProto: Message, Sendable {
     static let protoMessageName = "cartomix.common.OpenL3Embedding"
-    var vector: [Float]
-    var windowCount: Int32
+    var vector: [Float] = []
+    var windowCount: Int32 = 0
     var unknownFields = SwiftProtobuf.UnknownStorage()
+
+    init() {}
+    init(vector: [Float], windowCount: Int32) {
+        self.vector = vector
+        self.windowCount = windowCount
+    }
 
     mutating func decodeMessage<D: SwiftProtobuf.Decoder>(decoder: inout D) throws {}
     func traverse<V: SwiftProtobuf.Visitor>(visitor: inout V) throws {
@@ -532,5 +661,9 @@ struct OpenL3EmbeddingProto: Message, Sendable {
     }
     static func ==(lhs: OpenL3EmbeddingProto, rhs: OpenL3EmbeddingProto) -> Bool {
         lhs.windowCount == rhs.windowCount
+    }
+    func isEqualTo(message: any Message) -> Bool {
+        guard let other = message as? OpenL3EmbeddingProto else { return false }
+        return self == other
     }
 }

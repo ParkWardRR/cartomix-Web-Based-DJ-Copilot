@@ -29,6 +29,9 @@ let package = Package(
                 .product(name: "SwiftProtobuf", package: "swift-protobuf"),
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
                 .product(name: "Logging", package: "swift-log"),
+            ],
+            swiftSettings: [
+                .unsafeFlags(["-parse-as-library"])
             ]),
         .target(
             name: "AnalyzerSwift",

@@ -12,6 +12,9 @@ type Config struct {
 	DataDir  string
 	LogLevel string
 
+	// Static file serving (for standalone app)
+	WebRoot string
+
 	// Analyzer settings
 	AnalyzerAddr string
 
@@ -26,6 +29,7 @@ func Parse() *Config {
 	flag.IntVar(&cfg.HTTPPort, "http-port", 8080, "HTTP REST API port")
 	flag.StringVar(&cfg.DataDir, "data-dir", defaultDataDir(), "data directory for SQLite and blobs")
 	flag.StringVar(&cfg.LogLevel, "log-level", "info", "log level (debug, info, warn, error)")
+	flag.StringVar(&cfg.WebRoot, "web-root", "", "static file directory to serve (empty = disabled)")
 	flag.StringVar(&cfg.AnalyzerAddr, "analyzer-addr", "localhost:50052", "analyzer worker gRPC address")
 	flag.BoolVar(&cfg.AuthEnabled, "auth", false, "enable API authentication (default: open for local use)")
 
