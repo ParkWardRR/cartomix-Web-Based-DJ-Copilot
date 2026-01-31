@@ -84,7 +84,7 @@ actor ProcessManager {
 
         let process = Process()
         process.executableURL = URL(fileURLWithPath: analyzerPath)
-        process.arguments = ["serve", "--port", "9090", "--proto", "http"]
+        process.arguments = ["serve", "--port", "50052", "--proto", "grpc"]
 
         let pipe = Pipe()
         process.standardOutput = pipe

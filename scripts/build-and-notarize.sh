@@ -51,7 +51,7 @@ echo "✓ Web assets built"
 echo ""
 echo ">>> Building Go engine..."
 cd "$PROJECT_ROOT"
-CGO_ENABLED=0 go build -ldflags="-s -w" -o "$BUILD_DIR/algiers-engine" ./cmd/engine
+CGO_ENABLED=1 go build -ldflags="-s -w" -o "$BUILD_DIR/algiers-engine" ./cmd/engine
 echo "✓ Engine built"
 
 # Step 3: Build Swift analyzer
