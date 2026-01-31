@@ -8,7 +8,7 @@
 
 <!-- Status & Version -->
 [![Phase](https://img.shields.io/badge/beta-blueviolet?style=for-the-badge)](#beta-features)
-[![Version](https://img.shields.io/badge/v0.5.1-blue?style=for-the-badge)](#changelog)
+[![Version](https://img.shields.io/badge/v0.6--beta-blue?style=for-the-badge)](#changelog)
 [![E2E Tests](https://img.shields.io/badge/E2E%20Tests-7%2F7%20Passing-brightgreen?style=for-the-badge)](#developer-loop)
 [![Local-First](https://img.shields.io/badge/local--first-success?style=for-the-badge)](#what-this-is)
 [![Privacy](https://img.shields.io/badge/100%25%20Local-222222?style=for-the-badge&logo=lock&logoColor=white)](#what-this-is)
@@ -785,7 +785,9 @@ The HTTP REST API remains available for backward compatibility but is **deprecat
 
 ### macOS Standalone App (Recommended)
 
-Download the latest release or build from source:
+**[⬇️ Download Algiers v0.6-beta DMG](https://github.com/ParkWardRR/cartomix-Web-Based-DJ-Copilot/releases/download/v0.6-beta/Algiers-v0.6-beta-AppleSilicon.dmg)** (20 MB)
+
+Or build from source:
 
 ```bash
 git clone https://github.com/ParkWardRR/cartomix-Web-Based-DJ-Copilot.git
