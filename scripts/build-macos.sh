@@ -108,9 +108,16 @@ mkdir -p "$RESOURCES_DIR/web"
 cp "$BUILD_DIR/algiers-engine" "$HELPERS_DIR/"
 chmod +x "$HELPERS_DIR/algiers-engine"
 
-# Copy analyzer
+# Copy analyzer binary
 cp "$BUILD_DIR/analyzer-swift" "$HELPERS_DIR/"
 chmod +x "$HELPERS_DIR/analyzer-swift"
+
+# Copy analyzer resources bundle (contains OpenL3 model)
+ANALYZER_BUNDLE="$PROJECT_ROOT/analyzer-swift/.build/release/AnalyzerSwift_AnalyzerSwift.bundle"
+if [ -d "$ANALYZER_BUNDLE" ]; then
+    cp -r "$ANALYZER_BUNDLE" "$HELPERS_DIR/"
+    echo "OpenL3 model bundle copied"
+fi
 
 # Copy web assets
 cp -r "$PROJECT_ROOT/web/dist/"* "$RESOURCES_DIR/web/"
