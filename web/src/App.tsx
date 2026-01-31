@@ -17,6 +17,8 @@ import { ModelSettings } from './components/ModelSettings';
 import { TrainingScreen } from './components/TrainingScreen';
 import { IntroWizard } from './components/IntroWizard';
 import { FolderDropZone } from './components/FolderDropZone';
+import { KeyboardShortcutsHelp } from './components/KeyboardShortcutsHelp';
+import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { useStore } from './store';
 
 function App() {
@@ -61,6 +63,9 @@ function App() {
     selectNoneTracks,
     analyzeBatchSelected,
   } = useStore();
+
+  // Initialize keyboard shortcuts
+  useKeyboardShortcuts();
 
   // Local UI state for playback simulation
   const [playheadPosition, setPlayheadPosition] = useState(0.3);
@@ -187,46 +192,63 @@ function App() {
             <span className="logo-icon">◈</span>
             Algiers
           </div>
-          <span className="version-badge">v0.9</span>
+          <span className="version-badge">v1.0</span>
           {!apiAvailable && <span className="demo-badge">demo</span>}
         </div>
         <nav className="header-nav">
           <button
             className={`nav-btn ${viewMode === 'library' ? 'active' : ''}`}
             onClick={() => setViewMode('library')}
+            title="Library (1)"
           >
             <span className="nav-icon">◫</span>
             Library
+            <span className="shortcut-hint">1</span>
           </button>
           <button
             className={`nav-btn ${viewMode === 'setBuilder' ? 'active' : ''}`}
             onClick={handleSetBuilderEnter}
+            title="Set Builder (2)"
           >
             <span className="nav-icon">≡</span>
             Set Builder
+            <span className="shortcut-hint">2</span>
           </button>
           <button
             className={`nav-btn ${viewMode === 'graph' ? 'active' : ''}`}
             onClick={() => setViewMode('graph')}
+            title="Graph (3)"
           >
             <span className="nav-icon">◎</span>
             Graph
+            <span className="shortcut-hint">3</span>
           </button>
           <button
             className={`nav-btn ${viewMode === 'settings' ? 'active' : ''}`}
             onClick={() => setViewMode('settings')}
+            title="Settings (4)"
           >
             <span className="nav-icon">⚙</span>
             Settings
+            <span className="shortcut-hint">4</span>
           </button>
           <button
             className={`nav-btn ${viewMode === 'training' ? 'active' : ''}`}
             onClick={() => setViewMode('training')}
+            title="Training (5)"
           >
             <span className="nav-icon">🤖</span>
             Training
+            <span className="shortcut-hint">5</span>
           </button>
           <div className="nav-divider" />
+          <button
+            className="help-btn"
+            onClick={() => window.dispatchEvent(new CustomEvent('show-shortcuts-help'))}
+            title="Keyboard shortcuts (?)"
+          >
+            ?
+          </button>
           <ThemeToggle />
         </nav>
       </header>
@@ -607,10 +629,13 @@ function App() {
       <footer className="app-footer">
         <span>Algiers · DJ Set Prep Copilot</span>
         <span className="muted">
-          v0.9-beta · Apple Silicon M1–M5
+          v1.0-beta · Apple Silicon M1–M5
           {apiAvailable ? ' · API connected' : ' · demo mode'}
         </span>
       </footer>
+
+      {/* Keyboard shortcuts help modal */}
+      <KeyboardShortcutsHelp />
     </div>
   );
 }
