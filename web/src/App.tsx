@@ -15,6 +15,7 @@ import { ExportPanel } from './components/ExportPanel';
 import { SimilarTracks } from './components/SimilarTracks';
 import { ModelSettings } from './components/ModelSettings';
 import { TrainingScreen } from './components/TrainingScreen';
+import { IntroWizard } from './components/IntroWizard';
 import { useStore } from './store';
 
 function App() {
@@ -49,6 +50,7 @@ function App() {
     checkApiHealth,
     proposeSet,
     fetchTrackDetail,
+    hasCompletedOnboarding,
   } = useStore();
 
   // Local UI state for playback simulation
@@ -145,6 +147,15 @@ function App() {
       setPlayheadPosition(0);
     }
   };
+
+  // Show intro wizard for new users
+  if (!hasCompletedOnboarding && tracks.length === 0) {
+    return (
+      <div className="app">
+        <IntroWizard />
+      </div>
+    );
+  }
 
   // Loading state
   if (isLoading) {
@@ -554,7 +565,7 @@ function App() {
       <footer className="app-footer">
         <span>Algiers · DJ Set Prep Copilot</span>
         <span className="muted">
-          v0.1.0-alpha · Apple Silicon M1–M5
+          v0.7-beta · Apple Silicon M1–M5
           {apiAvailable ? ' · API connected' : ' · demo mode'}
         </span>
       </footer>

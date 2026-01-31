@@ -6,7 +6,7 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 BUILD_DIR="$PROJECT_ROOT/build"
 PROFILE_NAME="notary-api"
-DMG_PATH="${1:-$BUILD_DIR/Algiers-v0.6-beta-AppleSilicon.dmg}"
+DMG_PATH="${1:-$BUILD_DIR/Algiers-v0.7-beta-AppleSilicon.dmg}"
 
 echo "=== Notarize DMG ==="
 echo ""
