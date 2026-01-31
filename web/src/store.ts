@@ -66,6 +66,8 @@ interface AppState {
 
   // Selection & UI
   selectedId: string | null;
+  batchSelectedIds: Set<string>;
+  batchMode: boolean;
   viewMode: ViewMode;
   query: string;
   onlyReview: boolean;
@@ -97,6 +99,10 @@ interface AppState {
   similarTracks: SimilarTrack[];
   similarTracksLoading: boolean;
   similarTracksError: string | null;
+
+  // Batch Operations
+  isAnalyzing: boolean;
+  analyzeProgress: { current: number; total: number; analyzing: string[] };
 
   // Computed
   filteredTracks: () => Track[];
@@ -142,6 +148,13 @@ interface AppState {
   updateMLSettings: (settings: Partial<MLSettings>) => Promise<void>;
   fetchSimilarTracks: (trackId: string, limit?: number) => Promise<void>;
   clearSimilarTracks: () => void;
+
+  // Batch Actions
+  setBatchMode: (enabled: boolean) => void;
+  toggleBatchSelection: (id: string) => void;
+  selectAllTracks: () => void;
+  selectNoneTracks: () => void;
+  analyzeBatchSelected: () => Promise<void>;
 }
 
 // Generate waveform from energy level (used when API doesn't return waveform)
@@ -256,6 +269,8 @@ export const useStore = create<AppState>((set, get) => ({
   trackMap: initialTrackMap,
   currentSetPlan: initialSetPlan,
   selectedId: initialTracks[0]?.id || null,
+  batchSelectedIds: new Set<string>(),
+  batchMode: false,
   viewMode: 'library',
   query: '',
   onlyReview: false,
@@ -287,6 +302,10 @@ export const useStore = create<AppState>((set, get) => ({
   similarTracks: [],
   similarTracksLoading: false,
   similarTracksError: null,
+
+  // Batch Operations
+  isAnalyzing: false,
+  analyzeProgress: { current: 0, total: 0, analyzing: [] },
 
   // Computed getters
   filteredTracks: () => {
@@ -614,5 +633,89 @@ export const useStore = create<AppState>((set, get) => ({
   // Clear similar tracks
   clearSimilarTracks: () => {
     set({ similarTracks: [], similarTracksError: null });
+  },
+
+  // Batch operations
+  setBatchMode: (enabled: boolean) => {
+    set({
+      batchMode: enabled,
+      batchSelectedIds: enabled ? get().batchSelectedIds : new Set<string>(),
+    });
+  },
+
+  toggleBatchSelection: (id: string) => {
+    const current = get().batchSelectedIds;
+    const next = new Set(current);
+    if (next.has(id)) {
+      next.delete(id);
+    } else {
+      next.add(id);
+    }
+    set({ batchSelectedIds: next });
+  },
+
+  selectAllTracks: () => {
+    const filtered = get().filteredTracks();
+    set({ batchSelectedIds: new Set(filtered.map((t) => t.id)) });
+  },
+
+  selectNoneTracks: () => {
+    set({ batchSelectedIds: new Set<string>() });
+  },
+
+  analyzeBatchSelected: async () => {
+    const { batchSelectedIds, apiAvailable, tracks } = get();
+    if (!apiAvailable || batchSelectedIds.size === 0) return;
+
+    const selectedIds = Array.from(batchSelectedIds);
+    set({
+      isAnalyzing: true,
+      analyzeProgress: { current: 0, total: selectedIds.length, analyzing: selectedIds },
+    });
+
+    try {
+      const result = await api.analyzeTracks({ track_ids: selectedIds });
+
+      // Refresh track list after analysis
+      const response = await api.listTracks({ limit: 500 });
+      const updatedTracks = response.map((t) => {
+        // Find existing track to preserve extended data
+        const existing = tracks.find((e) => e.id === t.content_hash);
+        return existing ? { ...existing, status: t.status as Track['status'] } : {
+          id: t.content_hash,
+          title: t.title || t.path.split('/').pop() || 'Unknown',
+          artist: t.artist || 'Unknown Artist',
+          bpm: t.bpm || 120,
+          key: t.key || '8A',
+          energy: t.energy || 5,
+          status: (t.status === 'analyzed' ? 'analyzed' : t.status === 'failed' ? 'failed' : 'pending') as Track['status'],
+          needsReview: t.needs_review,
+          path: t.path,
+          cues: [],
+          sections: [],
+          transitionWindows: [],
+          waveformSummary: [],
+        };
+      });
+
+      const trackMap: Record<string, Track> = {};
+      for (const t of updatedTracks) {
+        trackMap[t.id] = t;
+      }
+
+      set({
+        tracks: updatedTracks,
+        trackMap,
+        isAnalyzing: false,
+        analyzeProgress: { current: result.analyzed.length, total: selectedIds.length, analyzing: [] },
+        batchSelectedIds: new Set<string>(),
+        batchMode: false,
+      });
+    } catch (err) {
+      set({
+        isAnalyzing: false,
+        error: err instanceof Error ? err.message : 'Analysis failed',
+      });
+    }
   },
 }));

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { motion } from 'framer-motion';
+import type { MouseEvent as ReactMouseEvent } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import type { Cue, Section } from '../types';
 
 interface WaveformCanvasProps {
@@ -10,10 +11,14 @@ interface WaveformCanvasProps {
   duration?: number;
   isPlaying?: boolean;
   onSeek?: (position: number) => void;
+  onSectionsChange?: (sections: Section[]) => void;
   height?: number;
   showBeatGrid?: boolean;
   bpm?: number;
+  editable?: boolean;
 }
+
+const SECTION_LABELS = ['Intro', 'Build', 'Drop', 'Breakdown', 'Outro', 'Verse', 'Chorus', 'Body'] as const;
 
 const SECTION_COLORS: Record<string, string> = {
   Intro: 'rgba(34, 197, 94, 0.25)',
@@ -24,6 +29,20 @@ const SECTION_COLORS: Record<string, string> = {
   'Build/Drop': 'rgba(251, 191, 36, 0.25)',
   Body: 'rgba(59, 130, 246, 0.15)',
   Outro: 'rgba(234, 179, 8, 0.25)',
+  Verse: 'rgba(96, 165, 250, 0.25)',
+  Chorus: 'rgba(244, 114, 182, 0.25)',
+};
+
+const SECTION_BORDER_COLORS: Record<string, string> = {
+  Intro: '#22c55e',
+  Drop: '#ef4444',
+  Break: '#a855f7',
+  Breakdown: '#a855f7',
+  Build: '#fbbf24',
+  Body: '#3b82f6',
+  Outro: '#eab308',
+  Verse: '#60a5fa',
+  Chorus: '#f472b6',
 };
 
 const CUE_COLORS: Record<string, string> = {
@@ -36,6 +55,15 @@ const CUE_COLORS: Record<string, string> = {
   SafetyLoop: '#06b6d4',
 };
 
+interface EditingState {
+  mode: 'none' | 'creating' | 'resizing-start' | 'resizing-end' | 'moving';
+  sectionIndex?: number;
+  startBeat?: number;
+  startMouseX?: number;
+  originalStart?: number;
+  originalEnd?: number;
+}
+
 export function WaveformCanvas({
   peaks,
   sections = [],
@@ -44,15 +72,24 @@ export function WaveformCanvas({
   duration = 180,
   isPlaying = false,
   onSeek,
+  onSectionsChange,
   height = 120,
   showBeatGrid = true,
   bpm = 128,
+  editable = false,
 }: WaveformCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const animationRef = useRef<number>(0);
   const [hoveredCue] = useState<Cue | null>(null);
   const [dimensions, setDimensions] = useState({ width: 800, height });
+  const [editMode, setEditMode] = useState(false);
+  const [selectedSection, setSelectedSection] = useState<number | null>(null);
+  const [editingState, setEditingState] = useState<EditingState>({ mode: 'none' });
+  const [showLabelMenu, setShowLabelMenu] = useState<{ x: number; y: number; index: number } | null>(null);
+  const [hoveredSectionEdge, setHoveredSectionEdge] = useState<{ index: number; edge: 'start' | 'end' } | null>(null);
+
+  const totalBeats = peaks.length > 0 ? peaks.length : 384;
 
   // Resize observer for responsive canvas
   useEffect(() => {
@@ -69,6 +106,44 @@ export function WaveformCanvas({
     resizeObserver.observe(container);
     return () => resizeObserver.disconnect();
   }, [height]);
+
+  // Convert pixel position to beat
+  const pixelToBeat = useCallback((x: number) => {
+    const beat = Math.round((x / dimensions.width) * totalBeats);
+    return Math.max(0, Math.min(totalBeats, beat));
+  }, [dimensions.width, totalBeats]);
+
+  // Convert beat to pixel position
+  const beatToPixel = useCallback((beat: number) => {
+    return (beat / totalBeats) * dimensions.width;
+  }, [dimensions.width, totalBeats]);
+
+  // Check if mouse is near section edge
+  const getSectionEdgeAtPosition = useCallback((x: number): { index: number; edge: 'start' | 'end' } | null => {
+    const threshold = 8; // pixels
+    for (let i = 0; i < sections.length; i++) {
+      const startX = beatToPixel(sections[i].start);
+      const endX = beatToPixel(sections[i].end);
+      if (Math.abs(x - startX) < threshold) {
+        return { index: i, edge: 'start' };
+      }
+      if (Math.abs(x - endX) < threshold) {
+        return { index: i, edge: 'end' };
+      }
+    }
+    return null;
+  }, [sections, beatToPixel]);
+
+  // Check if mouse is inside a section
+  const getSectionAtPosition = useCallback((x: number): number | null => {
+    const beat = pixelToBeat(x);
+    for (let i = 0; i < sections.length; i++) {
+      if (beat >= sections[i].start && beat <= sections[i].end) {
+        return i;
+      }
+    }
+    return null;
+  }, [sections, pixelToBeat]);
 
   // High-performance canvas rendering
   const render = useCallback(() => {
@@ -92,12 +167,34 @@ export function WaveformCanvas({
     ctx.clearRect(0, 0, width, h);
 
     // Draw sections background
-    const totalBeats = peaks.length > 0 ? peaks.length : 384;
-    sections.forEach((section) => {
+    sections.forEach((section, i) => {
       const x = (section.start / totalBeats) * width;
       const w = ((section.end - section.start) / totalBeats) * width;
       ctx.fillStyle = SECTION_COLORS[section.label] || 'rgba(100, 100, 100, 0.1)';
       ctx.fillRect(x, 0, w, h);
+
+      // Draw selection highlight
+      if (editMode && selectedSection === i) {
+        ctx.strokeStyle = SECTION_BORDER_COLORS[section.label] || '#a855f7';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(x + 1, 1, w - 2, h - 2);
+      }
+
+      // Draw resize handles in edit mode
+      if (editMode) {
+        const handleWidth = 6;
+        const handleColor = SECTION_BORDER_COLORS[section.label] || '#a855f7';
+
+        // Start handle
+        ctx.fillStyle = hoveredSectionEdge?.index === i && hoveredSectionEdge?.edge === 'start'
+          ? handleColor : `${handleColor}88`;
+        ctx.fillRect(x, 0, handleWidth, h);
+
+        // End handle
+        ctx.fillStyle = hoveredSectionEdge?.index === i && hoveredSectionEdge?.edge === 'end'
+          ? handleColor : `${handleColor}88`;
+        ctx.fillRect(x + w - handleWidth, 0, handleWidth, h);
+      }
     });
 
     // Draw beat grid
@@ -111,7 +208,6 @@ export function WaveformCanvas({
 
       for (let i = 0; i < totalBeatsInDuration; i++) {
         const x = i * beatWidth;
-        // Stronger line every 4 beats (bar)
         if (i % 4 === 0) {
           ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
         } else {
@@ -133,17 +229,14 @@ export function WaveformCanvas({
       const normalizedPeak = peak / 10;
       const barHeight = normalizedPeak * (h * 0.8);
 
-      // Gradient based on position relative to playhead
       const position = i / peaks.length;
       if (position < playheadPosition) {
-        // Played portion - accent color
         const gradient = ctx.createLinearGradient(x, centerY - barHeight / 2, x, centerY + barHeight / 2);
         gradient.addColorStop(0, 'rgba(167, 139, 250, 0.9)');
         gradient.addColorStop(0.5, 'rgba(139, 92, 246, 1)');
         gradient.addColorStop(1, 'rgba(167, 139, 250, 0.9)');
         ctx.fillStyle = gradient;
       } else {
-        // Unplayed portion - primary color
         const gradient = ctx.createLinearGradient(x, centerY - barHeight / 2, x, centerY + barHeight / 2);
         gradient.addColorStop(0, 'rgba(59, 130, 246, 0.7)');
         gradient.addColorStop(0.5, 'rgba(59, 130, 246, 1)');
@@ -151,7 +244,6 @@ export function WaveformCanvas({
         ctx.fillStyle = gradient;
       }
 
-      // Draw mirrored bars for stereo effect
       ctx.beginPath();
       ctx.roundRect(x, centerY - barHeight / 2, barWidth, barHeight, 1);
       ctx.fill();
@@ -162,7 +254,6 @@ export function WaveformCanvas({
       const x = (cue.beat / totalBeats) * width;
       const color = CUE_COLORS[cue.type] || '#ffffff';
 
-      // Cue line
       ctx.strokeStyle = color;
       ctx.lineWidth = 2;
       ctx.beginPath();
@@ -170,7 +261,6 @@ export function WaveformCanvas({
       ctx.lineTo(x, h);
       ctx.stroke();
 
-      // Cue triangle marker at top
       ctx.fillStyle = color;
       ctx.beginPath();
       ctx.moveTo(x, 0);
@@ -184,7 +274,6 @@ export function WaveformCanvas({
     if (playheadPosition > 0) {
       const playheadX = playheadPosition * width;
 
-      // Glow effect
       ctx.shadowColor = '#a78bfa';
       ctx.shadowBlur = 10;
       ctx.strokeStyle = '#a78bfa';
@@ -195,15 +284,14 @@ export function WaveformCanvas({
       ctx.stroke();
       ctx.shadowBlur = 0;
 
-      // Playhead handle
       ctx.fillStyle = '#a78bfa';
       ctx.beginPath();
       ctx.arc(playheadX, h - 8, 6, 0, Math.PI * 2);
       ctx.fill();
     }
-  }, [peaks, sections, cues, playheadPosition, duration, dimensions, showBeatGrid, bpm]);
+  }, [peaks, sections, cues, playheadPosition, duration, dimensions, showBeatGrid, bpm, editMode, selectedSection, totalBeats, hoveredSectionEdge, editingState]);
 
-  // Animation loop for smooth playhead
+  // Animation loop
   useEffect(() => {
     const animate = () => {
       render();
@@ -211,9 +299,7 @@ export function WaveformCanvas({
         animationRef.current = requestAnimationFrame(animate);
       }
     };
-
     animate();
-
     return () => {
       if (animationRef.current) {
         cancelAnimationFrame(animationRef.current);
@@ -221,17 +307,173 @@ export function WaveformCanvas({
     };
   }, [render, isPlaying]);
 
-  // Re-render on state changes
   useEffect(() => {
     render();
   }, [render]);
 
-  const handleClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!onSeek || !canvasRef.current) return;
+  // Mouse handlers for section editing
+  const handleMouseDown = (e: ReactMouseEvent<HTMLCanvasElement>) => {
+    if (!canvasRef.current) return;
     const rect = canvasRef.current.getBoundingClientRect();
     const x = e.clientX - rect.left;
-    const position = x / rect.width;
-    onSeek(Math.max(0, Math.min(1, position)));
+
+    if (editMode && onSectionsChange) {
+      // Check if clicking on section edge for resize
+      const edge = getSectionEdgeAtPosition(x);
+      if (edge) {
+        setEditingState({
+          mode: edge.edge === 'start' ? 'resizing-start' : 'resizing-end',
+          sectionIndex: edge.index,
+          startMouseX: x,
+          originalStart: sections[edge.index].start,
+          originalEnd: sections[edge.index].end,
+        });
+        return;
+      }
+
+      // Check if clicking inside a section for selection
+      const sectionIndex = getSectionAtPosition(x);
+      if (sectionIndex !== null) {
+        setSelectedSection(sectionIndex);
+        return;
+      }
+
+      // Start creating new section
+      const beat = pixelToBeat(x);
+      setEditingState({
+        mode: 'creating',
+        startBeat: beat,
+        startMouseX: x,
+      });
+      setSelectedSection(null);
+    } else if (onSeek) {
+      const position = x / rect.width;
+      onSeek(Math.max(0, Math.min(1, position)));
+    }
+  };
+
+  const handleMouseMove = (e: ReactMouseEvent<HTMLCanvasElement>) => {
+    if (!canvasRef.current) return;
+    const rect = canvasRef.current.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+
+    if (editMode) {
+      // Update cursor based on hover
+      const edge = getSectionEdgeAtPosition(x);
+      setHoveredSectionEdge(edge);
+
+      if (editingState.mode === 'resizing-start' && editingState.sectionIndex !== undefined) {
+        const newStart = pixelToBeat(x);
+        const newSections = [...sections];
+        newSections[editingState.sectionIndex] = {
+          ...newSections[editingState.sectionIndex],
+          start: Math.min(newStart, newSections[editingState.sectionIndex].end - 4),
+        };
+        onSectionsChange?.(newSections);
+      } else if (editingState.mode === 'resizing-end' && editingState.sectionIndex !== undefined) {
+        const newEnd = pixelToBeat(x);
+        const newSections = [...sections];
+        newSections[editingState.sectionIndex] = {
+          ...newSections[editingState.sectionIndex],
+          end: Math.max(newEnd, newSections[editingState.sectionIndex].start + 4),
+        };
+        onSectionsChange?.(newSections);
+      }
+    }
+  };
+
+  const handleMouseUp = (e: ReactMouseEvent<HTMLCanvasElement>) => {
+    if (!canvasRef.current) return;
+    const rect = canvasRef.current.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+
+    if (editingState.mode === 'creating' && editingState.startBeat !== undefined) {
+      const endBeat = pixelToBeat(x);
+      const start = Math.min(editingState.startBeat, endBeat);
+      const end = Math.max(editingState.startBeat, endBeat);
+
+      // Only create if selection is big enough (at least 4 beats)
+      if (end - start >= 4) {
+        const newSection: Section = {
+          start,
+          end,
+          label: 'Body', // Default label
+        };
+        const newSections = [...sections, newSection].sort((a, b) => a.start - b.start);
+        onSectionsChange?.(newSections);
+        setSelectedSection(newSections.findIndex(s => s.start === start && s.end === end));
+      }
+    }
+
+    setEditingState({ mode: 'none' });
+  };
+
+  const handleContextMenu = (e: ReactMouseEvent<HTMLCanvasElement>) => {
+    e.preventDefault();
+    if (!editMode || !canvasRef.current) return;
+
+    const rect = canvasRef.current.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const sectionIndex = getSectionAtPosition(x);
+
+    if (sectionIndex !== null) {
+      setShowLabelMenu({ x: e.clientX, y: e.clientY, index: sectionIndex });
+      setSelectedSection(sectionIndex);
+    }
+  };
+
+  const handleLabelChange = (label: string) => {
+    if (showLabelMenu && onSectionsChange) {
+      const newSections = [...sections];
+      newSections[showLabelMenu.index] = {
+        ...newSections[showLabelMenu.index],
+        label,
+      };
+      onSectionsChange(newSections);
+    }
+    setShowLabelMenu(null);
+  };
+
+  const handleDeleteSection = () => {
+    if (selectedSection !== null && onSectionsChange) {
+      const newSections = sections.filter((_, i) => i !== selectedSection);
+      onSectionsChange(newSections);
+      setSelectedSection(null);
+    }
+    setShowLabelMenu(null);
+  };
+
+  // Close menu on click outside
+  useEffect(() => {
+    const handleClickOutside = () => setShowLabelMenu(null);
+    if (showLabelMenu) {
+      document.addEventListener('click', handleClickOutside);
+      return () => document.removeEventListener('click', handleClickOutside);
+    }
+  }, [showLabelMenu]);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Delete' || e.key === 'Backspace') {
+        if (selectedSection !== null && editMode && onSectionsChange) {
+          handleDeleteSection();
+        }
+      }
+      if (e.key === 'Escape') {
+        setSelectedSection(null);
+        setShowLabelMenu(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedSection, editMode, onSectionsChange]);
+
+  const getCursor = () => {
+    if (!editMode) return onSeek ? 'pointer' : 'default';
+    if (hoveredSectionEdge) return 'ew-resize';
+    if (editingState.mode === 'creating') return 'crosshair';
+    return 'crosshair';
   };
 
   return (
@@ -252,12 +494,35 @@ export function WaveformCanvas({
     >
       <canvas
         ref={canvasRef}
-        onClick={handleClick}
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={() => {
+          setHoveredSectionEdge(null);
+          if (editingState.mode !== 'none') {
+            setEditingState({ mode: 'none' });
+          }
+        }}
+        onContextMenu={handleContextMenu}
         style={{
-          cursor: onSeek ? 'pointer' : 'default',
+          cursor: getCursor(),
           display: 'block',
         }}
       />
+
+      {/* Edit mode toggle */}
+      {editable && (
+        <button
+          className={`waveform-edit-btn ${editMode ? 'active' : ''}`}
+          onClick={() => {
+            setEditMode(!editMode);
+            setSelectedSection(null);
+          }}
+          title={editMode ? 'Exit edit mode' : 'Edit sections'}
+        >
+          {editMode ? '✓' : '✎'}
+        </button>
+      )}
 
       {/* Section labels */}
       <div
@@ -267,26 +532,30 @@ export function WaveformCanvas({
           left: 0,
           right: 0,
           display: 'flex',
-          pointerEvents: 'none',
+          pointerEvents: editMode ? 'auto' : 'none',
         }}
       >
         {sections.map((section, i) => {
-          const totalBeats = peaks.length > 0 ? peaks.length : 384;
           const left = `${(section.start / totalBeats) * 100}%`;
           return (
             <span
               key={i}
+              onClick={() => editMode && setSelectedSection(i)}
               style={{
                 position: 'absolute',
                 left,
                 fontSize: '0.65rem',
                 fontWeight: 500,
-                color: 'var(--color-text-secondary)',
+                color: selectedSection === i ? '#fff' : 'var(--color-text-secondary)',
                 textTransform: 'uppercase',
                 letterSpacing: '0.05em',
-                padding: '2px 4px',
-                background: 'rgba(0,0,0,0.4)',
-                borderRadius: 2,
+                padding: '2px 6px',
+                background: selectedSection === i
+                  ? SECTION_BORDER_COLORS[section.label] || '#a855f7'
+                  : 'rgba(0,0,0,0.5)',
+                borderRadius: 3,
+                cursor: editMode ? 'pointer' : 'default',
+                transition: 'all 0.15s',
               }}
             >
               {section.label}
@@ -294,6 +563,43 @@ export function WaveformCanvas({
           );
         })}
       </div>
+
+      {/* Label selection menu */}
+      <AnimatePresence>
+        {showLabelMenu && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            className="section-label-menu"
+            style={{
+              position: 'fixed',
+              left: showLabelMenu.x,
+              top: showLabelMenu.y,
+              zIndex: 1000,
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="menu-title">Section Type</div>
+            {SECTION_LABELS.map((label) => (
+              <button
+                key={label}
+                className={`menu-item ${sections[showLabelMenu.index]?.label === label ? 'active' : ''}`}
+                onClick={() => handleLabelChange(label)}
+                style={{
+                  borderLeft: `3px solid ${SECTION_BORDER_COLORS[label] || '#666'}`,
+                }}
+              >
+                {label}
+              </button>
+            ))}
+            <div className="menu-divider" />
+            <button className="menu-item delete" onClick={handleDeleteSection}>
+              Delete Section
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Cue tooltips */}
       {hoveredCue && (
@@ -303,7 +609,7 @@ export function WaveformCanvas({
           style={{
             position: 'absolute',
             top: 20,
-            left: `calc(${(hoveredCue.beat / (peaks.length || 384)) * 100}% - 40px)`,
+            left: `calc(${(hoveredCue.beat / totalBeats) * 100}% - 40px)`,
             background: 'var(--color-bg-secondary)',
             border: '1px solid var(--color-border)',
             borderRadius: 4,
@@ -336,6 +642,13 @@ export function WaveformCanvas({
         <span>0:00</span>
         <span>{Math.floor(duration / 60)}:{String(duration % 60).padStart(2, '0')}</span>
       </div>
+
+      {/* Edit mode indicator */}
+      {editMode && (
+        <div className="edit-mode-indicator">
+          EDIT MODE · Click to select · Drag to create · Right-click for options
+        </div>
+      )}
     </motion.div>
   );
 }
