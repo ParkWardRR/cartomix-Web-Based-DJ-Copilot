@@ -54,15 +54,13 @@ func main() {
 	}
 	defer db.Close()
 
-	// Prefer Swift analyzer worker; fall back to CPU placeholder.
-	var analysisBackend analyzer.Analyzer
-	analysisBackend, err = analyzer.NewClient(cfg.AnalyzerAddr, logger)
+	// Connect to Swift analyzer worker (required)
+	analysisBackend, err := analyzer.NewClient(cfg.AnalyzerAddr, logger)
 	if err != nil {
-		logger.Warn("analyzer worker unavailable, falling back to CPU", "error", err)
-		analysisBackend = analyzer.NewCPUFallback(logger)
-	} else {
-		logger.Info("connected to analyzer worker", "addr", cfg.AnalyzerAddr)
+		logger.Error("failed to connect to analyzer worker", "addr", cfg.AnalyzerAddr, "error", err)
+		os.Exit(1)
 	}
+	logger.Info("connected to analyzer worker", "addr", cfg.AnalyzerAddr)
 	defer analysisBackend.Close()
 
 	// Create gRPC server with chained interceptors (logging, metrics, recovery, auth)
