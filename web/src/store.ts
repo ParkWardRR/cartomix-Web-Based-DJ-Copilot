@@ -3,6 +3,23 @@ import type { Track, SetPlan, SetEdge } from './types';
 import * as api from './api';
 import { demoTracks, demoSetPlan } from './mockData';
 
+// Check localStorage for onboarding state
+const ONBOARDING_KEY = 'algiers-onboarding-complete';
+function getOnboardingComplete(): boolean {
+  try {
+    return localStorage.getItem(ONBOARDING_KEY) === 'true';
+  } catch {
+    return false;
+  }
+}
+function setOnboardingComplete(value: boolean): void {
+  try {
+    localStorage.setItem(ONBOARDING_KEY, value ? 'true' : 'false');
+  } catch {
+    // localStorage not available
+  }
+}
+
 type ViewMode = 'library' | 'setBuilder' | 'graph' | 'settings' | 'training';
 type SortMode = 'bpm-asc' | 'bpm-desc' | 'energy-desc';
 type SetMode = 'Warm-up' | 'Peak-time' | 'Open-format';
@@ -64,6 +81,9 @@ interface AppState {
   error: string | null;
   apiAvailable: boolean;
 
+  // Onboarding
+  hasCompletedOnboarding: boolean;
+
   // Export
   isExporting: boolean;
   exportResult: ExportResult | null;
@@ -110,8 +130,12 @@ interface AppState {
   proposeSet: (trackIds: string[], mode: SetMode) => Promise<void>;
   exportSet: (trackIds: string[], playlistName: string, formats: ExportFormat[]) => Promise<ExportResult | null>;
   checkApiHealth: () => Promise<void>;
-  useMockData: () => void;
+  useDemoData: () => void;
   clearExportResult: () => void;
+
+  // Onboarding Actions
+  scanLibrary: (roots: string[]) => Promise<{ processed: number; total: number; newTracks: string[] }>;
+  completeOnboarding: () => void;
 
   // ML Actions
   fetchMLSettings: () => Promise<void>;
@@ -220,13 +244,14 @@ function buildTrackMap(tracks: Track[]): Record<string, Track> {
   return map;
 }
 
-// Initialize with demo data at module load time
-const initialTracks = demoTracks.slice();  // Copy the array
+// Initialize based on onboarding state
+const hasOnboarded = getOnboardingComplete();
+const initialTracks = hasOnboarded ? demoTracks.slice() : [];
 const initialTrackMap = buildTrackMap(initialTracks);
-const initialSetPlan = JSON.parse(JSON.stringify(demoSetPlan)) as typeof demoSetPlan;
+const initialSetPlan = hasOnboarded ? JSON.parse(JSON.stringify(demoSetPlan)) as typeof demoSetPlan : null;
 
 export const useStore = create<AppState>((set, get) => ({
-  // Initial state - demo data loaded at module init time
+  // Initial state - empty until onboarding or API load
   tracks: initialTracks,
   trackMap: initialTrackMap,
   currentSetPlan: initialSetPlan,
@@ -240,9 +265,10 @@ export const useStore = create<AppState>((set, get) => ({
   playheadPosition: 0.3,
   isPlaying: false,
   chartMode: 'bpm',
-  isLoading: false,  // Demo data loaded instantly
+  isLoading: false,
   error: null,
-  apiAvailable: false,  // Will update when API detected
+  apiAvailable: false,
+  hasCompletedOnboarding: hasOnboarded,
   isExporting: false,
   exportResult: null,
   exportError: null,
@@ -332,8 +358,8 @@ export const useStore = create<AppState>((set, get) => ({
   setIsPlaying: (playing) => set({ isPlaying: playing }),
   setChartMode: (mode) => set({ chartMode: mode }),
 
-  // Use mock data fallback
-  useMockData: () => {
+  // Use demo data
+  useDemoData: () => {
     const trackMap: Record<string, Track> = {};
     for (const t of demoTracks) {
       trackMap[t.id] = t;
@@ -347,6 +373,45 @@ export const useStore = create<AppState>((set, get) => ({
       error: null,
       apiAvailable: false,
     });
+  },
+
+  // Scan music library folders
+  scanLibrary: async (roots: string[]) => {
+    set({ isLoading: true, error: null });
+    try {
+      const result = await api.scanLibrary(roots, false);
+      // After scanning, fetch the tracks
+      const response = await api.listTracks({ limit: 500 });
+      const tracks = response.map(apiToTrack);
+      const trackMap: Record<string, Track> = {};
+      for (const t of tracks) {
+        trackMap[t.id] = t;
+      }
+      set({
+        tracks,
+        trackMap,
+        selectedId: tracks[0]?.id || null,
+        isLoading: false,
+        apiAvailable: true,
+      });
+      return {
+        processed: result.processed,
+        total: result.total,
+        newTracks: result.new_tracks,
+      };
+    } catch (err) {
+      set({
+        error: err instanceof Error ? err.message : 'Scan failed',
+        isLoading: false,
+      });
+      throw err;
+    }
+  },
+
+  // Complete onboarding
+  completeOnboarding: () => {
+    setOnboardingComplete(true);
+    set({ hasCompletedOnboarding: true });
   },
 
   // API health check
@@ -394,8 +459,8 @@ export const useStore = create<AppState>((set, get) => ({
         error: err instanceof Error ? err.message : 'Failed to fetch tracks',
         isLoading: false,
       });
-      // Fall back to mock data on API failure
-      get().useMockData();
+      // Fall back to demo data on API failure
+      get().useDemoData();
     }
   },
 

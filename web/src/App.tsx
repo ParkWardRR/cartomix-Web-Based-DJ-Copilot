@@ -15,6 +15,8 @@ import { ExportPanel } from './components/ExportPanel';
 import { SimilarTracks } from './components/SimilarTracks';
 import { ModelSettings } from './components/ModelSettings';
 import { TrainingScreen } from './components/TrainingScreen';
+import { IntroWizard } from './components/IntroWizard';
+import { FolderDropZone } from './components/FolderDropZone';
 import { useStore } from './store';
 
 function App() {
@@ -49,6 +51,7 @@ function App() {
     checkApiHealth,
     proposeSet,
     fetchTrackDetail,
+    hasCompletedOnboarding,
   } = useStore();
 
   // Local UI state for playback simulation
@@ -146,6 +149,15 @@ function App() {
     }
   };
 
+  // Show intro wizard for new users
+  if (!hasCompletedOnboarding && tracks.length === 0) {
+    return (
+      <div className="app">
+        <IntroWizard />
+      </div>
+    );
+  }
+
   // Loading state
   if (isLoading) {
     return (
@@ -167,7 +179,7 @@ function App() {
             <span className="logo-icon">◈</span>
             Algiers
           </div>
-          <span className="version-badge">alpha</span>
+          <span className="version-badge">v0.8</span>
           {!apiAvailable && <span className="demo-badge">demo</span>}
         </div>
         <nav className="header-nav">
@@ -256,7 +268,10 @@ function App() {
                 <div className="panel library-panel">
                   <div className="panel-header">
                     <h3>Library</h3>
-                    <span className="count-badge">{filtered.length} tracks</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <span className="count-badge">{filtered.length} tracks</span>
+                      {apiAvailable && <FolderDropZone compact />}
+                    </div>
                   </div>
                   <div className="filter-bar">
                     <input
@@ -554,7 +569,7 @@ function App() {
       <footer className="app-footer">
         <span>Algiers · DJ Set Prep Copilot</span>
         <span className="muted">
-          v0.1.0-alpha · Apple Silicon M1–M5
+          v0.8-beta · Apple Silicon M1–M5
           {apiAvailable ? ' · API connected' : ' · demo mode'}
         </span>
       </footer>
