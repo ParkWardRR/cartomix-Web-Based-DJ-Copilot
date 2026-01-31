@@ -10,7 +10,7 @@ BUILD_DIR="$PROJECT_ROOT/build"
 TEAM_ID="6U62M4232W"
 DEVELOPER_ID="Developer ID Application: Twesh Deshetty (6U62M4232W)"
 BUNDLE_ID="com.algiers.app"
-VERSION="1.1-beta"
+VERSION="1.2-beta"
 PROFILE_NAME="notary-api"
 
 echo "=== Algiers Build & Notarize ==="

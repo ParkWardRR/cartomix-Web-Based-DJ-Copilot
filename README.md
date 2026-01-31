@@ -10,7 +10,7 @@
 
 <br/>
 
-[![Download](https://img.shields.io/badge/Download-v1.1--beta-6366f1?style=for-the-badge&logo=apple&logoColor=white)](https://github.com/ParkWardRR/cartomix-Web-Based-DJ-Copilot/releases/download/v1.1-beta/Algiers-v1.1-beta-AppleSilicon.dmg)
+[![Download](https://img.shields.io/badge/Download-v1.1--beta-6366f1?style=for-the-badge&logo=apple&logoColor=white)](https://github.com/ParkWardRR/cartomix-Web-Based-DJ-Copilot/releases/download/v1.2-beta/Algiers-v1.2-beta-AppleSilicon.dmg)
 [![macOS](https://img.shields.io/badge/macOS%2014+-000000?style=for-the-badge&logo=apple&logoColor=white)](#requirements)
 [![Apple Silicon](https://img.shields.io/badge/Apple%20Silicon-M1--M4-000000?style=for-the-badge&logo=apple&logoColor=white)](#requirements)
 
@@ -104,6 +104,7 @@ Efficient bulk track management:
 | Selection | `S` | Toggle batch select mode |
 | Selection | `⌘A` | Select all tracks |
 | Selection | `Space` | Toggle selection on current track |
+| Tempo | `T` | Tap for BPM detection |
 | Help | `?` | Show keyboard shortcuts |
 
 ### Harmonic Mixing Assistant
@@ -119,6 +120,23 @@ Interactive Camelot wheel for harmonic mixing:
 | Perfect | Green | Same key — seamless mix |
 | Compatible | Blue | ±1 on wheel — smooth transition |
 | Energy Shift | Yellow | Relative major/minor — mood change |
+
+### BPM Tap Detection
+
+Tap tempo feature for detecting BPM from external audio sources:
+- **Tap button or press T** — Tap along with the beat to detect BPM
+- **Smart averaging** — Uses last 8 taps for accurate tempo detection
+- **Auto-reset** — Automatically resets after 2 seconds of inactivity
+- **Visual feedback** — Beat indicator shows current tap position
+- **DJ range clamping** — Automatically doubles or halves extreme tempos
+
+### Library Statistics
+
+Real-time insights into your music collection:
+- **Track counts** — Total tracks and analyzed percentage
+- **BPM analysis** — Average BPM and tempo range distribution
+- **Energy metrics** — Average energy level across your library
+- **Key distribution** — Visual breakdown of keys in your collection
 
 ---
 
@@ -143,7 +161,7 @@ Interactive Camelot wheel for harmonic mixing:
 
 ### Download (Recommended)
 
-**[Download Algiers v1.1-beta](https://github.com/ParkWardRR/cartomix-Web-Based-DJ-Copilot/releases/download/v1.1-beta/Algiers-v1.1-beta-AppleSilicon.dmg)** (~21 MB)
+**[Download Algiers v1.2-beta](https://github.com/ParkWardRR/cartomix-Web-Based-DJ-Copilot/releases/download/v1.2-beta/Algiers-v1.2-beta-AppleSilicon.dmg)** (~21 MB)
 
 1. Open the DMG
 2. Drag **Algiers** to Applications
@@ -382,7 +400,7 @@ npm run dev
 # Full build with code signing and notarization
 bash scripts/build-and-notarize.sh
 
-# Output: build/Algiers-v1.1-beta-AppleSilicon.dmg
+# Output: build/Algiers-v1.2-beta-AppleSilicon.dmg
 ```
 
 ---
@@ -403,14 +421,15 @@ bash scripts/build-and-notarize.sh
 - [x] Batch operations (select all, analyze all)
 - [x] Keyboard shortcuts for power users
 - [x] Harmonic mixing assistant (Camelot wheel)
+- [x] BPM tap detection
+- [x] Library statistics and insights
 
 ### Planned
 
 - [ ] Live audio preview with crossfade simulation
 - [ ] Custom ML model training on your preferences
-- [ ] Set history and statistics
+- [ ] Set history tracking
 - [ ] Apple Music library integration
-- [ ] BPM tap detection
 
 ---
 
@@ -440,6 +459,6 @@ Blue Oak Model License 1.0.0. See [LICENSE](LICENSE).
 
 <br/>
 
-**[Download Algiers](https://github.com/ParkWardRR/cartomix-Web-Based-DJ-Copilot/releases/download/v1.1-beta/Algiers-v1.1-beta-AppleSilicon.dmg)**
+**[Download Algiers](https://github.com/ParkWardRR/cartomix-Web-Based-DJ-Copilot/releases/download/v1.2-beta/Algiers-v1.2-beta-AppleSilicon.dmg)**
 
 </div>

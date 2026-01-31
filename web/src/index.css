@@ -4127,3 +4127,425 @@ body {
 .harmonic-section .section-label {
   margin-bottom: 0.5rem;
 }
+
+/* =====================================================
+   BPM Tap Tempo
+   ===================================================== */
+
+.bpm-tap-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+}
+
+.bpm-tap-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+.bpm-tap-header h4 {
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.tap-hint {
+  font-size: 0.65rem;
+  color: var(--color-text-muted);
+}
+
+.tap-hint kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  background: var(--color-bg-tertiary);
+  border: 1px solid var(--color-border);
+  border-radius: 3px;
+  font-family: inherit;
+  font-size: 0.6rem;
+  margin: 0 2px;
+}
+
+.tap-btn {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+  box-shadow: 0 4px 20px rgba(99, 102, 241, 0.3);
+}
+
+.tap-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 24px rgba(99, 102, 241, 0.4);
+}
+
+.tap-btn.active {
+  transform: scale(0.95);
+  box-shadow: 0 2px 12px rgba(99, 102, 241, 0.5);
+}
+
+.tap-bpm-display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: white;
+}
+
+.tap-bpm-display .bpm-value {
+  font-size: 1.8rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.tap-bpm-display .bpm-unit {
+  font-size: 0.7rem;
+  font-weight: 500;
+  opacity: 0.8;
+  margin-top: 2px;
+}
+
+.tap-prompt {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: white;
+  letter-spacing: 0.1em;
+}
+
+.tap-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.tap-count {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+}
+
+.tap-reset {
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-muted);
+  padding: 0.25rem 0.5rem;
+  font-size: 0.7rem;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.tap-reset:hover {
+  border-color: var(--color-error);
+  color: var(--color-error);
+}
+
+.beat-indicator {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.beat-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-accent);
+}
+
+/* Compact BPM Tap */
+.bpm-tap-compact {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.tap-btn-compact {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.6rem;
+  background: var(--color-bg-tertiary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.15s;
+  color: var(--color-text-secondary);
+  font-size: 0.7rem;
+}
+
+.tap-btn-compact:hover {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+
+.tap-btn-compact.active {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: white;
+}
+
+.tap-btn-compact .tap-icon {
+  font-size: 0.8rem;
+}
+
+.tap-btn-compact .tap-bpm {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.tap-reset-compact {
+  background: none;
+  border: none;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  font-size: 0.65rem;
+  padding: 0.2rem;
+  opacity: 0.6;
+  transition: opacity 0.15s;
+}
+
+.tap-reset-compact:hover {
+  opacity: 1;
+  color: var(--color-error);
+}
+
+/* =====================================================
+   Library Statistics
+   ===================================================== */
+
+.library-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.library-stats-empty {
+  text-align: center;
+  padding: 2rem;
+  color: var(--color-text-muted);
+}
+
+.stats-summary {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.5rem;
+}
+
+.stat-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.75rem 0.5rem;
+  background: var(--color-bg-tertiary);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+}
+
+.stat-card .stat-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--color-accent);
+  font-variant-numeric: tabular-nums;
+}
+
+.stat-card .stat-label {
+  font-size: 0.6rem;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-top: 0.25rem;
+}
+
+.stats-section {
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--color-border);
+}
+
+.stats-section h4 {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-muted);
+}
+
+/* BPM Range */
+.bpm-range-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.range-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.7rem;
+  color: var(--color-text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.range-labels .range-median {
+  color: var(--color-accent);
+  font-weight: 600;
+}
+
+.range-track {
+  position: relative;
+  height: 6px;
+  background: var(--color-border);
+  border-radius: 3px;
+  overflow: visible;
+}
+
+.range-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--color-primary), var(--color-accent));
+  border-radius: 3px;
+}
+
+.range-marker {
+  position: absolute;
+  top: -3px;
+  width: 4px;
+  height: 12px;
+  background: var(--color-accent);
+  border-radius: 2px;
+  transform: translateX(-50%);
+}
+
+/* Energy Distribution */
+.energy-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.energy-bar-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.energy-bar-item .energy-level {
+  width: 16px;
+  font-size: 0.65rem;
+  color: var(--color-text-muted);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.energy-bar-track {
+  flex: 1;
+  height: 8px;
+  background: var(--color-border);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.energy-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+}
+
+.energy-bar-item .energy-count {
+  width: 24px;
+  font-size: 0.65rem;
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Key Distribution */
+.key-distribution {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.key-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.key-item .key-name {
+  width: 28px;
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+}
+
+.key-bar-track {
+  flex: 1;
+  height: 8px;
+  background: var(--color-border);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.key-bar-fill {
+  height: 100%;
+  background: var(--color-accent);
+  border-radius: 4px;
+}
+
+.key-item .key-count {
+  width: 24px;
+  font-size: 0.65rem;
+  color: var(--color-text-muted);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Status Breakdown */
+.status-breakdown {
+  display: flex;
+  gap: 1rem;
+}
+
+.status-item {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.status-item .status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.status-item.analyzed .status-dot {
+  background: #22c55e;
+}
+
+.status-item.pending .status-dot {
+  background: #fbbf24;
+}
+
+.status-item.failed .status-dot {
+  background: #ef4444;
+}
+
+.status-item .status-label {
+  font-size: 0.7rem;
+  color: var(--color-text-secondary);
+}
+
+.status-item .status-count {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--color-text);
+  font-variant-numeric: tabular-nums;
+}
