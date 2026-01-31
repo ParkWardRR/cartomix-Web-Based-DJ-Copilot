@@ -1,13 +1,8 @@
 <div align="center">
 
-> **⚠️ ARCHIVED PROTOTYPE**
->
-> This project is being archived as a prototype. Development has moved to:
-> **[CartoMix - DJ Set Prep Copilot](https://github.com/ParkWardRR/CartoMix---DJ-Set-Prep-Copilot)**
-
 <img src="docs/assets/logo.svg" alt="Algiers - DJ Set Prep Copilot" width="100" />
 
-# Algiers — DJ Set Prep Copilot (Prototype)
+# Algiers — DJ Set Prep Copilot
 
 **Apple Silicon–native DJ prep tool: analyze, cue, transition, export — all local.**
 
@@ -788,20 +783,26 @@ The HTTP REST API remains available for backward compatibility but is **deprecat
 
 ## Quick Start
 
-### One-Command Install (Recommended)
+### macOS Standalone App (Recommended)
+
+Download the latest release or build from source:
 
 ```bash
-git clone https://github.com/cartomix/algiers.git
-cd algiers
-make install
+git clone https://github.com/ParkWardRR/cartomix-Web-Based-DJ-Copilot.git
+cd cartomix-Web-Based-DJ-Copilot
+make build-macos
+open build/Algiers.app
 ```
 
-That's it! The installer handles all dependencies automatically.
+The standalone app bundles everything — just double-click to run. No terminal needed.
 
-### Run
+### Development Mode
 
 ```bash
-# Start all services
+# Install dependencies
+make install
+
+# Start all services (3 terminals)
 make run-stack
 
 # Open in browser
