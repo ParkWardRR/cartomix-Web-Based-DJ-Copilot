@@ -19,6 +19,8 @@ import { IntroWizard } from './components/IntroWizard';
 import { FolderDropZone } from './components/FolderDropZone';
 import { KeyboardShortcutsHelp } from './components/KeyboardShortcutsHelp';
 import { CamelotWheel } from './components/CamelotWheel';
+import { BPMTap } from './components/BPMTap';
+import { LibraryStats } from './components/LibraryStats';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { useStore } from './store';
 
@@ -193,7 +195,7 @@ function App() {
             <span className="logo-icon">◈</span>
             Algiers
           </div>
-          <span className="version-badge">v1.1</span>
+          <span className="version-badge">v1.2</span>
           {!apiAvailable && <span className="demo-badge">demo</span>}
         </div>
         <nav className="header-nav">
@@ -243,6 +245,7 @@ function App() {
             <span className="shortcut-hint">5</span>
           </button>
           <div className="nav-divider" />
+          <BPMTap compact />
           <button
             className="help-btn"
             onClick={() => window.dispatchEvent(new CustomEvent('show-shortcuts-help'))}
@@ -591,6 +594,12 @@ function App() {
                 <div className="panel">
                   <ModelSettings />
                 </div>
+                <div className="panel">
+                  <div className="panel-header">
+                    <h3>Library Statistics</h3>
+                  </div>
+                  <LibraryStats tracks={tracks} />
+                </div>
               </div>
               <div className="settings-sidebar">
                 {selected && (
@@ -638,7 +647,7 @@ function App() {
       <footer className="app-footer">
         <span>Algiers · DJ Set Prep Copilot</span>
         <span className="muted">
-          v1.1-beta · Apple Silicon M1–M5
+          v1.2-beta · Apple Silicon M1–M5
           {apiAvailable ? ' · API connected' : ' · demo mode'}
         </span>
       </footer>
