@@ -52,6 +52,14 @@ function App() {
     proposeSet,
     fetchTrackDetail,
     hasCompletedOnboarding,
+    batchMode,
+    batchSelectedIds,
+    isAnalyzing,
+    setBatchMode,
+    toggleBatchSelection,
+    selectAllTracks,
+    selectNoneTracks,
+    analyzeBatchSelected,
   } = useStore();
 
   // Local UI state for playback simulation
@@ -179,7 +187,7 @@ function App() {
             <span className="logo-icon">◈</span>
             Algiers
           </div>
-          <span className="version-badge">v0.8</span>
+          <span className="version-badge">v0.9</span>
           {!apiAvailable && <span className="demo-badge">demo</span>}
         </div>
         <nav className="header-nav">
@@ -270,9 +278,32 @@ function App() {
                     <h3>Library</h3>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                       <span className="count-badge">{filtered.length} tracks</span>
+                      <button
+                        className={`batch-mode-btn ${batchMode ? 'active' : ''}`}
+                        onClick={() => setBatchMode(!batchMode)}
+                        title={batchMode ? 'Exit batch mode' : 'Select multiple tracks'}
+                      >
+                        {batchMode ? '✓ Select' : '☐ Select'}
+                      </button>
                       {apiAvailable && <FolderDropZone compact />}
                     </div>
                   </div>
+                  {batchMode && (
+                    <div className="batch-controls">
+                      <div className="batch-selection">
+                        <button className="batch-btn" onClick={selectAllTracks}>Select All</button>
+                        <button className="batch-btn" onClick={selectNoneTracks}>Select None</button>
+                        <span className="batch-count">{batchSelectedIds.size} selected</span>
+                      </div>
+                      <button
+                        className="batch-analyze-btn"
+                        onClick={analyzeBatchSelected}
+                        disabled={batchSelectedIds.size === 0 || isAnalyzing}
+                      >
+                        {isAnalyzing ? 'Analyzing...' : `Analyze ${batchSelectedIds.size} Tracks`}
+                      </button>
+                    </div>
+                  )}
                   <div className="filter-bar">
                     <input
                       className="search-input"
@@ -318,7 +349,14 @@ function App() {
                       <option value="bpm-desc">BPM ↓</option>
                     </select>
                   </div>
-                  <LibraryGrid tracks={filtered} selectedId={selected?.id} onSelect={setSelectedId} />
+                  <LibraryGrid
+                    tracks={filtered}
+                    selectedId={selected?.id}
+                    onSelect={setSelectedId}
+                    batchMode={batchMode}
+                    batchSelectedIds={batchSelectedIds}
+                    onBatchToggle={toggleBatchSelection}
+                  />
                 </div>
 
                 {/* Center: Track Detail + Waveform */}
@@ -569,7 +607,7 @@ function App() {
       <footer className="app-footer">
         <span>Algiers · DJ Set Prep Copilot</span>
         <span className="muted">
-          v0.8-beta · Apple Silicon M1–M5
+          v0.9-beta · Apple Silicon M1–M5
           {apiAvailable ? ' · API connected' : ' · demo mode'}
         </span>
       </footer>
