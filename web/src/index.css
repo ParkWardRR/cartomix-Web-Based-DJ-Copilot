@@ -4909,3 +4909,662 @@ body {
 .preview-transition-btn .preview-icon {
   font-size: 0.7rem;
 }
+
+/* ===========================================
+   WAVEFORM LABELER
+   =========================================== */
+
+.waveform-labeler {
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.labeler-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.labeler-header .track-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.labeler-header .track-title {
+  font-weight: 600;
+  color: var(--color-text);
+  font-size: 1rem;
+}
+
+.labeler-header .track-meta {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+
+.labeler-header .shortcut-hint {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+}
+
+.labeler-header kbd {
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  padding: 0.1rem 0.4rem;
+  font-family: inherit;
+  font-size: 0.7rem;
+}
+
+/* Label selector bar */
+.label-selector-bar {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.label-chip {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.75rem;
+  background: var(--color-bg);
+  border: 2px solid var(--label-color);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: var(--label-color);
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.label-chip:hover {
+  background: color-mix(in srgb, var(--label-color) 15%, transparent);
+}
+
+.label-chip.active {
+  background: var(--label-color);
+  color: white;
+}
+
+.label-chip kbd {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  padding: 0.1rem 0.35rem;
+  border-radius: 3px;
+  font-size: 0.65rem;
+}
+
+.label-chip.active kbd {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+/* Waveform container */
+.waveform-container {
+  position: relative;
+  height: 140px;
+  background: var(--color-bg);
+  border-radius: 12px;
+  overflow: hidden;
+  cursor: crosshair;
+}
+
+.waveform-bars {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  padding: 0 0.5rem;
+}
+
+.waveform-bar {
+  flex: 1;
+  background: var(--color-accent);
+  opacity: 0.4;
+  border-radius: 1px;
+  min-width: 2px;
+}
+
+.waveform-bar.placeholder {
+  background: var(--color-text-muted);
+  opacity: 0.2;
+}
+
+/* Labels overlay */
+.labels-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.label-region {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 0.25rem 0.5rem;
+  pointer-events: auto;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.label-region:hover {
+  opacity: 0.9 !important;
+}
+
+.label-region .label-name {
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: white;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.label-region .label-delete {
+  background: rgba(0, 0, 0, 0.4);
+  border: none;
+  color: white;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  font-size: 0.75rem;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.label-region:hover .label-delete {
+  opacity: 1;
+}
+
+.label-region .label-delete:hover {
+  background: rgba(239, 68, 68, 0.8);
+}
+
+/* Selection overlay */
+.selection-overlay {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px dashed rgba(255, 255, 255, 0.6);
+  border-radius: 4px;
+}
+
+.selection-overlay .selection-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: white;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.selection-overlay .selection-beats {
+  font-size: 0.7rem;
+  font-weight: 400;
+  opacity: 0.8;
+}
+
+/* Beat markers */
+.beat-markers {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 20px;
+  display: flex;
+  pointer-events: none;
+}
+
+.beat-marker {
+  position: absolute;
+  bottom: 0;
+  transform: translateX(-50%);
+}
+
+.beat-marker::before {
+  content: '';
+  position: absolute;
+  bottom: 12px;
+  left: 50%;
+  width: 1px;
+  height: 100px;
+  background: var(--color-border);
+  opacity: 0.3;
+}
+
+.beat-marker span {
+  font-size: 0.6rem;
+  color: var(--color-text-muted);
+  background: var(--color-bg);
+  padding: 0 0.25rem;
+}
+
+/* Add label bar */
+.add-label-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  background: var(--color-bg);
+  border-radius: 10px;
+  border: 1px solid var(--color-border);
+}
+
+.selection-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: var(--color-text);
+}
+
+.selection-info .color-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.clear-btn {
+  background: var(--color-bg-tertiary);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.clear-btn:hover {
+  background: var(--color-bg-secondary);
+  color: var(--color-text);
+}
+
+.add-btn {
+  background: linear-gradient(135deg, var(--color-accent), var(--color-accent-secondary));
+  border: none;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.add-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
+.add-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Labeler hint */
+.labeler-hint {
+  text-align: center;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  padding: 0.5rem;
+}
+
+.labeler-hint kbd {
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  padding: 0.1rem 0.4rem;
+  font-family: inherit;
+  font-size: 0.7rem;
+}
+
+/* ===========================================
+   TRAINING SCREEN V2
+   =========================================== */
+
+.training-screen-v2 {
+  display: grid;
+  grid-template-columns: 1fr 360px;
+  gap: 1.5rem;
+  padding: 1.5rem;
+  height: 100%;
+  overflow: hidden;
+}
+
+.training-main-area {
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.labeler-panel {
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  padding: 1.5rem;
+}
+
+.labeler-panel .panel-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-bottom: 1rem;
+}
+
+.labeler-panel .panel-header h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin: 0;
+}
+
+.labeler-panel .panel-subtitle {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+
+.no-track-selected {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  text-align: center;
+  background: var(--color-bg);
+  border-radius: 12px;
+  border: 2px dashed var(--color-border);
+}
+
+.no-track-selected .icon {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+}
+
+.no-track-selected p {
+  font-size: 0.95rem;
+  color: var(--color-text);
+  margin: 0 0 0.5rem 0;
+}
+
+.no-track-selected .hint {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+
+.no-track-selected kbd {
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  padding: 0.15rem 0.4rem;
+  font-size: 0.75rem;
+}
+
+/* Quick track selector */
+.quick-track-selector {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--color-border);
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.selector-label {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.track-chips {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.track-chip {
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
+  padding: 0.35rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 150px;
+}
+
+.track-chip:hover {
+  background: var(--color-bg-tertiary);
+  color: var(--color-text);
+}
+
+.track-chip.active {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: white;
+}
+
+/* Training sidebar v2 */
+.training-sidebar-v2 {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  overflow-y: auto;
+}
+
+.training-sidebar-v2 .panel {
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 1rem;
+}
+
+.training-sidebar-v2 .panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.training-sidebar-v2 .panel-header h4 {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin: 0;
+}
+
+/* Mini stats grid */
+.mini-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.25rem;
+  margin-bottom: 1rem;
+}
+
+.mini-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.35rem 0;
+  background: var(--color-bg);
+  border-radius: 6px;
+  opacity: 0.5;
+}
+
+.mini-stat.enough {
+  opacity: 1;
+}
+
+.mini-stat-color {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.mini-stat-count {
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+/* Training progress card updates */
+.training-progress-card {
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 1rem;
+}
+
+.training-progress-card .card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.training-progress-card .card-header h4 {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin: 0;
+}
+
+.progress-info {
+  display: flex;
+  gap: 1rem;
+  margin-top: 0.5rem;
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+}
+
+.result-value.success {
+  color: var(--color-success);
+}
+
+/* Recent labels */
+.recent-labels {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.recent-labels-empty {
+  text-align: center;
+  padding: 1rem;
+  color: var(--color-text-muted);
+}
+
+.recent-labels-empty p {
+  font-size: 0.85rem;
+  margin: 0 0 0.25rem 0;
+}
+
+.recent-labels-empty span {
+  font-size: 0.75rem;
+}
+
+.recent-label-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.5rem;
+  background: var(--color-bg);
+  border-radius: 6px;
+  font-size: 0.75rem;
+}
+
+.recent-label-item .label-badge {
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+  color: white;
+  font-weight: 500;
+  font-size: 0.65rem;
+  white-space: nowrap;
+}
+
+.recent-label-item .label-track {
+  flex: 1;
+  color: var(--color-text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.recent-label-item .label-beats {
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.recent-label-item .label-delete {
+  background: none;
+  border: none;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  padding: 0 0.25rem;
+  font-size: 0.9rem;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.recent-label-item:hover .label-delete {
+  opacity: 1;
+}
+
+.recent-label-item .label-delete:hover {
+  color: var(--color-danger);
+}
+
+/* Delete version button */
+.delete-version-btn {
+  background: transparent;
+  border: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+  padding: 0.3rem 0.6rem;
+  border-radius: 6px;
+  font-size: 0.7rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.delete-version-btn:hover {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: var(--color-danger);
+  color: var(--color-danger);
+}
+
+/* Models empty update */
+.models-empty .empty-hint {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  margin-top: 0.25rem;
+  font-size: 0.7rem;
+}
