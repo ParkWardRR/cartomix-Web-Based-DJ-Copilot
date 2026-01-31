@@ -18,6 +18,7 @@ import { TrainingScreen } from './components/TrainingScreen';
 import { IntroWizard } from './components/IntroWizard';
 import { FolderDropZone } from './components/FolderDropZone';
 import { KeyboardShortcutsHelp } from './components/KeyboardShortcutsHelp';
+import { CamelotWheel } from './components/CamelotWheel';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { useStore } from './store';
 
@@ -192,7 +193,7 @@ function App() {
             <span className="logo-icon">◈</span>
             Algiers
           </div>
-          <span className="version-badge">v1.0</span>
+          <span className="version-badge">v1.1</span>
           {!apiAvailable && <span className="demo-badge">demo</span>}
         </div>
         <nav className="header-nav">
@@ -435,6 +436,14 @@ function App() {
                     />
                   </div>
                   <TransitionRehearsal from={fromTrack} to={toTrack} edge={currentEdge} compact />
+                  <div className="harmonic-section">
+                    <div className="section-label">Harmonic Wheel</div>
+                    <CamelotWheel
+                      selectedKey={selected?.key}
+                      tracks={tracks.map(t => ({ key: t.key, count: 1 }))}
+                      size={140}
+                    />
+                  </div>
                 </div>
               </div>
             </motion.div>
@@ -629,7 +638,7 @@ function App() {
       <footer className="app-footer">
         <span>Algiers · DJ Set Prep Copilot</span>
         <span className="muted">
-          v1.0-beta · Apple Silicon M1–M5
+          v1.1-beta · Apple Silicon M1–M5
           {apiAvailable ? ' · API connected' : ' · demo mode'}
         </span>
       </footer>
