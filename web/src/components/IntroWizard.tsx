@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import type { DragEvent } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useStore } from '../store';
 
@@ -9,6 +10,7 @@ export function IntroWizard() {
   const [folderPath, setFolderPath] = useState('');
   const [scanProgress, setScanProgress] = useState({ processed: 0, total: 0, newTracks: 0 });
   const [error, setError] = useState<string | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
 
   const { scanLibrary, completeOnboarding, useDemoData } = useStore();
 
@@ -43,6 +45,53 @@ export function IntroWizard() {
     useDemoData();
     completeOnboarding();
   }, [useDemoData, completeOnboarding]);
+
+  const handleDragOver = useCallback((e: DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e: DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  }, []);
+
+  const handleDrop = useCallback((e: DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    const items = e.dataTransfer.items;
+    if (items && items.length > 0) {
+      // Get the first item - check if it's a file/folder
+      const item = items[0];
+      if (item.kind === 'file') {
+        const file = item.getAsFile();
+        if (file) {
+          // For web, we can't get the actual path, but the webkitRelativePath might help
+          // In the native app context, we'd have access to the path
+          // For now, show the file name as a hint
+          const path = (file as File & { path?: string }).path || file.name;
+          if (path) {
+            setFolderPath(path);
+            setError(null);
+          }
+        }
+      }
+    }
+
+    // Also check files array
+    const files = e.dataTransfer.files;
+    if (files && files.length > 0) {
+      const file = files[0] as File & { path?: string };
+      if (file.path) {
+        setFolderPath(file.path);
+        setError(null);
+      }
+    }
+  }, []);
 
   return (
     <div className="intro-wizard">
@@ -105,8 +154,36 @@ export function IntroWizard() {
             <div className="wizard-icon">📁</div>
             <h1>Add Your Music</h1>
             <p className="wizard-subtitle">
-              Enter the path to your music folder to start analyzing
+              Drag & drop a folder, or enter the path to your music
             </p>
+
+            <div
+              className={`drop-zone ${isDragging ? 'dragging' : ''} ${folderPath ? 'has-path' : ''}`}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+            >
+              <div className="drop-zone-content">
+                {isDragging ? (
+                  <>
+                    <span className="drop-icon">⬇️</span>
+                    <span className="drop-text">Drop folder here</span>
+                  </>
+                ) : folderPath ? (
+                  <>
+                    <span className="drop-icon">✓</span>
+                    <span className="drop-text path">{folderPath}</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="drop-icon">🎵</span>
+                    <span className="drop-text">Drag music folder here</span>
+                    <span className="drop-hint">or enter path below</span>
+                  </>
+                )}
+              </div>
+            </div>
+
             <div className="folder-input-group">
               <input
                 type="text"
@@ -117,12 +194,12 @@ export function IntroWizard() {
                 onKeyDown={(e) => e.key === 'Enter' && handleAddFolder()}
               />
               <p className="input-hint">
-                Supports: MP3, WAV, FLAC, AIFF, M4A
+                Supports: MP3, WAV, FLAC, AIFF, M4A, AAC
               </p>
             </div>
             {error && <p className="wizard-error">{error}</p>}
             <div className="wizard-actions">
-              <button className="btn-primary" onClick={handleAddFolder}>
+              <button className="btn-primary" onClick={handleAddFolder} disabled={!folderPath.trim()}>
                 Scan Folder
               </button>
               <button className="btn-text" onClick={() => setStep('welcome')}>
@@ -130,7 +207,7 @@ export function IntroWizard() {
               </button>
             </div>
             <p className="wizard-note">
-              Analysis runs 100% locally on your Mac using Apple Neural Engine.
+              🔒 100% local analysis using Apple Neural Engine.
               Your music never leaves your device.
             </p>
           </motion.div>

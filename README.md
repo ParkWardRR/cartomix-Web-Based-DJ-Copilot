@@ -6,7 +6,7 @@
 
 **Standalone macOS app for DJ set prep — analyze, match, plan, export.**
 
-[![Download](https://img.shields.io/badge/Download-v0.7--beta-blue?style=for-the-badge)](https://github.com/ParkWardRR/cartomix-Web-Based-DJ-Copilot/releases/download/v0.7-beta/Algiers-v0.7-beta-AppleSilicon.dmg)
+[![Download](https://img.shields.io/badge/Download-v0.8--beta-blue?style=for-the-badge)](https://github.com/ParkWardRR/cartomix-Web-Based-DJ-Copilot/releases/download/v0.8-beta/Algiers-v0.8-beta-AppleSilicon.dmg)
 [![macOS](https://img.shields.io/badge/macOS%2014+-000000?style=for-the-badge&logo=apple&logoColor=white)](#requirements)
 [![Apple Silicon](https://img.shields.io/badge/Apple%20Silicon-M1--M4-000000?style=for-the-badge&logo=apple&logoColor=white)](#requirements)
 [![Notarized](https://img.shields.io/badge/Apple%20Notarized-✓-34C759?style=for-the-badge)](#installation)
@@ -38,7 +38,7 @@ Everything runs locally on your Mac. Your music never leaves your device.
 
 ### Download (Recommended)
 
-**[⬇️ Download Algiers v0.7-beta](https://github.com/ParkWardRR/cartomix-Web-Based-DJ-Copilot/releases/download/v0.7-beta/Algiers-v0.7-beta-AppleSilicon.dmg)** (~22 MB)
+**[⬇️ Download Algiers v0.8-beta](https://github.com/ParkWardRR/cartomix-Web-Based-DJ-Copilot/releases/download/v0.8-beta/Algiers-v0.8-beta-AppleSilicon.dmg)** (~21 MB)
 
 1. Open the DMG
 2. Drag **Algiers** to Applications
@@ -208,10 +208,13 @@ cd web && npm run dev
 - [x] Intro wizard for first-run onboarding
 - [x] OpenL3 vibe matching
 - [x] Rekordbox/Serato/Traktor export
-- [ ] Drag-and-drop folder import
+- [x] Drag-and-drop folder import
+- [x] Real-time analysis progress indicator
+- [x] Modern UI refresh with gradient styling
 - [ ] Waveform-based section editing
-- [ ] Real-time analysis progress
+- [ ] Live audio preview with crossfade
 - [ ] Custom ML model training
+- [ ] Batch operations (select all, analyze all)
 
 ---
 

@@ -10,7 +10,7 @@ BUILD_DIR="$PROJECT_ROOT/build"
 TEAM_ID="6U62M4232W"
 DEVELOPER_ID="Developer ID Application: Twesh Deshetty (6U62M4232W)"
 BUNDLE_ID="com.algiers.app"
-VERSION="0.7-beta"
+VERSION="0.8-beta"
 PROFILE_NAME="notary-api"
 
 echo "=== Algiers Build & Notarize ==="
@@ -138,7 +138,8 @@ echo ""
 echo ">>> Creating DMG..."
 DMG_NAME="Algiers-v${VERSION}-AppleSilicon.dmg"
 rm -f "$BUILD_DIR/$DMG_NAME"
-hdiutil create -volname "Algiers" -srcfolder "$APP_PATH" -ov -format UDZO "$BUILD_DIR/$DMG_NAME"
+# Use unique volume name to avoid conflicts with previous mounts
+hdiutil create -volname "Algiers v${VERSION}" -srcfolder "$APP_PATH" -ov -format UDZO "$BUILD_DIR/$DMG_NAME"
 echo "  ✓ DMG created"
 
 # Sign DMG
