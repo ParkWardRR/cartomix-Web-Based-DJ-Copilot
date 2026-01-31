@@ -10,7 +10,7 @@
 
 <br/>
 
-[![Download](https://img.shields.io/badge/Download-v1.3--beta-6366f1?style=for-the-badge&logo=apple&logoColor=white)](https://github.com/ParkWardRR/cartomix-Web-Based-DJ-Copilot/releases/download/v1.3-beta/Algiers-v1.3-beta-AppleSilicon.dmg)
+[![Download](https://img.shields.io/badge/Download-v1.3--beta-6366f1?style=for-the-badge&logo=apple&logoColor=white)](https://github.com/ParkWardRR/cartomix-Web-Based-DJ-Copilot/releases/download/v1.4-beta/Algiers-v1.4-beta-AppleSilicon.dmg)
 [![macOS](https://img.shields.io/badge/macOS%2014+-000000?style=for-the-badge&logo=apple&logoColor=white)](#requirements)
 [![Apple Silicon](https://img.shields.io/badge/Apple%20Silicon-M1--M4-000000?style=for-the-badge&logo=apple&logoColor=white)](#requirements)
 
@@ -147,6 +147,26 @@ Preview transitions between tracks with real audio playback:
 - **Visual volume meters** — See the crossfade curve in real-time
 - **Web Audio API powered** — Native browser audio with HTTP Range support
 
+### Custom ML Model Training
+
+Train a personalized AI model that understands your music style:
+- **Visual waveform labeling** — Click and drag on waveforms to label sections
+- **7 section types** — Intro, Build, Drop, Break, Outro, Verse, Chorus
+- **Keyboard shortcuts** — Press 1-7 to select label type, Enter to add
+- **Real-time training** — Watch progress with accuracy/F1 metrics
+- **Model versioning** — Compare and activate different model versions
+- **Local training** — Your training data never leaves your Mac
+
+| Shortcut | Label |
+|----------|-------|
+| `1` | Intro |
+| `2` | Build |
+| `3` | Drop |
+| `4` | Break |
+| `5` | Outro |
+| `6` | Verse |
+| `7` | Chorus |
+
 ---
 
 ## Screenshots
@@ -170,7 +190,7 @@ Preview transitions between tracks with real audio playback:
 
 ### Download (Recommended)
 
-**[Download Algiers v1.3-beta](https://github.com/ParkWardRR/cartomix-Web-Based-DJ-Copilot/releases/download/v1.3-beta/Algiers-v1.3-beta-AppleSilicon.dmg)** (~21 MB)
+**[Download Algiers v1.4-beta](https://github.com/ParkWardRR/cartomix-Web-Based-DJ-Copilot/releases/download/v1.4-beta/Algiers-v1.4-beta-AppleSilicon.dmg)** (~21 MB)
 
 1. Open the DMG
 2. Drag **Algiers** to Applications
@@ -409,7 +429,7 @@ npm run dev
 # Full build with code signing and notarization
 bash scripts/build-and-notarize.sh
 
-# Output: build/Algiers-v1.3-beta-AppleSilicon.dmg
+# Output: build/Algiers-v1.4-beta-AppleSilicon.dmg
 ```
 
 ---
@@ -433,10 +453,13 @@ bash scripts/build-and-notarize.sh
 - [x] BPM tap detection
 - [x] Library statistics and insights
 - [x] Live audio preview with crossfade simulation
+- [x] Custom ML model training with visual waveform labeler
 
 ### Planned
 
-- [ ] Custom ML model training on your preferences
+- [ ] Set history and session tracking
+- [ ] Apple Music library integration
+- [ ] Spotify playlist import
 - [ ] Set history tracking
 - [ ] Apple Music library integration
 
@@ -468,6 +491,6 @@ Blue Oak Model License 1.0.0. See [LICENSE](LICENSE).
 
 <br/>
 
-**[Download Algiers](https://github.com/ParkWardRR/cartomix-Web-Based-DJ-Copilot/releases/download/v1.3-beta/Algiers-v1.3-beta-AppleSilicon.dmg)**
+**[Download Algiers](https://github.com/ParkWardRR/cartomix-Web-Based-DJ-Copilot/releases/download/v1.4-beta/Algiers-v1.4-beta-AppleSilicon.dmg)**
 
 </div>

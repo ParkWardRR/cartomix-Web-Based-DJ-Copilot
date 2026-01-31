@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import * as api from '../api';
 import type {
   TrainingLabelResponse,
@@ -9,6 +9,7 @@ import type {
   DJSectionLabel,
 } from '../api';
 import { useStore } from '../store';
+import { WaveformLabeler } from './WaveformLabeler';
 
 // Label configuration
 const LABEL_CONFIG: Record<DJSectionLabel, { displayName: string; color: string }> = {
@@ -21,203 +22,14 @@ const LABEL_CONFIG: Record<DJSectionLabel, { displayName: string; color: string 
   chorus: { displayName: 'Chorus', color: '#ec4899' },
 };
 
-interface LabelEditorProps {
-  trackId: string;
-  onLabelAdded: () => void;
-}
-
-function LabelEditor({ trackId, onLabelAdded }: LabelEditorProps) {
-  const { trackMap } = useStore();
-  const track = trackMap[trackId];
-
-  const [selectedLabel, setSelectedLabel] = useState<DJSectionLabel>('drop');
-  const [startBeat, setStartBeat] = useState(0);
-  const [endBeat, setEndBeat] = useState(32);
-  const [isAdding, setIsAdding] = useState(false);
-
-  if (!track) {
-    return (
-      <div className="label-editor-empty">
-        <p>Select a track to add training labels</p>
-      </div>
-    );
-  }
-
-  const handleAddLabel = async () => {
-    if (startBeat >= endBeat) {
-      alert('End beat must be greater than start beat');
-      return;
-    }
-
-    setIsAdding(true);
-    try {
-      // Calculate time from beats (assuming 120 BPM as default)
-      const bpm = track.bpm || 120;
-      const startTime = (startBeat / bpm) * 60;
-      const endTime = (endBeat / bpm) * 60;
-
-      // Get track ID from API (using content hash)
-      const tracks = await api.listTracks({ query: track.title, limit: 1 });
-      const apiTrack = tracks.find(t => t.content_hash === trackId);
-      if (!apiTrack?.id) {
-        throw new Error('Track not found in database');
-      }
-
-      await api.addTrainingLabel({
-        track_id: apiTrack.id,
-        label_value: selectedLabel,
-        start_beat: startBeat,
-        end_beat: endBeat,
-        start_time_seconds: startTime,
-        end_time_seconds: endTime,
-        source: 'user',
-      });
-
-      onLabelAdded();
-      setStartBeat(endBeat);
-      setEndBeat(endBeat + 32);
-    } catch (error) {
-      console.error('Failed to add label:', error);
-      alert('Failed to add label: ' + (error as Error).message);
-    } finally {
-      setIsAdding(false);
-    }
-  };
-
-  return (
-    <div className="label-editor">
-      <div className="label-editor-header">
-        <h4>Add Label</h4>
-        <span className="track-name">{track.title}</span>
-      </div>
-
-      <div className="label-selector">
-        {(Object.entries(LABEL_CONFIG) as [DJSectionLabel, typeof LABEL_CONFIG[DJSectionLabel]][]).map(
-          ([value, config]) => (
-            <button
-              key={value}
-              className={`label-btn ${selectedLabel === value ? 'active' : ''}`}
-              style={{
-                borderColor: config.color,
-                backgroundColor: selectedLabel === value ? config.color : 'transparent',
-                color: selectedLabel === value ? 'white' : config.color,
-              }}
-              onClick={() => setSelectedLabel(value)}
-            >
-              {config.displayName}
-            </button>
-          )
-        )}
-      </div>
-
-      <div className="beat-inputs">
-        <div className="input-group">
-          <label>Start Beat</label>
-          <input
-            type="number"
-            value={startBeat}
-            onChange={(e) => setStartBeat(parseInt(e.target.value) || 0)}
-            min={0}
-          />
-        </div>
-        <div className="input-group">
-          <label>End Beat</label>
-          <input
-            type="number"
-            value={endBeat}
-            onChange={(e) => setEndBeat(parseInt(e.target.value) || 0)}
-            min={1}
-          />
-        </div>
-      </div>
-
-      <button className="add-label-btn" onClick={handleAddLabel} disabled={isAdding}>
-        {isAdding ? 'Adding...' : 'Add Label'}
-      </button>
-    </div>
-  );
-}
-
-interface DatasetTableProps {
-  labels: TrainingLabelResponse[];
-  onDelete: (id: number) => void;
-}
-
-function DatasetTable({ labels, onDelete }: DatasetTableProps) {
-  if (labels.length === 0) {
-    return (
-      <div className="dataset-empty">
-        <span className="empty-icon">📋</span>
-        <p>No training labels yet</p>
-        <span className="empty-hint">Add labels to train your custom model</span>
-      </div>
-    );
-  }
-
-  return (
-    <div className="dataset-table">
-      <table>
-        <thead>
-          <tr>
-            <th>Track</th>
-            <th>Label</th>
-            <th>Beats</th>
-            <th>Source</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          {labels.map((label) => {
-            const config = LABEL_CONFIG[label.label_value as DJSectionLabel];
-            return (
-              <motion.tr
-                key={label.id}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-              >
-                <td className="track-cell">
-                  <span className="track-path" title={label.track_path}>
-                    {label.track_path.split('/').pop()}
-                  </span>
-                </td>
-                <td>
-                  <span
-                    className="label-badge"
-                    style={{ backgroundColor: config?.color || '#6b7280' }}
-                  >
-                    {config?.displayName || label.label_value}
-                  </span>
-                </td>
-                <td className="beats-cell">
-                  {label.start_beat} - {label.end_beat}
-                </td>
-                <td className="source-cell">{label.source}</td>
-                <td>
-                  <button
-                    className="delete-btn"
-                    onClick={() => onDelete(label.id)}
-                    title="Delete label"
-                  >
-                    ×
-                  </button>
-                </td>
-              </motion.tr>
-            );
-          })}
-        </tbody>
-      </table>
-    </div>
-  );
-}
-
 interface TrainingProgressCardProps {
   job: TrainingJobResponse | null;
   onStartTraining: () => void;
   isReady: boolean;
+  stats: TrainingLabelStats | null;
 }
 
-function TrainingProgressCard({ job, onStartTraining, isReady }: TrainingProgressCardProps) {
+function TrainingProgressCard({ job, onStartTraining, isReady, stats }: TrainingProgressCardProps) {
   const isTraining = job && ['pending', 'preparing', 'training', 'evaluating'].includes(job.status);
 
   return (
@@ -231,6 +43,23 @@ function TrainingProgressCard({ job, onStartTraining, isReady }: TrainingProgres
         )}
       </div>
 
+      {/* Stats grid showing label counts */}
+      {stats && (
+        <div className="mini-stats-grid">
+          {Object.entries(LABEL_CONFIG).map(([label, config]) => {
+            const count = stats.label_counts[label] || 0;
+            const minRequired = stats.min_samples_required;
+            const isEnough = count >= minRequired;
+            return (
+              <div key={label} className={`mini-stat ${isEnough ? 'enough' : ''}`}>
+                <div className="mini-stat-color" style={{ backgroundColor: config.color }} />
+                <span className="mini-stat-count">{count}</span>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
       {isTraining && job && (
         <div className="progress-section">
           <div className="progress-bar">
@@ -240,17 +69,17 @@ function TrainingProgressCard({ job, onStartTraining, isReady }: TrainingProgres
               transition={{ duration: 0.3 }}
             />
           </div>
-          <span className="progress-label">{Math.round(job.progress * 100)}%</span>
-
-          {job.current_epoch !== undefined && job.total_epochs !== undefined && (
-            <span className="epoch-label">
-              Epoch {job.current_epoch} / {job.total_epochs}
-            </span>
-          )}
-
-          {job.current_loss !== undefined && (
-            <span className="loss-label">Loss: {job.current_loss.toFixed(4)}</span>
-          )}
+          <div className="progress-info">
+            <span className="progress-label">{Math.round(job.progress * 100)}%</span>
+            {job.current_epoch !== undefined && job.total_epochs !== undefined && (
+              <span className="epoch-label">
+                Epoch {job.current_epoch}/{job.total_epochs}
+              </span>
+            )}
+            {job.current_loss !== undefined && (
+              <span className="loss-label">Loss: {job.current_loss.toFixed(4)}</span>
+            )}
+          </div>
         </div>
       )}
 
@@ -258,15 +87,15 @@ function TrainingProgressCard({ job, onStartTraining, isReady }: TrainingProgres
         <div className="results-section">
           <div className="result-row">
             <span className="result-label">Accuracy</span>
-            <span className="result-value">{((job.accuracy || 0) * 100).toFixed(1)}%</span>
+            <span className="result-value success">{((job.accuracy || 0) * 100).toFixed(1)}%</span>
           </div>
           <div className="result-row">
             <span className="result-label">F1 Score</span>
-            <span className="result-value">{((job.f1_score || 0) * 100).toFixed(1)}%</span>
+            <span className="result-value success">{((job.f1_score || 0) * 100).toFixed(1)}%</span>
           </div>
           {job.model_version && (
             <div className="result-row">
-              <span className="result-label">Model Version</span>
+              <span className="result-label">Model</span>
               <span className="result-value">v{job.model_version}</span>
             </div>
           )}
@@ -286,7 +115,7 @@ function TrainingProgressCard({ job, onStartTraining, isReady }: TrainingProgres
           onClick={onStartTraining}
           disabled={!isReady}
         >
-          {isReady ? 'Start Training' : 'Need More Labels'}
+          {isReady ? 'Start Training' : `Need ${stats?.min_samples_required || 10} samples per label`}
         </button>
       )}
     </div>
@@ -305,6 +134,7 @@ function ModelVersionsList({ versions, onActivate, onDelete }: ModelVersionsList
       <div className="models-empty">
         <span className="empty-icon">🤖</span>
         <p>No trained models yet</p>
+        <span className="empty-hint">Add labels and train your first model</span>
       </div>
     );
   }
@@ -340,7 +170,7 @@ function ModelVersionsList({ versions, onActivate, onDelete }: ModelVersionsList
                 <button className="activate-btn" onClick={() => onActivate(version.version)}>
                   Activate
                 </button>
-                <button className="delete-btn" onClick={() => onDelete(version.version)}>
+                <button className="delete-version-btn" onClick={() => onDelete(version.version)}>
                   Delete
                 </button>
               </>
@@ -352,8 +182,56 @@ function ModelVersionsList({ versions, onActivate, onDelete }: ModelVersionsList
   );
 }
 
+interface RecentLabelsProps {
+  labels: TrainingLabelResponse[];
+  onDelete: (id: number) => void;
+}
+
+function RecentLabels({ labels, onDelete }: RecentLabelsProps) {
+  // Show only the most recent 10 labels
+  const recentLabels = labels.slice(0, 10);
+
+  if (recentLabels.length === 0) {
+    return (
+      <div className="recent-labels-empty">
+        <p>No labels yet</p>
+        <span>Select a track above to start labeling</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="recent-labels">
+      {recentLabels.map((label) => {
+        const config = LABEL_CONFIG[label.label_value as DJSectionLabel];
+        return (
+          <motion.div
+            key={label.id}
+            className="recent-label-item"
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+          >
+            <span
+              className="label-badge"
+              style={{ backgroundColor: config?.color || '#6b7280' }}
+            >
+              {config?.displayName || label.label_value}
+            </span>
+            <span className="label-track" title={label.track_path}>
+              {label.track_path.split('/').pop()?.slice(0, 25)}...
+            </span>
+            <span className="label-beats">{label.start_beat}-{label.end_beat}</span>
+            <button className="label-delete" onClick={() => onDelete(label.id)}>×</button>
+          </motion.div>
+        );
+      })}
+    </div>
+  );
+}
+
 export function TrainingScreen() {
-  const { apiAvailable, selectedId } = useStore();
+  const { apiAvailable, selectedId, trackMap, tracks } = useStore();
+  const selectedTrack = selectedId ? trackMap[selectedId] : undefined;
 
   const [labels, setLabels] = useState<TrainingLabelResponse[]>([]);
   const [stats, setStats] = useState<TrainingLabelStats | null>(null);
@@ -452,8 +330,9 @@ export function TrainingScreen() {
     return (
       <div className="training-screen-empty">
         <span className="empty-icon">🤖</span>
-        <p>Training requires API connection</p>
-        <span className="empty-hint">Start the Go engine to train custom models</span>
+        <h3>Custom Model Training</h3>
+        <p>Train a personalized AI model to understand your music style</p>
+        <span className="empty-hint">Connect to the API to get started</span>
       </div>
     );
   }
@@ -468,66 +347,78 @@ export function TrainingScreen() {
   }
 
   return (
-    <div className="training-screen">
-      <div className="training-main">
-        <div className="panel">
+    <div className="training-screen-v2">
+      {/* Main area - Waveform Labeler */}
+      <div className="training-main-area">
+        <div className="labeler-panel">
           <div className="panel-header">
-            <h3>Training Dataset</h3>
-            <span className="count-badge">{stats?.total_labels || 0} labels</span>
+            <h3>Section Labeling</h3>
+            <span className="panel-subtitle">
+              Teach the AI to recognize sections in your style
+            </span>
           </div>
 
-          {stats && (
-            <div className="stats-grid">
-              {Object.entries(stats.label_counts).map(([label, count]) => {
-                const config = LABEL_CONFIG[label as DJSectionLabel];
-                const minRequired = stats.min_samples_required;
-                const isEnough = count >= minRequired;
-                return (
-                  <div key={label} className="stat-item">
-                    <div
-                      className="stat-color"
-                      style={{ backgroundColor: config?.color || '#6b7280' }}
-                    />
-                    <span className="stat-label">{config?.displayName || label}</span>
-                    <span className={`stat-count ${isEnough ? 'enough' : 'needs-more'}`}>
-                      {count} / {minRequired}
-                    </span>
-                  </div>
-                );
-              })}
+          {selectedTrack ? (
+            <WaveformLabeler
+              track={selectedTrack}
+              existingLabels={labels}
+              onLabelAdded={loadData}
+              onLabelDeleted={handleDeleteLabel}
+            />
+          ) : (
+            <div className="no-track-selected">
+              <span className="icon">🎵</span>
+              <p>Select a track from your library to start labeling</p>
+              <span className="hint">
+                Use keyboard shortcuts <kbd>↓</kbd> <kbd>↑</kbd> to navigate tracks
+              </span>
             </div>
           )}
 
-          <AnimatePresence>
-            <DatasetTable labels={labels} onDelete={handleDeleteLabel} />
-          </AnimatePresence>
+          {/* Track selector for quick access */}
+          <div className="quick-track-selector">
+            <span className="selector-label">Quick select:</span>
+            <div className="track-chips">
+              {tracks.slice(0, 8).map((track) => (
+                <button
+                  key={track.id}
+                  className={`track-chip ${selectedId === track.id ? 'active' : ''}`}
+                  onClick={() => useStore.getState().setSelectedId(track.id)}
+                >
+                  {track.title.slice(0, 20)}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
 
-      <div className="training-sidebar">
-        {selectedId && (
-          <div className="panel">
-            <LabelEditor trackId={selectedId} onLabelAdded={loadData} />
-          </div>
-        )}
-
-        <div className="panel">
-          <TrainingProgressCard
-            job={currentJob}
-            onStartTraining={handleStartTraining}
-            isReady={stats?.ready_for_training || false}
-          />
-        </div>
+      {/* Sidebar - Training Progress & Models */}
+      <div className="training-sidebar-v2">
+        <TrainingProgressCard
+          job={currentJob}
+          onStartTraining={handleStartTraining}
+          isReady={stats?.ready_for_training || false}
+          stats={stats}
+        />
 
         <div className="panel">
           <div className="panel-header">
-            <h4>Model Versions</h4>
+            <h4>Trained Models</h4>
           </div>
           <ModelVersionsList
             versions={modelVersions}
             onActivate={handleActivateModel}
             onDelete={handleDeleteModel}
           />
+        </div>
+
+        <div className="panel">
+          <div className="panel-header">
+            <h4>Recent Labels</h4>
+            <span className="count-badge">{stats?.total_labels || 0}</span>
+          </div>
+          <RecentLabels labels={labels} onDelete={handleDeleteLabel} />
         </div>
       </div>
     </div>
