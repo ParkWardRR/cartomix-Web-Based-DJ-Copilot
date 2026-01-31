@@ -4549,3 +4549,363 @@ body {
   color: var(--color-text);
   font-variant-numeric: tabular-nums;
 }
+
+/* ===========================================
+   CROSSFADE PREVIEW
+   =========================================== */
+
+.crossfade-preview {
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  padding: 1.5rem;
+  margin-top: 1rem;
+}
+
+.crossfade-preview-empty {
+  text-align: center;
+  padding: 2rem;
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+}
+
+.crossfade-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.crossfade-header h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin: 0;
+}
+
+.crossfade-header .close-btn {
+  background: none;
+  border: none;
+  color: var(--color-text-muted);
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+}
+
+.crossfade-header .close-btn:hover {
+  color: var(--color-text);
+}
+
+/* Track info cards */
+.crossfade-tracks {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.track-info {
+  flex: 1;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  padding: 1rem;
+  transition: all 0.3s ease;
+  opacity: 0.6;
+}
+
+.track-info.active {
+  opacity: 1;
+  border-color: var(--color-accent);
+  box-shadow: 0 0 20px rgba(99, 102, 241, 0.2);
+}
+
+.track-info .track-label {
+  display: inline-block;
+  background: linear-gradient(135deg, var(--color-accent), var(--color-accent-secondary));
+  color: white;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+  margin-bottom: 0.5rem;
+}
+
+.track-info.track-b .track-label {
+  background: linear-gradient(135deg, #10b981, #059669);
+}
+
+.track-details {
+  margin-bottom: 0.5rem;
+}
+
+.track-details .track-title {
+  display: block;
+  font-weight: 600;
+  color: var(--color-text);
+  font-size: 0.9rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.track-details .track-artist {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+}
+
+.track-meta {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.track-meta span {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  background: var(--color-bg-tertiary);
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+}
+
+/* Crossfade arrow */
+.crossfade-arrow {
+  width: 60px;
+  height: 8px;
+  background: var(--color-bg);
+  border-radius: 4px;
+  position: relative;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.crossfade-arrow .arrow-fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  background: linear-gradient(90deg, var(--color-accent), #10b981);
+  border-radius: 4px;
+}
+
+/* Crossfade visualization */
+.crossfade-viz {
+  display: flex;
+  align-items: stretch;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  height: 100px;
+}
+
+.volume-meter {
+  width: 40px;
+  background: var(--color-bg);
+  border-radius: 8px;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.volume-meter .meter-label {
+  position: absolute;
+  bottom: 4px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  z-index: 1;
+}
+
+.volume-meter .meter-fill {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  border-radius: 0 0 8px 8px;
+}
+
+.volume-meter.meter-a .meter-fill {
+  background: linear-gradient(to top, var(--color-accent), rgba(99, 102, 241, 0.3));
+}
+
+.volume-meter.meter-b .meter-fill {
+  background: linear-gradient(to top, #10b981, rgba(16, 185, 129, 0.3));
+}
+
+/* Crossfade slider container */
+.crossfade-slider-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.timeline {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.time-marker {
+  font-size: 0.7rem;
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.crossfade-slider {
+  flex: 1;
+  background: var(--color-bg);
+  border-radius: 8px;
+  position: relative;
+  overflow: hidden;
+}
+
+.crossfade-progress {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  background: linear-gradient(90deg,
+    rgba(99, 102, 241, 0.6) 0%,
+    rgba(99, 102, 241, 0.4) 50%,
+    rgba(16, 185, 129, 0.4) 50%,
+    rgba(16, 185, 129, 0.6) 100%
+  );
+  border-radius: 8px;
+}
+
+.transition-marker {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: var(--color-accent);
+  color: white;
+  font-size: 0.65rem;
+  font-weight: 600;
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+  z-index: 1;
+}
+
+/* Controls */
+.crossfade-controls {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+}
+
+.play-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: linear-gradient(135deg, var(--color-accent), var(--color-accent-secondary));
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.play-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+}
+
+.play-btn.playing {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+}
+
+.reset-btn {
+  background: var(--color-bg);
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border);
+  padding: 0.75rem 1.5rem;
+  border-radius: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.reset-btn:hover {
+  background: var(--color-bg-tertiary);
+  color: var(--color-text);
+}
+
+/* Settings */
+.crossfade-settings {
+  display: flex;
+  gap: 2rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--color-border);
+}
+
+.crossfade-settings .setting {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.crossfade-settings label {
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+}
+
+.crossfade-settings input[type="range"] {
+  flex: 1;
+  height: 4px;
+  background: var(--color-bg);
+  border-radius: 2px;
+  -webkit-appearance: none;
+}
+
+.crossfade-settings input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  background: var(--color-accent);
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.crossfade-settings span {
+  font-size: 0.75rem;
+  color: var(--color-text);
+  font-weight: 500;
+  min-width: 40px;
+  text-align: right;
+}
+
+/* Preview transition button in TransitionRehearsal */
+.preview-transition-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  margin-top: 1rem;
+  padding: 0.75rem;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.1));
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  border-radius: 10px;
+  color: var(--color-accent);
+  font-weight: 500;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.preview-transition-btn:hover {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(139, 92, 246, 0.2));
+  border-color: var(--color-accent);
+}
+
+.preview-transition-btn .preview-icon {
+  font-size: 0.7rem;
+}

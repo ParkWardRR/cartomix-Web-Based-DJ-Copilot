@@ -1,4 +1,7 @@
+import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import type { SetEdge, Track } from '../types';
+import { CrossfadePreview } from './CrossfadePreview';
 
 type Props = {
   from?: Track;
@@ -8,6 +11,8 @@ type Props = {
 };
 
 export function TransitionRehearsal({ from, to, edge, compact }: Props) {
+  const [showPreview, setShowPreview] = useState(false);
+
   if (!from || !to || !edge) {
     return null;
   }
@@ -43,6 +48,37 @@ export function TransitionRehearsal({ from, to, edge, compact }: Props) {
           <span className="pill pill-secondary">{edge.window}</span>
         </div>
       </div>
+
+      {/* Preview button */}
+      <motion.button
+        className="preview-transition-btn"
+        onClick={() => setShowPreview(!showPreview)}
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
+      >
+        <span className="preview-icon">{showPreview ? '▼' : '▶'}</span>
+        <span>{showPreview ? 'Hide Preview' : 'Preview Crossfade'}</span>
+      </motion.button>
+
+      {/* Crossfade preview panel */}
+      <AnimatePresence>
+        {showPreview && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <CrossfadePreview
+              trackA={from}
+              trackB={to}
+              transitionPoint={0.8}
+              crossfadeDuration={16}
+              onClose={() => setShowPreview(false)}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
