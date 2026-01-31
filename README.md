@@ -10,7 +10,7 @@
 
 <br/>
 
-[![Download](https://img.shields.io/badge/Download-v1.1--beta-6366f1?style=for-the-badge&logo=apple&logoColor=white)](https://github.com/ParkWardRR/cartomix-Web-Based-DJ-Copilot/releases/download/v1.2-beta/Algiers-v1.2-beta-AppleSilicon.dmg)
+[![Download](https://img.shields.io/badge/Download-v1.3--beta-6366f1?style=for-the-badge&logo=apple&logoColor=white)](https://github.com/ParkWardRR/cartomix-Web-Based-DJ-Copilot/releases/download/v1.3-beta/Algiers-v1.3-beta-AppleSilicon.dmg)
 [![macOS](https://img.shields.io/badge/macOS%2014+-000000?style=for-the-badge&logo=apple&logoColor=white)](#requirements)
 [![Apple Silicon](https://img.shields.io/badge/Apple%20Silicon-M1--M4-000000?style=for-the-badge&logo=apple&logoColor=white)](#requirements)
 
@@ -138,6 +138,15 @@ Real-time insights into your music collection:
 - **Energy metrics** — Average energy level across your library
 - **Key distribution** — Visual breakdown of keys in your collection
 
+### Live Crossfade Preview
+
+Preview transitions between tracks with real audio playback:
+- **Dual-track playback** — Hear both tracks simultaneously during crossfade
+- **Adjustable transition point** — Set where the mix begins (50-95% into track A)
+- **Configurable crossfade duration** — 4 to 32 seconds
+- **Visual volume meters** — See the crossfade curve in real-time
+- **Web Audio API powered** — Native browser audio with HTTP Range support
+
 ---
 
 ## Screenshots
@@ -161,7 +170,7 @@ Real-time insights into your music collection:
 
 ### Download (Recommended)
 
-**[Download Algiers v1.2-beta](https://github.com/ParkWardRR/cartomix-Web-Based-DJ-Copilot/releases/download/v1.2-beta/Algiers-v1.2-beta-AppleSilicon.dmg)** (~21 MB)
+**[Download Algiers v1.3-beta](https://github.com/ParkWardRR/cartomix-Web-Based-DJ-Copilot/releases/download/v1.3-beta/Algiers-v1.3-beta-AppleSilicon.dmg)** (~21 MB)
 
 1. Open the DMG
 2. Drag **Algiers** to Applications
@@ -400,7 +409,7 @@ npm run dev
 # Full build with code signing and notarization
 bash scripts/build-and-notarize.sh
 
-# Output: build/Algiers-v1.2-beta-AppleSilicon.dmg
+# Output: build/Algiers-v1.3-beta-AppleSilicon.dmg
 ```
 
 ---
@@ -423,10 +432,10 @@ bash scripts/build-and-notarize.sh
 - [x] Harmonic mixing assistant (Camelot wheel)
 - [x] BPM tap detection
 - [x] Library statistics and insights
+- [x] Live audio preview with crossfade simulation
 
 ### Planned
 
-- [ ] Live audio preview with crossfade simulation
 - [ ] Custom ML model training on your preferences
 - [ ] Set history tracking
 - [ ] Apple Music library integration
@@ -459,6 +468,6 @@ Blue Oak Model License 1.0.0. See [LICENSE](LICENSE).
 
 <br/>
 
-**[Download Algiers](https://github.com/ParkWardRR/cartomix-Web-Based-DJ-Copilot/releases/download/v1.2-beta/Algiers-v1.2-beta-AppleSilicon.dmg)**
+**[Download Algiers](https://github.com/ParkWardRR/cartomix-Web-Based-DJ-Copilot/releases/download/v1.3-beta/Algiers-v1.3-beta-AppleSilicon.dmg)**
 
 </div>

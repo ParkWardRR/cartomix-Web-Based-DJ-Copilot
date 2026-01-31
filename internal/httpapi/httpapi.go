@@ -89,6 +89,9 @@ func (s *Server) registerRoutes() {
 	s.mux.HandleFunc("POST /api/training/models/{version}/activate", s.handleActivateModel)
 	s.mux.HandleFunc("DELETE /api/training/models/{version}", s.handleDeleteModel)
 
+	// Audio streaming endpoint
+	s.mux.HandleFunc("GET /api/audio", s.handleAudio)
+
 	// Static file serving (for standalone app mode)
 	if s.cfg.WebRoot != "" {
 		s.mux.HandleFunc("/", s.handleStaticFiles)
@@ -1215,4 +1218,64 @@ func (s *Server) handleDeleteModel(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeJSON(w, http.StatusOK, map[string]string{"message": "model deleted"})
+}
+
+// handleAudio streams audio files for playback in the UI.
+// It supports HTTP Range requests for seeking.
+func (s *Server) handleAudio(w http.ResponseWriter, r *http.Request) {
+	path := r.URL.Query().Get("path")
+	if path == "" {
+		writeError(w, http.StatusBadRequest, "path parameter is required")
+		return
+	}
+
+	// Verify the path exists and is a file
+	info, err := os.Stat(path)
+	if err != nil {
+		if os.IsNotExist(err) {
+			writeError(w, http.StatusNotFound, "audio file not found")
+		} else {
+			writeError(w, http.StatusInternalServerError, "failed to access file: "+err.Error())
+		}
+		return
+	}
+
+	if info.IsDir() {
+		writeError(w, http.StatusBadRequest, "path is a directory, not a file")
+		return
+	}
+
+	// Determine content type based on file extension
+	ext := strings.ToLower(filepath.Ext(path))
+	contentType := "application/octet-stream"
+	switch ext {
+	case ".mp3":
+		contentType = "audio/mpeg"
+	case ".wav":
+		contentType = "audio/wav"
+	case ".flac":
+		contentType = "audio/flac"
+	case ".aac", ".m4a":
+		contentType = "audio/aac"
+	case ".ogg":
+		contentType = "audio/ogg"
+	case ".aiff", ".aif":
+		contentType = "audio/aiff"
+	}
+
+	// Open the file
+	file, err := os.Open(path)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "failed to open file: "+err.Error())
+		return
+	}
+	defer file.Close()
+
+	// Set headers
+	w.Header().Set("Content-Type", contentType)
+	w.Header().Set("Accept-Ranges", "bytes")
+	w.Header().Set("Cache-Control", "private, max-age=86400")
+
+	// Use http.ServeContent for Range request support
+	http.ServeContent(w, r, filepath.Base(path), info.ModTime(), file)
 }
