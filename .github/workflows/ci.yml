@@ -13,11 +13,28 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.22'
+          go-version: '1.24'
       - name: Lint (placeholder)
         run: echo "lint TODO: golangci-lint"
       - name: Go tests
         run: go test ./...
+
+  web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: web/package-lock.json
+      - name: Install deps
+        run: npm ci
+        working-directory: web
+      - name: Build UI
+        run: npm run build
+        working-directory: web
 
   swift:
     runs-on: macos-latest

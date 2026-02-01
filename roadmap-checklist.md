@@ -93,6 +93,7 @@
 - [x] Integration: golden comparisons on fixture corpus.
 - [x] E2E: Playwright-Go flows (import→analyze→cues→set→rehearse→export) across Chromium/WebKit; theme toggle tests.
 - [ ] CI: run go/swift/unit/property + E2E (WebKit on macOS runner).
+  - In progress: go + Swift + React build workflows running on CI (macOS + Ubuntu); WebKit E2E still pending.
 
 ## DevX & quality gates
 
@@ -195,6 +196,12 @@
 - UI: TrainingProgressCard with epoch/loss visualization
 - UI: ModelVersionsList with activate/delete actions
 - SQLite schema for training_labels, training_jobs, model_versions
+
+### Aurora UI & Distribution (v1.6-beta - 2026-02-01)
+- Glassmorphic "Aurora" skin with hero HUD, neon grid, and elevated panels.
+- Quick filter chips for analyzed/high-energy/review crates plus energy hero lane.
+- CI uplift: Go 1.24 + Swift tests + React build on GitHub Actions.
+- Notarized DMG v1.6, README/screenshots refreshed for release.
 
 ---
 

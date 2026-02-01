@@ -109,6 +109,9 @@ function App() {
     return setPlan.order.map((id) => trackMap[id]?.title ?? id);
   }, [trackMap, setPlan.order]);
 
+  const heroTrack = selected || tracks[0];
+  const progressPercent = Math.min(100, Math.max(0, Math.round(playheadPosition * 100)));
+
   // Initialize: check API and load tracks
   useEffect(() => {
     const init = async () => {
@@ -190,13 +193,15 @@ function App() {
 
   return (
     <div className="app">
+      <div className="aurora-bg" aria-hidden />
+      <div className="grid-overlay" aria-hidden />
       <header className="app-header">
         <div className="header-left">
           <div className="app-logo">
             <span className="logo-icon">◈</span>
             Algiers
           </div>
-          <span className="version-badge">v1.5</span>
+          <span className="version-badge">v1.6</span>
           {!apiAvailable && <span className="demo-badge">demo</span>}
         </div>
         <nav className="header-nav">
@@ -269,9 +274,91 @@ function App() {
               transition={{ duration: 0.2 }}
               className="library-view"
             >
-              {/* Top Bar - Stats + Charts */}
-              <div className="top-bar">
-                <LiveStats stats={currentStats} compact />
+              {/* Aurora Hero Surface */}
+              <div className="hero-grid">
+                <div className="hero-card hero-now">
+                  <div className="eyebrow">Aurora Deck</div>
+                  <div className="hero-title">{heroTrack?.title ?? 'Load a track to drive the deck HUD'}</div>
+                  <div className="hero-meta">
+                    <span>{heroTrack?.artist ?? 'Select or analyze a track to unlock the visuals'}</span>
+                    <span className={`pill ${apiAvailable ? 'pill-analyzed' : 'pill-warn'} glow`}>
+                      {apiAvailable ? 'Live analyzer' : 'Offline demo'}
+                    </span>
+                  </div>
+                  <div className="hero-metrics">
+                    <div className="hero-metric">
+                      <label>BPM</label>
+                      <strong>{heroTrack?.bpm ?? '—'}</strong>
+                    </div>
+                    <div className="hero-metric">
+                      <label>Key</label>
+                      <strong>{heroTrack?.key ?? '—'}</strong>
+                    </div>
+                    <div className="hero-metric">
+                      <label>Energy</label>
+                      <strong>{heroTrack?.energy ? `E${heroTrack.energy}` : '—'}</strong>
+                    </div>
+                  </div>
+                  <div className="hero-progress">
+                    <div className="hero-progress-track">
+                      <div className="hero-progress-fill" style={{ width: `${progressPercent}%` }} />
+                    </div>
+                    <span className="hero-progress-label">{progressPercent}% journey</span>
+                  </div>
+                  <div className="hero-actions">
+                    <button className="cta primary" onClick={handleSetBuilderEnter}>
+                      Auto-build peak set
+                    </button>
+                    <button className="cta ghost" onClick={() => setViewMode('graph')}>
+                      Open transition graph
+                    </button>
+                  </div>
+                </div>
+
+                <div className="hero-card hero-stats">
+                  <div className="hero-card-header">
+                    <div>
+                      <div className="eyebrow">System Pulse</div>
+                      <p className="muted">Analysis health, throughput, and readiness</p>
+                    </div>
+                    <span className={`status-dot ${apiAvailable ? 'ok' : 'warn'}`}>
+                      {apiAvailable ? 'API live' : 'Demo mode'}
+                    </span>
+                  </div>
+                  <LiveStats stats={currentStats} />
+                  <div className="hero-inline-actions">
+                    <button className="chip ghost" onClick={() => setViewMode('training')}>
+                      <span>Training lab</span>
+                    </button>
+                    <button className="chip ghost" onClick={() => setViewMode('setBuilder')}>
+                      <span>Set builder</span>
+                    </button>
+                  </div>
+                </div>
+
+                <div className="hero-card hero-arc">
+                  <div className="hero-card-header">
+                    <div className="eyebrow">Energy Curve</div>
+                    <span className="pill pill-secondary">{setPlan.order.length} in queue</span>
+                  </div>
+                  <EnergyArc
+                    values={setEnergyValues}
+                    labels={setTrackLabels}
+                    height={90}
+                    highlightIndex={currentSetIndex >= 0 ? currentSetIndex : undefined}
+                  />
+                  <div className="hero-arc-footer">
+                    <div className="mini-pill-row">
+                      <span className="pill pill-primary subtle">Notarized build</span>
+                      <span className="pill pill-analyzed subtle">Gatekeeper safe</span>
+                    </div>
+                    <BPMTap compact />
+                  </div>
+                </div>
+              </div>
+
+              {/* Charts Strip */}
+              <div className="top-bar charts-only">
                 <div className="charts-row">
                   <div className="chart-box">
                     <div className="chart-tabs">
@@ -375,6 +462,38 @@ function App() {
                       <option value="bpm-asc">BPM ↑</option>
                       <option value="bpm-desc">BPM ↓</option>
                     </select>
+                  </div>
+                  <div className="chip-row emphasis">
+                    <button
+                      className={`chip ${onlyAnalyzed ? 'active' : ''}`}
+                      onClick={() => setOnlyAnalyzed(!onlyAnalyzed)}
+                    >
+                      🎚️ Analyzed only
+                    </button>
+                    <button
+                      className={`chip ${highEnergyOnly ? 'active' : ''}`}
+                      onClick={() => setHighEnergyOnly(!highEnergyOnly)}
+                    >
+                      ⚡ High energy
+                    </button>
+                    <button
+                      className={`chip ${onlyReview ? 'active' : ''}`}
+                      onClick={() => setOnlyReview(!onlyReview)}
+                    >
+                      📝 Needs review
+                    </button>
+                    <button
+                      className="chip ghost"
+                      onClick={() => {
+                        setOnlyAnalyzed(false);
+                        setHighEnergyOnly(false);
+                        setOnlyReview(false);
+                        setSortMode('energy-desc');
+                        setQuery('');
+                      }}
+                    >
+                      Reset filters
+                    </button>
                   </div>
                   <LibraryGrid
                     tracks={filtered}
@@ -655,7 +774,7 @@ function App() {
       <footer className="app-footer">
         <span>Algiers · DJ Set Prep Copilot</span>
         <span className="muted">
-          v1.5-beta · Apple Silicon M1–M5
+          v1.6-beta · Apple Silicon M1–M5
           {apiAvailable ? ' · API connected' : ' · demo mode'}
         </span>
       </footer>

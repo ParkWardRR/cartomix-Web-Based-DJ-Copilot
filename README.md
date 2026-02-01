@@ -10,25 +10,30 @@
 
 <br/>
 
-[![Download](https://img.shields.io/badge/Download-v1.5--beta-6366f1?style=for-the-badge&logo=apple&logoColor=white)](https://github.com/ParkWardRR/cartomix-Web-Based-DJ-Copilot/releases/download/v1.5-beta/Algiers-v1.5-beta-AppleSilicon.dmg)
+[![Download](https://img.shields.io/badge/Download-v1.6--beta-22d3ee?style=for-the-badge&logo=apple&logoColor=white)](https://github.com/ParkWardRR/cartomix-Web-Based-DJ-Copilot/releases/download/v1.6-beta/Algiers-v1.6-beta-AppleSilicon.dmg)
+[![Notarized DMG](https://img.shields.io/badge/Notarized-DMG-34c759?style=for-the-badge&logo=apple&logoColor=white)](#installation)
 [![macOS](https://img.shields.io/badge/macOS%2014+-000000?style=for-the-badge&logo=apple&logoColor=white)](#requirements)
 [![Apple Silicon](https://img.shields.io/badge/Apple%20Silicon-M1--M4-000000?style=for-the-badge&logo=apple&logoColor=white)](#requirements)
 
 <br/>
 
 [![License](https://img.shields.io/badge/License-Blue%20Oak%201.0-blue?style=flat-square)](LICENSE)
-[![Notarized](https://img.shields.io/badge/Apple%20Notarized-✓-34C759?style=flat-square)](#installation)
 [![Swift](https://img.shields.io/badge/Swift-6.0-F05138?style=flat-square&logo=swift&logoColor=white)](#tech-stack)
 [![Go](https://img.shields.io/badge/Go-1.24-00ADD8?style=flat-square&logo=go&logoColor=white)](#tech-stack)
 [![React](https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react&logoColor=black)](#tech-stack)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.6-3178C6?style=flat-square&logo=typescript&logoColor=white)](#tech-stack)
+[![Core ML](https://img.shields.io/badge/Core%20ML-ANE%20on%20device-0ea5e9?style=flat-square&logo=apple&logoColor=white)](#apple-silicon-optimization)
+[![Metal](https://img.shields.io/badge/Metal-Accelerated-8b5cf6?style=flat-square&logo=apple&logoColor=white)](#apple-silicon-optimization)
+[![SQLite WAL](https://img.shields.io/badge/SQLite-WAL%20mode-0f172a?style=flat-square&logo=sqlite&logoColor=white)](#architecture)
+[![Framer Motion](https://img.shields.io/badge/Framer%20Motion-12-ff0066?style=flat-square&logo=framer&logoColor=white)](#tech-stack)
 
 <br/>
 
-![Algiers Hero Screenshot](docs/assets/screens/algiers-demo.webp)
+![Algiers Aurora UI](docs/assets/screens/algiers-v1.6-hero.png)
 
 <br/>
 
+**Aurora glass HUD · v1.6-beta (February 1, 2026)**  
 **100% Local** · **No Cloud** · **Neural Engine Accelerated** · **Private by Design**
 
 </div>
@@ -47,6 +52,15 @@ Algiers is a **native macOS application** that transforms how you prep DJ sets. 
 | **Export** | Rekordbox, Serato, Traktor, M3U8, JSON formats |
 
 Everything runs **100% locally** on your Mac. Your music **never leaves your device**.
+
+---
+
+## What's New in v1.6-beta (February 1, 2026)
+
+- **Aurora UI skin** — glassmorphic hero HUD with neon grid background and hero stats row.
+- **Actionable filters** — pill chips for analyzed-only, high-energy crates, review queues, and one-tap reset.
+- **Energy hero lane** — set energy arc and Camelot-ready preview surfaced above the fold.
+- **Polished distribution** — refreshed notarized DMG, updated versioning (1.6), and roadmap/readme showcase.
 
 ---
 
@@ -190,14 +204,24 @@ Track and recall your DJ sessions with persistent localStorage-based history:
 
 <table>
 <tr>
-<td align="center"><b>Library View</b></td>
+<td align="center"><b>Aurora Library</b></td>
 <td align="center"><b>Set Builder</b></td>
 <td align="center"><b>Transition Graph</b></td>
 </tr>
 <tr>
-<td><img src="docs/assets/screens/algiers-library-view.png" width="300"/></td>
-<td><img src="docs/assets/screens/algiers-set-builder.png" width="300"/></td>
-<td><img src="docs/assets/screens/algiers-graph-view.png" width="300"/></td>
+<td><img src="docs/assets/screens/algiers-v1.6-library.png" width="320"/></td>
+<td><img src="docs/assets/screens/algiers-v1.6-set-builder.png" width="320"/></td>
+<td><img src="docs/assets/screens/algiers-v1.6-graph.png" width="320"/></td>
+</tr>
+<tr>
+<td align="center"><b>Energy HUD</b></td>
+<td align="center"><b>Training Lab</b></td>
+<td align="center"><b>Keyboard Shortcuts</b></td>
+</tr>
+<tr>
+<td><img src="docs/assets/screens/algiers-v1.6-hero.png" width="320"/></td>
+<td><img src="docs/assets/screens/algiers-v1.6-training.png" width="320"/></td>
+<td><img src="docs/assets/screens/algiers-v1.6-shortcuts.png" width="320"/></td>
 </tr>
 </table>
 
@@ -207,7 +231,7 @@ Track and recall your DJ sessions with persistent localStorage-based history:
 
 ### Download (Recommended)
 
-**[Download Algiers v1.5-beta](https://github.com/ParkWardRR/cartomix-Web-Based-DJ-Copilot/releases/download/v1.5-beta/Algiers-v1.5-beta-AppleSilicon.dmg)** (~21 MB)
+**[Download Algiers v1.6-beta](https://github.com/ParkWardRR/cartomix-Web-Based-DJ-Copilot/releases/download/v1.6-beta/Algiers-v1.6-beta-AppleSilicon.dmg)** (~21 MB)
 
 1. Open the DMG
 2. Drag **Algiers** to Applications
@@ -446,7 +470,7 @@ npm run dev
 # Full build with code signing and notarization
 bash scripts/build-and-notarize.sh
 
-# Output: build/Algiers-v1.5-beta-AppleSilicon.dmg
+# Output: build/Algiers-v1.6-beta-AppleSilicon.dmg
 ```
 
 ---
@@ -506,6 +530,6 @@ Blue Oak Model License 1.0.0. See [LICENSE](LICENSE).
 
 <br/>
 
-**[Download Algiers](https://github.com/ParkWardRR/cartomix-Web-Based-DJ-Copilot/releases/download/v1.5-beta/Algiers-v1.5-beta-AppleSilicon.dmg)**
+**[Download Algiers](https://github.com/ParkWardRR/cartomix-Web-Based-DJ-Copilot/releases/download/v1.6-beta/Algiers-v1.6-beta-AppleSilicon.dmg)**
 
 </div>
