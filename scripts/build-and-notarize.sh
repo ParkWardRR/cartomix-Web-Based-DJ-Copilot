@@ -1,5 +1,16 @@
 #!/bin/bash
 # Build, sign, notarize, and package Algiers for distribution
+#
+# SETUP REQUIRED: Before running this script, you must configure notarization credentials.
+# See docs/SIGNING.md for full instructions, or run:
+#
+#   xcrun notarytool store-credentials "notary-api" \
+#       --apple-id "YOUR_APPLE_ID" \
+#       --team-id "YOUR_TEAM_ID" \
+#       --password "YOUR_APP_SPECIFIC_PASSWORD"
+#
+# Get an app-specific password at: https://appleid.apple.com → Security → App-Specific Passwords
+#
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
