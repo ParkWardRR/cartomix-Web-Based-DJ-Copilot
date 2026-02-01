@@ -49,3 +49,23 @@ export type SetPlan = {
   order: string[];
   edges: SetEdge[];
 };
+
+export type SetSession = {
+  id: string;
+  name: string;
+  createdAt: string;
+  updatedAt: string;
+  plan: SetPlan;
+  trackCount: number;
+  totalDuration: number; // minutes
+  avgBpm: number;
+  notes?: string;
+};
+
+export type SetHistoryStats = {
+  totalSessions: number;
+  totalTracks: number;
+  avgTracksPerSet: number;
+  favoriteMode: 'Warm-up' | 'Peak-time' | 'Open-format';
+  lastSessionDate: string | null;
+};

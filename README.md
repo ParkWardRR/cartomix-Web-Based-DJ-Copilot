@@ -10,7 +10,7 @@
 
 <br/>
 
-[![Download](https://img.shields.io/badge/Download-v1.3--beta-6366f1?style=for-the-badge&logo=apple&logoColor=white)](https://github.com/ParkWardRR/cartomix-Web-Based-DJ-Copilot/releases/download/v1.4-beta/Algiers-v1.4-beta-AppleSilicon.dmg)
+[![Download](https://img.shields.io/badge/Download-v1.5--beta-6366f1?style=for-the-badge&logo=apple&logoColor=white)](https://github.com/ParkWardRR/cartomix-Web-Based-DJ-Copilot/releases/download/v1.5-beta/Algiers-v1.5-beta-AppleSilicon.dmg)
 [![macOS](https://img.shields.io/badge/macOS%2014+-000000?style=for-the-badge&logo=apple&logoColor=white)](#requirements)
 [![Apple Silicon](https://img.shields.io/badge/Apple%20Silicon-M1--M4-000000?style=for-the-badge&logo=apple&logoColor=white)](#requirements)
 
@@ -167,6 +167,23 @@ Train a personalized AI model that understands your music style:
 | `6` | Verse |
 | `7` | Chorus |
 
+### Set History & Session Tracking
+
+Track and recall your DJ sessions with persistent localStorage-based history:
+- **Save sessions** — Name and annotate your set plans for future reference
+- **Session stats** — Track total sessions, tracks used, and favorite modes
+- **Quick search** — Find past sessions by name or notes
+- **Load & resume** — Reload any previous set into the Set Builder
+- **Delete management** — Clean up old sessions when no longer needed
+- **Auto-persistence** — All data stored locally in browser storage
+
+| Stat | Description |
+|------|-------------|
+| Total Sessions | Number of saved set plans |
+| Total Tracks | Cumulative tracks across all sessions |
+| Avg per Set | Average tracks per session |
+| Favorite Mode | Most frequently used set mode |
+
 ---
 
 ## Screenshots
@@ -190,7 +207,7 @@ Train a personalized AI model that understands your music style:
 
 ### Download (Recommended)
 
-**[Download Algiers v1.4-beta](https://github.com/ParkWardRR/cartomix-Web-Based-DJ-Copilot/releases/download/v1.4-beta/Algiers-v1.4-beta-AppleSilicon.dmg)** (~21 MB)
+**[Download Algiers v1.5-beta](https://github.com/ParkWardRR/cartomix-Web-Based-DJ-Copilot/releases/download/v1.5-beta/Algiers-v1.5-beta-AppleSilicon.dmg)** (~21 MB)
 
 1. Open the DMG
 2. Drag **Algiers** to Applications
@@ -429,7 +446,7 @@ npm run dev
 # Full build with code signing and notarization
 bash scripts/build-and-notarize.sh
 
-# Output: build/Algiers-v1.4-beta-AppleSilicon.dmg
+# Output: build/Algiers-v1.5-beta-AppleSilicon.dmg
 ```
 
 ---
@@ -454,14 +471,12 @@ bash scripts/build-and-notarize.sh
 - [x] Library statistics and insights
 - [x] Live audio preview with crossfade simulation
 - [x] Custom ML model training with visual waveform labeler
+- [x] Set history and session tracking
 
 ### Planned
 
-- [ ] Set history and session tracking
 - [ ] Apple Music library integration
 - [ ] Spotify playlist import
-- [ ] Set history tracking
-- [ ] Apple Music library integration
 
 ---
 
@@ -491,6 +506,6 @@ Blue Oak Model License 1.0.0. See [LICENSE](LICENSE).
 
 <br/>
 
-**[Download Algiers](https://github.com/ParkWardRR/cartomix-Web-Based-DJ-Copilot/releases/download/v1.4-beta/Algiers-v1.4-beta-AppleSilicon.dmg)**
+**[Download Algiers](https://github.com/ParkWardRR/cartomix-Web-Based-DJ-Copilot/releases/download/v1.5-beta/Algiers-v1.5-beta-AppleSilicon.dmg)**
 
 </div>

@@ -21,6 +21,7 @@ import { KeyboardShortcutsHelp } from './components/KeyboardShortcutsHelp';
 import { CamelotWheel } from './components/CamelotWheel';
 import { BPMTap } from './components/BPMTap';
 import { LibraryStats } from './components/LibraryStats';
+import { SetHistory } from './components/SetHistory';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { useStore } from './store';
 
@@ -195,7 +196,7 @@ function App() {
             <span className="logo-icon">◈</span>
             Algiers
           </div>
-          <span className="version-badge">v1.4</span>
+          <span className="version-badge">v1.5</span>
           {!apiAvailable && <span className="demo-badge">demo</span>}
         </div>
         <nav className="header-nav">
@@ -600,6 +601,13 @@ function App() {
                   </div>
                   <LibraryStats tracks={tracks} />
                 </div>
+                <div className="panel">
+                  <div className="panel-header">
+                    <h3>Set History</h3>
+                    <span className="muted">Track and recall your DJ sessions</span>
+                  </div>
+                  <SetHistory />
+                </div>
               </div>
               <div className="settings-sidebar">
                 {selected && (
@@ -647,7 +655,7 @@ function App() {
       <footer className="app-footer">
         <span>Algiers · DJ Set Prep Copilot</span>
         <span className="muted">
-          v1.4-beta · Apple Silicon M1–M5
+          v1.5-beta · Apple Silicon M1–M5
           {apiAvailable ? ' · API connected' : ' · demo mode'}
         </span>
       </footer>
