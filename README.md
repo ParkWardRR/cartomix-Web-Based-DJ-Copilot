@@ -60,7 +60,7 @@ Everything runs **100% locally** on your Mac. Your music **never leaves your dev
 - **Aurora UI skin** — glassmorphic hero HUD with neon grid background and hero stats row.
 - **Actionable filters** — pill chips for analyzed-only, high-energy crates, review queues, and one-tap reset.
 - **Energy hero lane** — set energy arc and Camelot-ready preview surfaced above the fold.
-- **Polished distribution** — refreshed notarized DMG, updated versioning (1.6), and roadmap/readme showcase.
+- **Local-only pipeline** — GitHub Actions disabled; release verified locally (UI build, Go tests, Swift tests, notarized DMG).
 
 ---
 
