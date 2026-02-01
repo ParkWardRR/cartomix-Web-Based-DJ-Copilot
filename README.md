@@ -10,7 +10,7 @@
 
 <br/>
 
-[![Download](https://img.shields.io/badge/Download-v1.6--beta-22d3ee?style=for-the-badge&logo=apple&logoColor=white)](https://github.com/ParkWardRR/cartomix-Web-Based-DJ-Copilot/releases/download/v1.6-beta/Algiers-v1.6-beta-AppleSilicon.dmg)
+[![Download](https://img.shields.io/badge/Download-v1.7--beta-22d3ee?style=for-the-badge&logo=apple&logoColor=white)](https://github.com/ParkWardRR/cartomix-Web-Based-DJ-Copilot/releases/download/v1.7-beta/Algiers-v1.7-beta-AppleSilicon.dmg)
 [![Notarized DMG](https://img.shields.io/badge/Notarized-DMG-34c759?style=for-the-badge&logo=apple&logoColor=white)](#installation)
 [![macOS](https://img.shields.io/badge/macOS%2014+-000000?style=for-the-badge&logo=apple&logoColor=white)](#requirements)
 [![Apple Silicon](https://img.shields.io/badge/Apple%20Silicon-M1--M4-000000?style=for-the-badge&logo=apple&logoColor=white)](#requirements)
@@ -29,11 +29,11 @@
 
 <br/>
 
-![Algiers Aurora UI](docs/assets/screens/algiers-v1.6-hero.png)
+![Algiers Aurora UI](docs/assets/screens/algiers-v1.7-hero.png)
 
 <br/>
 
-**Aurora glass HUD · v1.6-beta (February 1, 2026)**  
+**Aurora glass HUD · v1.7-beta (February 1, 2026)**  
 **100% Local** · **No Cloud** · **Neural Engine Accelerated** · **Private by Design**
 
 </div>
@@ -55,11 +55,10 @@ Everything runs **100% locally** on your Mac. Your music **never leaves your dev
 
 ---
 
-## What's New in v1.6-beta (February 1, 2026)
+## What's New in v1.7-beta (February 1, 2026)
 
-- **Aurora UI skin** — glassmorphic hero HUD with neon grid background and hero stats row.
-- **Actionable filters** — pill chips for analyzed-only, high-energy crates, review queues, and one-tap reset.
-- **Energy hero lane** — set energy arc and Camelot-ready preview surfaced above the fold.
+- **Command Palette (⌘K)** — fast navigation, filters, batch analyze, chart mode, and theme toggle in one overlay.
+- **HUD polish** — aurora glass skin refined with crisper stats, energy arc lane, and smart journey progress.
 - **Local-only pipeline** — GitHub Actions disabled; release verified locally (UI build, Go tests, Swift tests, notarized DMG).
 
 ---
@@ -209,19 +208,19 @@ Track and recall your DJ sessions with persistent localStorage-based history:
 <td align="center"><b>Transition Graph</b></td>
 </tr>
 <tr>
-<td><img src="docs/assets/screens/algiers-v1.6-library.png" width="320"/></td>
-<td><img src="docs/assets/screens/algiers-v1.6-set-builder.png" width="320"/></td>
-<td><img src="docs/assets/screens/algiers-v1.6-graph.png" width="320"/></td>
+<td><img src="docs/assets/screens/algiers-v1.7-library.png" width="320"/></td>
+<td><img src="docs/assets/screens/algiers-v1.7-set-builder.png" width="320"/></td>
+<td><img src="docs/assets/screens/algiers-v1.7-graph.png" width="320"/></td>
 </tr>
 <tr>
 <td align="center"><b>Energy HUD</b></td>
 <td align="center"><b>Training Lab</b></td>
-<td align="center"><b>Keyboard Shortcuts</b></td>
+<td align="center"><b>Command Palette</b></td>
 </tr>
 <tr>
-<td><img src="docs/assets/screens/algiers-v1.6-hero.png" width="320"/></td>
-<td><img src="docs/assets/screens/algiers-v1.6-training.png" width="320"/></td>
-<td><img src="docs/assets/screens/algiers-v1.6-shortcuts.png" width="320"/></td>
+<td><img src="docs/assets/screens/algiers-v1.7-hero.png" width="320"/></td>
+<td><img src="docs/assets/screens/algiers-v1.7-training.png" width="320"/></td>
+<td><img src="docs/assets/screens/algiers-v1.7-palette.png" width="320"/></td>
 </tr>
 </table>
 
@@ -231,7 +230,7 @@ Track and recall your DJ sessions with persistent localStorage-based history:
 
 ### Download (Recommended)
 
-**[Download Algiers v1.6-beta](https://github.com/ParkWardRR/cartomix-Web-Based-DJ-Copilot/releases/download/v1.6-beta/Algiers-v1.6-beta-AppleSilicon.dmg)** (~21 MB)
+**[Download Algiers v1.7-beta](https://github.com/ParkWardRR/cartomix-Web-Based-DJ-Copilot/releases/download/v1.7-beta/Algiers-v1.7-beta-AppleSilicon.dmg)** (~21 MB)
 
 1. Open the DMG
 2. Drag **Algiers** to Applications
@@ -470,7 +469,7 @@ npm run dev
 # Full build with code signing and notarization
 bash scripts/build-and-notarize.sh
 
-# Output: build/Algiers-v1.6-beta-AppleSilicon.dmg
+# Output: build/Algiers-v1.7-beta-AppleSilicon.dmg
 ```
 
 ---
@@ -530,6 +529,6 @@ Blue Oak Model License 1.0.0. See [LICENSE](LICENSE).
 
 <br/>
 
-**[Download Algiers](https://github.com/ParkWardRR/cartomix-Web-Based-DJ-Copilot/releases/download/v1.6-beta/Algiers-v1.6-beta-AppleSilicon.dmg)**
+**[Download Algiers](https://github.com/ParkWardRR/cartomix-Web-Based-DJ-Copilot/releases/download/v1.7-beta/Algiers-v1.7-beta-AppleSilicon.dmg)**
 
 </div>

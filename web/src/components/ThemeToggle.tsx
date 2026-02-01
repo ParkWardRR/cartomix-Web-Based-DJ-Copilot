@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useTheme, type Theme } from '../hooks/useTheme';
 
 const themeLabels: Record<Theme, string> = {
@@ -14,6 +15,13 @@ const themeIcons: Record<Theme, string> = {
 
 export function ThemeToggle() {
   const { theme, toggleTheme } = useTheme();
+
+  // Allow global custom event toggling (used by command palette)
+  useEffect(() => {
+    const handler = () => toggleTheme();
+    window.addEventListener('toggle-theme', handler as EventListener);
+    return () => window.removeEventListener('toggle-theme', handler as EventListener);
+  }, [toggleTheme]);
 
   return (
     <button

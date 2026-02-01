@@ -24,6 +24,7 @@ import { LibraryStats } from './components/LibraryStats';
 import { SetHistory } from './components/SetHistory';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { useStore } from './store';
+import { CommandPalette } from './components/CommandPalette';
 
 function App() {
   // Get state and actions from store
@@ -111,6 +112,24 @@ function App() {
 
   const heroTrack = selected || tracks[0];
   const progressPercent = Math.min(100, Math.max(0, Math.round(playheadPosition * 100)));
+
+  // Command palette state
+  const [isCommandOpen, setCommandOpen] = useState(false);
+  const [commandQuery, setCommandQuery] = useState('');
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setCommandOpen((open) => !open);
+      }
+      if (e.key === 'Escape') {
+        setCommandOpen(false);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
 
   // Initialize: check API and load tracks
   useEffect(() => {
@@ -201,7 +220,7 @@ function App() {
             <span className="logo-icon">◈</span>
             Algiers
           </div>
-          <span className="version-badge">v1.6</span>
+          <span className="version-badge">v1.7</span>
           {!apiAvailable && <span className="demo-badge">demo</span>}
         </div>
         <nav className="header-nav">
@@ -774,13 +793,35 @@ function App() {
       <footer className="app-footer">
         <span>Algiers · DJ Set Prep Copilot</span>
         <span className="muted">
-          v1.6-beta · Apple Silicon M1–M5
+          v1.7-beta · Apple Silicon M1–M5
           {apiAvailable ? ' · API connected' : ' · demo mode'}
         </span>
       </footer>
 
       {/* Keyboard shortcuts help modal */}
       <KeyboardShortcutsHelp />
+      <CommandPalette
+        open={isCommandOpen}
+        query={commandQuery}
+        onQueryChange={setCommandQuery}
+        onClose={() => setCommandOpen(false)}
+        actions={[
+          { group: 'Navigation', label: 'Library', hint: '1', run: () => setViewMode('library') },
+          { group: 'Navigation', label: 'Set Builder', hint: '2', run: () => handleSetBuilderEnter() },
+          { group: 'Navigation', label: 'Graph', hint: '3', run: () => setViewMode('graph') },
+          { group: 'Navigation', label: 'Settings', hint: '4', run: () => setViewMode('settings') },
+          { group: 'Navigation', label: 'Training Lab', hint: '5', run: () => setViewMode('training') },
+          { group: 'Filters', label: 'Analyzed only', run: () => setOnlyAnalyzed(!onlyAnalyzed), active: onlyAnalyzed },
+          { group: 'Filters', label: 'High energy only', run: () => setHighEnergyOnly(!highEnergyOnly), active: highEnergyOnly },
+          { group: 'Filters', label: 'Needs review', run: () => setOnlyReview(!onlyReview), active: onlyReview },
+          { group: 'Charts', label: 'Chart: BPM', run: () => setChartMode('bpm'), active: chartMode === 'bpm' },
+          { group: 'Charts', label: 'Chart: Keys', run: () => setChartMode('key'), active: chartMode === 'key' },
+          { group: 'Actions', label: 'Analyze selected batch', run: () => analyzeBatchSelected(), disabled: batchSelectedIds.size === 0 || isAnalyzing },
+          { group: 'Actions', label: 'Select all tracks', run: selectAllTracks },
+          { group: 'Actions', label: 'Clear selections', run: selectNoneTracks },
+          { group: 'Theme', label: 'Toggle theme', hint: '⌥T', run: () => window.dispatchEvent(new CustomEvent('toggle-theme')) },
+        ]}
+      />
     </div>
   );
 }
