@@ -3742,6 +3742,141 @@ body {
 }
 
 /* =====================================================
+   Command Palette
+   ===================================================== */
+.cmdp-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(5, 6, 10, 0.65);
+  backdrop-filter: blur(6px);
+  z-index: 1200;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 8vh;
+}
+
+.cmdp {
+  width: min(720px, 92vw);
+  background: linear-gradient(160deg, rgba(34, 211, 238, 0.1), rgba(15, 23, 42, 0.92));
+  border: 1px solid rgba(34, 211, 238, 0.35);
+  border-radius: 18px;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.6), 0 0 32px rgba(34, 211, 238, 0.35);
+  overflow: hidden;
+}
+
+.cmdp-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid var(--color-border);
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.cmdp-header input {
+  flex: 1;
+  padding: 0.65rem 0.85rem;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  color: var(--color-text);
+  font-size: 0.95rem;
+}
+
+.cmdp-close {
+  background: transparent;
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.cmdp-list {
+  max-height: 360px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0.75rem;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.cmdp-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.65rem 0.8rem;
+  border-radius: 12px;
+  border: 1px solid var(--color-border);
+  background: rgba(15, 23, 42, 0.6);
+  color: var(--color-text);
+  cursor: pointer;
+  transition: transform 0.12s ease, border-color 0.12s ease, background 0.12s ease;
+}
+
+.cmdp-item:hover {
+  transform: translateX(2px);
+  border-color: var(--color-primary);
+  background: rgba(34, 211, 238, 0.06);
+}
+
+.cmdp-item.active {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 1px rgba(34, 211, 238, 0.4);
+}
+
+.cmdp-item.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.cmdp-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.15rem;
+}
+
+.cmdp-label {
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.cmdp-group {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.cmdp-hint kbd {
+  background: var(--color-bg-tertiary);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  padding: 0.25rem 0.45rem;
+  font-size: 0.75rem;
+}
+
+.cmdp-empty {
+  padding: 1rem;
+  text-align: center;
+  color: var(--color-text-secondary);
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.cmdp-footer {
+  padding: 0.75rem 1rem;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  border-top: 1px solid var(--color-border);
+  background: rgba(0, 0, 0, 0.25);
+}
+/* =====================================================
    Folder Drop Zone (Library)
    ===================================================== */
 

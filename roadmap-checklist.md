@@ -203,6 +203,11 @@
 - Local-only validation (UI build, Go tests, Swift tests); GitHub CI disabled per cost constraints.
 - Notarized DMG v1.6, README/screenshots refreshed for release.
 
+### Command Palette & HUD Polish (v1.7-beta - 2026-02-01)
+- Global command palette (⌘K) for navigation, filters, batch actions, charts, and theme toggle.
+- Refined aurora HUD: journey progress meter, crisp stats, tightened chip filters.
+- Local pipeline only; notarized DMG v1.7 released.
+
 ---
 
 ## Future Roadmap (Recommended)
