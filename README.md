@@ -61,6 +61,12 @@ Everything runs **100% locally** on your Mac. Your music **never leaves your dev
 - **HUD polish** — aurora glass skin refined with crisper stats, energy arc lane, and smart journey progress.
 - **Local-only pipeline** — GitHub Actions disabled; release verified locally (UI build, Go tests, Swift tests, notarized DMG).
 
+## What's Next (v1.8)
+
+- Apple Music library ingest and smart crate sync.
+- Spotify playlist import with key/BPM enrichment.
+- Export presets and palette commands for one-click Rekordbox/Serato/Traktor bundles.
+
 ---
 
 ## Key Features

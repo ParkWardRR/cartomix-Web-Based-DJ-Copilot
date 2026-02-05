@@ -208,6 +208,11 @@
 - Refined aurora HUD: journey progress meter, crisp stats, tightened chip filters.
 - Local pipeline only; notarized DMG v1.7 released.
 
+### Upcoming (v1.8)
+- Apple Music library integration and smart crate sync.
+- Spotify playlist import with BPM/key enrichment.
+- Export preset profiles surfaced in command palette.
+
 ---
 
 ## Future Roadmap (Recommended)
